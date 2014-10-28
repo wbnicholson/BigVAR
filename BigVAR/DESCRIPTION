@@ -1,0 +1,22 @@
+Package: BigVAR
+Type: Package
+Title: Dimension Reduction Methods for Multivariate Time Series
+Version: 1.0
+Date: 2014-06-19
+Author: Will Nicholson
+Maintainer: Will Nicholson <wbn8@cornell.edu>
+Description: More about what it does (maybe more than one line)
+Depends:
+    RcppArmadillo,
+    Rcpp,
+    zoo,
+    expm,
+    methods,
+    lattice
+Imports:
+    MASS,
+    vars
+License: GPL (>=2)
+LazyLoad: yes
+LinkingTo: Rcpp, RcppArmadillo
+Packaged: 2014-09-28 14:34:16 UTC; will
