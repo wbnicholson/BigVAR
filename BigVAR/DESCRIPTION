@@ -7,7 +7,7 @@ Author: Will Nicholson
 Maintainer: Will Nicholson <wbn8@cornell.edu>
 Description: Estimates VAR and VARX models with structured Lasso Penalties
 Depends:
-    R (>= 3.1.0)
+    R (>= 3.1.0),
     RcppArmadillo,	
     Rcpp,
     expm,
