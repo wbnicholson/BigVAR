@@ -5,17 +5,16 @@ Version: 1.0
 Date: 2014-06-19
 Author: Will Nicholson
 Maintainer: Will Nicholson <wbn8@cornell.edu>
-Description: More about what it does (maybe more than one line)
+Description: Estimates VAR and VARX models with structured Lasso Penalties
 Depends:
-    RcppArmadillo,
+    RcppArmadillo,	
     Rcpp,
-    zoo,
     expm,
-    methods,
-    lattice
+    methods
 Imports:
     MASS,
-    vars
+    zoo,
+    lattice
 License: GPL (>=2)
 LazyLoad: yes
 LinkingTo: Rcpp, RcppArmadillo
