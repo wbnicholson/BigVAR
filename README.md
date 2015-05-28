@@ -10,10 +10,14 @@ Note: This package utilizes C++11, so it requires a compiler with C++11 support 
 
 To install BigVAR, after installing the devtools package, run the following commands
 
+```R
 if(!require("zoo"))
 {install.packages("zoo")}
 
 library(devtools)
 
 install_github("wbnicholson/BigVAR/BigVAR")
+```
+
+The package source is available [here](https://www.wbnicholson.com/BigVAR_1.0.tar.gz).
 
