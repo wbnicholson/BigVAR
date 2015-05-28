@@ -19,5 +19,5 @@ library(devtools)
 install_github("wbnicholson/BigVAR/BigVAR")
 ```
 
-The package source is available [here](https://www.wbnicholson.com/BigVAR_1.0.tar.gz).
+The package source is available [here](http://www.wbnicholson.com/BigVAR_1.0.tar.gz).
 
