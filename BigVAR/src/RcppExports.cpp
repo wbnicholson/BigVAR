@@ -11,721 +11,877 @@ using namespace Rcpp;
 double ST1a(double z, double gam);
 RcppExport SEXP BigVAR_ST1a(SEXP zSEXP, SEXP gamSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< double >::type z(zSEXP);
-    Rcpp::traits::input_parameter< double >::type gam(gamSEXP);
-    __result = Rcpp::wrap(ST1a(z, gam));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< double >::type z(zSEXP );
+        Rcpp::traits::input_parameter< double >::type gam(gamSEXP );
+        double __result = ST1a(z, gam);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // ST3a
 colvec ST3a(colvec z, double gam);
 RcppExport SEXP BigVAR_ST3a(SEXP zSEXP, SEXP gamSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< colvec >::type z(zSEXP);
-    Rcpp::traits::input_parameter< double >::type gam(gamSEXP);
-    __result = Rcpp::wrap(ST3a(z, gam));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< colvec >::type z(zSEXP );
+        Rcpp::traits::input_parameter< double >::type gam(gamSEXP );
+        colvec __result = ST3a(z, gam);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // ST3bc
 rowvec ST3bc(rowvec& z, double gam);
 RcppExport SEXP BigVAR_ST3bc(SEXP zSEXP, SEXP gamSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< rowvec& >::type z(zSEXP);
-    Rcpp::traits::input_parameter< double >::type gam(gamSEXP);
-    __result = Rcpp::wrap(ST3bc(z, gam));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< rowvec& >::type z(zSEXP );
+        Rcpp::traits::input_parameter< double >::type gam(gamSEXP );
+        rowvec __result = ST3bc(z, gam);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // FistaLV
 mat FistaLV(const mat& Y, const mat& Z, mat& B, const double gam, const double eps, double tk, int k, int p);
 RcppExport SEXP BigVAR_FistaLV(SEXP YSEXP, SEXP ZSEXP, SEXP BSEXP, SEXP gamSEXP, SEXP epsSEXP, SEXP tkSEXP, SEXP kSEXP, SEXP pSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< mat& >::type B(BSEXP);
-    Rcpp::traits::input_parameter< const double >::type gam(gamSEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< double >::type tk(tkSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    __result = Rcpp::wrap(FistaLV(Y, Z, B, gam, eps, tk, k, p));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< mat& >::type B(BSEXP );
+        Rcpp::traits::input_parameter< const double >::type gam(gamSEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< double >::type tk(tkSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        mat __result = FistaLV(Y, Z, B, gam, eps, tk, k, p);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // gamloopFista
 cube gamloopFista(NumericVector beta_, const mat& Y, const mat& Z, const colvec gammgrid, const double eps, const colvec& YMean2, const colvec& ZMean2, mat& B1, int k, int p, double tk, int k1, int s);
 RcppExport SEXP BigVAR_gamloopFista(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP tkSEXP, SEXP k1SEXP, SEXP sSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< const colvec >::type gammgrid(gammgridSEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< mat& >::type B1(B1SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< double >::type tk(tkSEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    Rcpp::traits::input_parameter< int >::type s(sSEXP);
-    __result = Rcpp::wrap(gamloopFista(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, tk, k1, s));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< const colvec >::type gammgrid(gammgridSEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< mat& >::type B1(B1SEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< double >::type tk(tkSEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        Rcpp::traits::input_parameter< int >::type s(sSEXP );
+        cube __result = gamloopFista(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, tk, k1, s);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // Eigencomp
 List Eigencomp(mat& Z1, List groups, int n1, int k1);
 RcppExport SEXP BigVAR_Eigencomp(SEXP Z1SEXP, SEXP groupsSEXP, SEXP n1SEXP, SEXP k1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type Z1(Z1SEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    Rcpp::traits::input_parameter< int >::type n1(n1SEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    __result = Rcpp::wrap(Eigencomp(Z1, groups, n1, k1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type Z1(Z1SEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        Rcpp::traits::input_parameter< int >::type n1(n1SEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        List __result = Eigencomp(Z1, groups, n1, k1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // EigencompOO
 List EigencompOO(mat& ZZ1, List groups, int n1, int k);
 RcppExport SEXP BigVAR_EigencompOO(SEXP ZZ1SEXP, SEXP groupsSEXP, SEXP n1SEXP, SEXP kSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type ZZ1(ZZ1SEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    Rcpp::traits::input_parameter< int >::type n1(n1SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    __result = Rcpp::wrap(EigencompOO(ZZ1, groups, n1, k));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type ZZ1(ZZ1SEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        Rcpp::traits::input_parameter< int >::type n1(n1SEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        List __result = EigencompOO(ZZ1, groups, n1, k);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // BlockUpdateGL
 List BlockUpdateGL(mat& beta, const mat& Z1, double lam, const mat& Y1, double eps, List groups, List fullgroups, List compgroups, int k, List M3f_, List eigvalF_, List eigvecF_, int k1);
 RcppExport SEXP BigVAR_BlockUpdateGL(SEXP betaSEXP, SEXP Z1SEXP, SEXP lamSEXP, SEXP Y1SEXP, SEXP epsSEXP, SEXP groupsSEXP, SEXP fullgroupsSEXP, SEXP compgroupsSEXP, SEXP kSEXP, SEXP M3f_SEXP, SEXP eigvalF_SEXP, SEXP eigvecF_SEXP, SEXP k1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP);
-    Rcpp::traits::input_parameter< double >::type lam(lamSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    Rcpp::traits::input_parameter< List >::type fullgroups(fullgroupsSEXP);
-    Rcpp::traits::input_parameter< List >::type compgroups(compgroupsSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< List >::type M3f_(M3f_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    __result = Rcpp::wrap(BlockUpdateGL(beta, Z1, lam, Y1, eps, groups, fullgroups, compgroups, k, M3f_, eigvalF_, eigvecF_, k1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type beta(betaSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP );
+        Rcpp::traits::input_parameter< double >::type lam(lamSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        Rcpp::traits::input_parameter< List >::type fullgroups(fullgroupsSEXP );
+        Rcpp::traits::input_parameter< List >::type compgroups(compgroupsSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< List >::type M3f_(M3f_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        List __result = BlockUpdateGL(beta, Z1, lam, Y1, eps, groups, fullgroups, compgroups, k, M3f_, eigvalF_, eigvecF_, k1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // ThreshUpdate
 mat ThreshUpdate(mat& betaActive, const mat& Z1, double lam, const mat& Y1, double eps, List groups, List fullgroups, List compgroups, List M2f_, List eigvalF_, List eigvecF_, int k1);
 RcppExport SEXP BigVAR_ThreshUpdate(SEXP betaActiveSEXP, SEXP Z1SEXP, SEXP lamSEXP, SEXP Y1SEXP, SEXP epsSEXP, SEXP groupsSEXP, SEXP fullgroupsSEXP, SEXP compgroupsSEXP, SEXP M2f_SEXP, SEXP eigvalF_SEXP, SEXP eigvecF_SEXP, SEXP k1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type betaActive(betaActiveSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP);
-    Rcpp::traits::input_parameter< double >::type lam(lamSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    Rcpp::traits::input_parameter< List >::type fullgroups(fullgroupsSEXP);
-    Rcpp::traits::input_parameter< List >::type compgroups(compgroupsSEXP);
-    Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    __result = Rcpp::wrap(ThreshUpdate(betaActive, Z1, lam, Y1, eps, groups, fullgroups, compgroups, M2f_, eigvalF_, eigvecF_, k1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type betaActive(betaActiveSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP );
+        Rcpp::traits::input_parameter< double >::type lam(lamSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        Rcpp::traits::input_parameter< List >::type fullgroups(fullgroupsSEXP );
+        Rcpp::traits::input_parameter< List >::type compgroups(compgroupsSEXP );
+        Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        mat __result = ThreshUpdate(betaActive, Z1, lam, Y1, eps, groups, fullgroups, compgroups, M2f_, eigvalF_, eigvecF_, k1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // GamLoopGL2
 List GamLoopGL2(NumericVector beta_, List Activeset, NumericVector gamm, const mat& Y1, const mat& Z1, List jj, List jjfull, List jjcomp, double eps, const colvec& YMean2, const colvec& ZMean2, int k, int pk, const List M2f_, const List eigvalF_, const List eigvecF_);
 RcppExport SEXP BigVAR_GamLoopGL2(SEXP beta_SEXP, SEXP ActivesetSEXP, SEXP gammSEXP, SEXP Y1SEXP, SEXP Z1SEXP, SEXP jjSEXP, SEXP jjfullSEXP, SEXP jjcompSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP kSEXP, SEXP pkSEXP, SEXP M2f_SEXP, SEXP eigvalF_SEXP, SEXP eigvecF_SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< List >::type Activeset(ActivesetSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type gamm(gammSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP);
-    Rcpp::traits::input_parameter< List >::type jj(jjSEXP);
-    Rcpp::traits::input_parameter< List >::type jjfull(jjfullSEXP);
-    Rcpp::traits::input_parameter< List >::type jjcomp(jjcompSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type pk(pkSEXP);
-    Rcpp::traits::input_parameter< const List >::type M2f_(M2f_SEXP);
-    Rcpp::traits::input_parameter< const List >::type eigvalF_(eigvalF_SEXP);
-    Rcpp::traits::input_parameter< const List >::type eigvecF_(eigvecF_SEXP);
-    __result = Rcpp::wrap(GamLoopGL2(beta_, Activeset, gamm, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigvalF_, eigvecF_));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< List >::type Activeset(ActivesetSEXP );
+        Rcpp::traits::input_parameter< NumericVector >::type gamm(gammSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP );
+        Rcpp::traits::input_parameter< List >::type jj(jjSEXP );
+        Rcpp::traits::input_parameter< List >::type jjfull(jjfullSEXP );
+        Rcpp::traits::input_parameter< List >::type jjcomp(jjcompSEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type pk(pkSEXP );
+        Rcpp::traits::input_parameter< const List >::type M2f_(M2f_SEXP );
+        Rcpp::traits::input_parameter< const List >::type eigvalF_(eigvalF_SEXP );
+        Rcpp::traits::input_parameter< const List >::type eigvecF_(eigvecF_SEXP );
+        List __result = GamLoopGL2(beta_, Activeset, gamm, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigvalF_, eigvecF_);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // GroupLassoVAR
 List GroupLassoVAR(NumericVector beta_, mat& Y, mat& Z, const colvec& gamm, double eps, int k, int p, List INIActive_, List jj, List Compgroups, int k1, int s);
 RcppExport SEXP BigVAR_GroupLassoVAR(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammSEXP, SEXP epsSEXP, SEXP kSEXP, SEXP pSEXP, SEXP INIActive_SEXP, SEXP jjSEXP, SEXP CompgroupsSEXP, SEXP k1SEXP, SEXP sSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type gamm(gammSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< List >::type INIActive_(INIActive_SEXP);
-    Rcpp::traits::input_parameter< List >::type jj(jjSEXP);
-    Rcpp::traits::input_parameter< List >::type Compgroups(CompgroupsSEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    Rcpp::traits::input_parameter< int >::type s(sSEXP);
-    __result = Rcpp::wrap(GroupLassoVAR(beta_, Y, Z, gamm, eps, k, p, INIActive_, jj, Compgroups, k1, s));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type gamm(gammSEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< List >::type INIActive_(INIActive_SEXP );
+        Rcpp::traits::input_parameter< List >::type jj(jjSEXP );
+        Rcpp::traits::input_parameter< List >::type Compgroups(CompgroupsSEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        Rcpp::traits::input_parameter< int >::type s(sSEXP );
+        List __result = GroupLassoVAR(beta_, Y, Z, gamm, eps, k, p, INIActive_, jj, Compgroups, k1, s);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // BlockUpdate2
 List BlockUpdate2(const mat& ZZ1, double lam, const mat& Y1, double eps, List groups, List fullgroups, List compgroups, int k, List M2f_, List eigvalF_, List eigvecF_, colvec& B, int k1);
 RcppExport SEXP BigVAR_BlockUpdate2(SEXP ZZ1SEXP, SEXP lamSEXP, SEXP Y1SEXP, SEXP epsSEXP, SEXP groupsSEXP, SEXP fullgroupsSEXP, SEXP compgroupsSEXP, SEXP kSEXP, SEXP M2f_SEXP, SEXP eigvalF_SEXP, SEXP eigvecF_SEXP, SEXP BSEXP, SEXP k1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat& >::type ZZ1(ZZ1SEXP);
-    Rcpp::traits::input_parameter< double >::type lam(lamSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    Rcpp::traits::input_parameter< List >::type fullgroups(fullgroupsSEXP);
-    Rcpp::traits::input_parameter< List >::type compgroups(compgroupsSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP);
-    Rcpp::traits::input_parameter< colvec& >::type B(BSEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    __result = Rcpp::wrap(BlockUpdate2(ZZ1, lam, Y1, eps, groups, fullgroups, compgroups, k, M2f_, eigvalF_, eigvecF_, B, k1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< const mat& >::type ZZ1(ZZ1SEXP );
+        Rcpp::traits::input_parameter< double >::type lam(lamSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        Rcpp::traits::input_parameter< List >::type fullgroups(fullgroupsSEXP );
+        Rcpp::traits::input_parameter< List >::type compgroups(compgroupsSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP );
+        Rcpp::traits::input_parameter< colvec& >::type B(BSEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        List __result = BlockUpdate2(ZZ1, lam, Y1, eps, groups, fullgroups, compgroups, k, M2f_, eigvalF_, eigvecF_, B, k1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // ThreshUpdateOO
 colvec ThreshUpdateOO(const mat& ZZ, double lam, const mat& Y, double eps, List groups, List fullgroups, List compgroups, List M2f_, List eigvalF_, List eigvecF_, colvec& B, int n, int k1);
 RcppExport SEXP BigVAR_ThreshUpdateOO(SEXP ZZSEXP, SEXP lamSEXP, SEXP YSEXP, SEXP epsSEXP, SEXP groupsSEXP, SEXP fullgroupsSEXP, SEXP compgroupsSEXP, SEXP M2f_SEXP, SEXP eigvalF_SEXP, SEXP eigvecF_SEXP, SEXP BSEXP, SEXP nSEXP, SEXP k1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat& >::type ZZ(ZZSEXP);
-    Rcpp::traits::input_parameter< double >::type lam(lamSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    Rcpp::traits::input_parameter< List >::type fullgroups(fullgroupsSEXP);
-    Rcpp::traits::input_parameter< List >::type compgroups(compgroupsSEXP);
-    Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP);
-    Rcpp::traits::input_parameter< colvec& >::type B(BSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    __result = Rcpp::wrap(ThreshUpdateOO(ZZ, lam, Y, eps, groups, fullgroups, compgroups, M2f_, eigvalF_, eigvecF_, B, n, k1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< const mat& >::type ZZ(ZZSEXP );
+        Rcpp::traits::input_parameter< double >::type lam(lamSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        Rcpp::traits::input_parameter< List >::type fullgroups(fullgroupsSEXP );
+        Rcpp::traits::input_parameter< List >::type compgroups(compgroupsSEXP );
+        Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP );
+        Rcpp::traits::input_parameter< colvec& >::type B(BSEXP );
+        Rcpp::traits::input_parameter< int >::type n(nSEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        colvec __result = ThreshUpdateOO(ZZ, lam, Y, eps, groups, fullgroups, compgroups, M2f_, eigvalF_, eigvecF_, B, n, k1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // GamLoopGLOO
 List GamLoopGLOO(NumericVector beta_, List Activeset, NumericVector gamm, const mat& Y, const mat& Z, List jj, List jjfull, List jjcomp, double eps, colvec& YMean2, colvec& ZMean2, int k, int pk, List M2f_, List eigvalF_, List eigvecF_, int k1);
 RcppExport SEXP BigVAR_GamLoopGLOO(SEXP beta_SEXP, SEXP ActivesetSEXP, SEXP gammSEXP, SEXP YSEXP, SEXP ZSEXP, SEXP jjSEXP, SEXP jjfullSEXP, SEXP jjcompSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP kSEXP, SEXP pkSEXP, SEXP M2f_SEXP, SEXP eigvalF_SEXP, SEXP eigvecF_SEXP, SEXP k1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< List >::type Activeset(ActivesetSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type gamm(gammSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< List >::type jj(jjSEXP);
-    Rcpp::traits::input_parameter< List >::type jjfull(jjfullSEXP);
-    Rcpp::traits::input_parameter< List >::type jjcomp(jjcompSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< colvec& >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< colvec& >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type pk(pkSEXP);
-    Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP);
-    Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    __result = Rcpp::wrap(GamLoopGLOO(beta_, Activeset, gamm, Y, Z, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigvalF_, eigvecF_, k1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< List >::type Activeset(ActivesetSEXP );
+        Rcpp::traits::input_parameter< NumericVector >::type gamm(gammSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< List >::type jj(jjSEXP );
+        Rcpp::traits::input_parameter< List >::type jjfull(jjfullSEXP );
+        Rcpp::traits::input_parameter< List >::type jjcomp(jjcompSEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< colvec& >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< colvec& >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type pk(pkSEXP );
+        Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvalF_(eigvalF_SEXP );
+        Rcpp::traits::input_parameter< List >::type eigvecF_(eigvecF_SEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        List __result = GamLoopGLOO(beta_, Activeset, gamm, Y, Z, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigvalF_, eigvecF_, k1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // GamLoopSGLOO
 List GamLoopSGLOO(NumericVector beta_, const List Activeset_, const NumericVector gamm, const double alpha, const mat& Y, const mat& Z, List jj_, const List jjfull_, List jjcomp_, const double eps, const colvec& YMean2, const colvec& ZMean2, const int k1, const int pk, const List M2f_, const NumericVector eigs_);
 RcppExport SEXP BigVAR_GamLoopSGLOO(SEXP beta_SEXP, SEXP Activeset_SEXP, SEXP gammSEXP, SEXP alphaSEXP, SEXP YSEXP, SEXP ZSEXP, SEXP jj_SEXP, SEXP jjfull_SEXP, SEXP jjcomp_SEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP k1SEXP, SEXP pkSEXP, SEXP M2f_SEXP, SEXP eigs_SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< const List >::type Activeset_(Activeset_SEXP);
-    Rcpp::traits::input_parameter< const NumericVector >::type gamm(gammSEXP);
-    Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< List >::type jj_(jj_SEXP);
-    Rcpp::traits::input_parameter< const List >::type jjfull_(jjfull_SEXP);
-    Rcpp::traits::input_parameter< List >::type jjcomp_(jjcomp_SEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< const int >::type k1(k1SEXP);
-    Rcpp::traits::input_parameter< const int >::type pk(pkSEXP);
-    Rcpp::traits::input_parameter< const List >::type M2f_(M2f_SEXP);
-    Rcpp::traits::input_parameter< const NumericVector >::type eigs_(eigs_SEXP);
-    __result = Rcpp::wrap(GamLoopSGLOO(beta_, Activeset_, gamm, alpha, Y, Z, jj_, jjfull_, jjcomp_, eps, YMean2, ZMean2, k1, pk, M2f_, eigs_));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< const List >::type Activeset_(Activeset_SEXP );
+        Rcpp::traits::input_parameter< const NumericVector >::type gamm(gammSEXP );
+        Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< List >::type jj_(jj_SEXP );
+        Rcpp::traits::input_parameter< const List >::type jjfull_(jjfull_SEXP );
+        Rcpp::traits::input_parameter< List >::type jjcomp_(jjcomp_SEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< const int >::type k1(k1SEXP );
+        Rcpp::traits::input_parameter< const int >::type pk(pkSEXP );
+        Rcpp::traits::input_parameter< const List >::type M2f_(M2f_SEXP );
+        Rcpp::traits::input_parameter< const NumericVector >::type eigs_(eigs_SEXP );
+        List __result = GamLoopSGLOO(beta_, Activeset_, gamm, alpha, Y, Z, jj_, jjfull_, jjcomp_, eps, YMean2, ZMean2, k1, pk, M2f_, eigs_);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // proxcpp
 rowvec proxcpp(colvec v2, int L, double lambda, int k, colvec w);
 RcppExport SEXP BigVAR_proxcpp(SEXP v2SEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP kSEXP, SEXP wSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< colvec >::type v2(v2SEXP);
-    Rcpp::traits::input_parameter< int >::type L(LSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< colvec >::type w(wSEXP);
-    __result = Rcpp::wrap(proxcpp(v2, L, lambda, k, w));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< colvec >::type v2(v2SEXP );
+        Rcpp::traits::input_parameter< int >::type L(LSEXP );
+        Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< colvec >::type w(wSEXP );
+        rowvec __result = proxcpp(v2, L, lambda, k, w);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // Fistapar
 mat Fistapar(const mat Y, const mat Z, const mat phi, const int L, const double lambda, const List vsubs_, const double eps, const double tk, const int k);
 RcppExport SEXP BigVAR_Fistapar(SEXP YSEXP, SEXP ZSEXP, SEXP phiSEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP vsubs_SEXP, SEXP epsSEXP, SEXP tkSEXP, SEXP kSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< const mat >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< const int >::type L(LSEXP);
-    Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< const List >::type vsubs_(vsubs_SEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const double >::type tk(tkSEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    __result = Rcpp::wrap(Fistapar(Y, Z, phi, L, lambda, vsubs_, eps, tk, k));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< const mat >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< const mat >::type phi(phiSEXP );
+        Rcpp::traits::input_parameter< const int >::type L(LSEXP );
+        Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP );
+        Rcpp::traits::input_parameter< const List >::type vsubs_(vsubs_SEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const double >::type tk(tkSEXP );
+        Rcpp::traits::input_parameter< const int >::type k(kSEXP );
+        mat __result = Fistapar(Y, Z, phi, L, lambda, vsubs_, eps, tk, k);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // gamloopHVAR
 cube gamloopHVAR(NumericVector beta_, const mat& Y, const mat& Z, colvec gammgrid, const double eps, const colvec& YMean2, const colvec& ZMean2, mat& B1, const int k, const int p, List vsubs_);
 RcppExport SEXP BigVAR_gamloopHVAR(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP vsubs_SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< colvec >::type gammgrid(gammgridSEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< mat& >::type B1(B1SEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< List >::type vsubs_(vsubs_SEXP);
-    __result = Rcpp::wrap(gamloopHVAR(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, vsubs_));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< colvec >::type gammgrid(gammgridSEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< mat& >::type B1(B1SEXP );
+        Rcpp::traits::input_parameter< const int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< const int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< List >::type vsubs_(vsubs_SEXP );
+        cube __result = gamloopHVAR(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, vsubs_);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // proxcppOO
 rowvec proxcppOO(colvec v2, int L, double lambda, List vsubs, int k, colvec w);
 RcppExport SEXP BigVAR_proxcppOO(SEXP v2SEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP vsubsSEXP, SEXP kSEXP, SEXP wSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< colvec >::type v2(v2SEXP);
-    Rcpp::traits::input_parameter< int >::type L(LSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< List >::type vsubs(vsubsSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< colvec >::type w(wSEXP);
-    __result = Rcpp::wrap(proxcppOO(v2, L, lambda, vsubs, k, w));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< colvec >::type v2(v2SEXP );
+        Rcpp::traits::input_parameter< int >::type L(LSEXP );
+        Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP );
+        Rcpp::traits::input_parameter< List >::type vsubs(vsubsSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< colvec >::type w(wSEXP );
+        rowvec __result = proxcppOO(v2, L, lambda, vsubs, k, w);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // FistaOO
 mat FistaOO(const mat Y, const mat Z, mat phi, const int p, const int k, double lambda, List groups_, const double eps, const double tk, colvec w);
 RcppExport SEXP BigVAR_FistaOO(SEXP YSEXP, SEXP ZSEXP, SEXP phiSEXP, SEXP pSEXP, SEXP kSEXP, SEXP lambdaSEXP, SEXP groups_SEXP, SEXP epsSEXP, SEXP tkSEXP, SEXP wSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< mat >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< List >::type groups_(groups_SEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const double >::type tk(tkSEXP);
-    Rcpp::traits::input_parameter< colvec >::type w(wSEXP);
-    __result = Rcpp::wrap(FistaOO(Y, Z, phi, p, k, lambda, groups_, eps, tk, w));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< const mat >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< mat >::type phi(phiSEXP );
+        Rcpp::traits::input_parameter< const int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< const int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP );
+        Rcpp::traits::input_parameter< List >::type groups_(groups_SEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const double >::type tk(tkSEXP );
+        Rcpp::traits::input_parameter< colvec >::type w(wSEXP );
+        mat __result = FistaOO(Y, Z, phi, p, k, lambda, groups_, eps, tk, w);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // gamloopOO
 cube gamloopOO(NumericVector beta_, const mat Y, const mat Z, colvec gammgrid, const double eps, const colvec YMean2, const colvec ZMean2, mat B1, const int k, const int p, colvec w, List groups_);
 RcppExport SEXP BigVAR_gamloopOO(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP wSEXP, SEXP groups_SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< const mat >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< colvec >::type gammgrid(gammgridSEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const colvec >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< const colvec >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< mat >::type B1(B1SEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< colvec >::type w(wSEXP);
-    Rcpp::traits::input_parameter< List >::type groups_(groups_SEXP);
-    __result = Rcpp::wrap(gamloopOO(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, w, groups_));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< const mat >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< colvec >::type gammgrid(gammgridSEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const colvec >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< const colvec >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< mat >::type B1(B1SEXP );
+        Rcpp::traits::input_parameter< const int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< const int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< colvec >::type w(wSEXP );
+        Rcpp::traits::input_parameter< List >::type groups_(groups_SEXP );
+        cube __result = gamloopOO(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, w, groups_);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // FistaElem
 mat FistaElem(const mat& Y, const mat& Z, mat phi, const int p, const int k, double lambda, const double eps, const double tk);
 RcppExport SEXP BigVAR_FistaElem(SEXP YSEXP, SEXP ZSEXP, SEXP phiSEXP, SEXP pSEXP, SEXP kSEXP, SEXP lambdaSEXP, SEXP epsSEXP, SEXP tkSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< mat >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const double >::type tk(tkSEXP);
-    __result = Rcpp::wrap(FistaElem(Y, Z, phi, p, k, lambda, eps, tk));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< mat >::type phi(phiSEXP );
+        Rcpp::traits::input_parameter< const int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< const int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const double >::type tk(tkSEXP );
+        mat __result = FistaElem(Y, Z, phi, p, k, lambda, eps, tk);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // gamloopElem
 cube gamloopElem(NumericVector beta_, const mat& Y, const mat& Z, colvec gammgrid, const double eps, const colvec YMean2, const colvec ZMean2, mat B1, const int k, const int p);
 RcppExport SEXP BigVAR_gamloopElem(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< colvec >::type gammgrid(gammgridSEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const colvec >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< const colvec >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< mat >::type B1(B1SEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    __result = Rcpp::wrap(gamloopElem(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< colvec >::type gammgrid(gammgridSEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const colvec >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< const colvec >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< mat >::type B1(B1SEXP );
+        Rcpp::traits::input_parameter< const int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< const int >::type p(pSEXP );
+        cube __result = gamloopElem(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // powermethod
 List powermethod(mat A, colvec x1);
 RcppExport SEXP BigVAR_powermethod(SEXP ASEXP, SEXP x1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat >::type A(ASEXP);
-    Rcpp::traits::input_parameter< colvec >::type x1(x1SEXP);
-    __result = Rcpp::wrap(powermethod(A, x1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat >::type A(ASEXP );
+        Rcpp::traits::input_parameter< colvec >::type x1(x1SEXP );
+        List __result = powermethod(A, x1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // norm2
 double norm2(NumericVector x);
 RcppExport SEXP BigVAR_norm2(SEXP xSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    __result = Rcpp::wrap(norm2(x));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP );
+        double __result = norm2(x);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // gamloopHVARDL
 cube gamloopHVARDL(NumericVector beta_, const mat& Y, const mat& Z, NumericVector gammgrid_, const double eps, const colvec& YMean2, const colvec& ZMean2, const int k, const int p, List vsubs_, int gran2);
 RcppExport SEXP BigVAR_gamloopHVARDL(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgrid_SEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP kSEXP, SEXP pSEXP, SEXP vsubs_SEXP, SEXP gran2SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type gammgrid_(gammgrid_SEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< List >::type vsubs_(vsubs_SEXP);
-    Rcpp::traits::input_parameter< int >::type gran2(gran2SEXP);
-    __result = Rcpp::wrap(gamloopHVARDL(beta_, Y, Z, gammgrid_, eps, YMean2, ZMean2, k, p, vsubs_, gran2));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< NumericVector >::type gammgrid_(gammgrid_SEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< const int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< const int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< List >::type vsubs_(vsubs_SEXP );
+        Rcpp::traits::input_parameter< int >::type gran2(gran2SEXP );
+        cube __result = gamloopHVARDL(beta_, Y, Z, gammgrid_, eps, YMean2, ZMean2, k, p, vsubs_, gran2);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // HLassoVAR
 NumericVector HLassoVAR(NumericVector betaL_, mat& Y, mat& Z, const NumericVector gamm_, double eps, int k, int p, List groups, int gran2);
 RcppExport SEXP BigVAR_HLassoVAR(SEXP betaL_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gamm_SEXP, SEXP epsSEXP, SEXP kSEXP, SEXP pSEXP, SEXP groupsSEXP, SEXP gran2SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type betaL_(betaL_SEXP);
-    Rcpp::traits::input_parameter< mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< const NumericVector >::type gamm_(gamm_SEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    Rcpp::traits::input_parameter< int >::type gran2(gran2SEXP);
-    __result = Rcpp::wrap(HLassoVAR(betaL_, Y, Z, gamm_, eps, k, p, groups, gran2));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type betaL_(betaL_SEXP );
+        Rcpp::traits::input_parameter< mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< const NumericVector >::type gamm_(gamm_SEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        Rcpp::traits::input_parameter< int >::type gran2(gran2SEXP );
+        NumericVector __result = HLassoVAR(betaL_, Y, Z, gamm_, eps, k, p, groups, gran2);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // HVARCVAL
 cube HVARCVAL(NumericVector beta_, const List Zfull_, const NumericVector gamm_, double eps, int T0, int T1, int p, int k, const mat& Z2, int gran2, List groups);
 RcppExport SEXP BigVAR_HVARCVAL(SEXP beta_SEXP, SEXP Zfull_SEXP, SEXP gamm_SEXP, SEXP epsSEXP, SEXP T0SEXP, SEXP T1SEXP, SEXP pSEXP, SEXP kSEXP, SEXP Z2SEXP, SEXP gran2SEXP, SEXP groupsSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< const List >::type Zfull_(Zfull_SEXP);
-    Rcpp::traits::input_parameter< const NumericVector >::type gamm_(gamm_SEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< int >::type T0(T0SEXP);
-    Rcpp::traits::input_parameter< int >::type T1(T1SEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z2(Z2SEXP);
-    Rcpp::traits::input_parameter< int >::type gran2(gran2SEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    __result = Rcpp::wrap(HVARCVAL(beta_, Zfull_, gamm_, eps, T0, T1, p, k, Z2, gran2, groups));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< const List >::type Zfull_(Zfull_SEXP );
+        Rcpp::traits::input_parameter< const NumericVector >::type gamm_(gamm_SEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< int >::type T0(T0SEXP );
+        Rcpp::traits::input_parameter< int >::type T1(T1SEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z2(Z2SEXP );
+        Rcpp::traits::input_parameter< int >::type gran2(gran2SEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        cube __result = HVARCVAL(beta_, Zfull_, gamm_, eps, T0, T1, p, k, Z2, gran2, groups);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // HVAREval
 mat HVAREval(NumericVector beta_, const List Zfull_, const NumericVector gamm_, double eps, int T1, int T2, int p, int k, const mat& Z2, int gran2, List groups);
 RcppExport SEXP BigVAR_HVAREval(SEXP beta_SEXP, SEXP Zfull_SEXP, SEXP gamm_SEXP, SEXP epsSEXP, SEXP T1SEXP, SEXP T2SEXP, SEXP pSEXP, SEXP kSEXP, SEXP Z2SEXP, SEXP gran2SEXP, SEXP groupsSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< const List >::type Zfull_(Zfull_SEXP);
-    Rcpp::traits::input_parameter< const NumericVector >::type gamm_(gamm_SEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< int >::type T1(T1SEXP);
-    Rcpp::traits::input_parameter< int >::type T2(T2SEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z2(Z2SEXP);
-    Rcpp::traits::input_parameter< int >::type gran2(gran2SEXP);
-    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
-    __result = Rcpp::wrap(HVAREval(beta_, Zfull_, gamm_, eps, T1, T2, p, k, Z2, gran2, groups));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< const List >::type Zfull_(Zfull_SEXP );
+        Rcpp::traits::input_parameter< const NumericVector >::type gamm_(gamm_SEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< int >::type T1(T1SEXP );
+        Rcpp::traits::input_parameter< int >::type T2(T2SEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z2(Z2SEXP );
+        Rcpp::traits::input_parameter< int >::type gran2(gran2SEXP );
+        Rcpp::traits::input_parameter< List >::type groups(groupsSEXP );
+        mat __result = HVAREval(beta_, Zfull_, gamm_, eps, T1, T2, p, k, Z2, gran2, groups);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // RelaxedLS
 mat RelaxedLS(const mat K, mat B2, int k, int p, int k1, int s);
 RcppExport SEXP BigVAR_RelaxedLS(SEXP KSEXP, SEXP B2SEXP, SEXP kSEXP, SEXP pSEXP, SEXP k1SEXP, SEXP sSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat >::type K(KSEXP);
-    Rcpp::traits::input_parameter< mat >::type B2(B2SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    Rcpp::traits::input_parameter< int >::type s(sSEXP);
-    __result = Rcpp::wrap(RelaxedLS(K, B2, k, p, k1, s));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< const mat >::type K(KSEXP );
+        Rcpp::traits::input_parameter< mat >::type B2(B2SEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        Rcpp::traits::input_parameter< int >::type s(sSEXP );
+        mat __result = RelaxedLS(K, B2, k, p, k1, s);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // ARFit
 List ARFit(const mat& K2, int k, int p);
 RcppExport SEXP BigVAR_ARFit(SEXP K2SEXP, SEXP kSEXP, SEXP pSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const mat& >::type K2(K2SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    __result = Rcpp::wrap(ARFit(K2, k, p));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< const mat& >::type K2(K2SEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        List __result = ARFit(K2, k, p);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // Zmat1
 mat Zmat1(mat& Y, int p, int k);
 RcppExport SEXP BigVAR_Zmat1(SEXP YSEXP, SEXP pSEXP, SEXP kSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    __result = Rcpp::wrap(Zmat1(Y, p, k));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        mat __result = Zmat1(Y, p, k);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // AIC
 List AIC(mat& Y, double k, int pmax);
 RcppExport SEXP BigVAR_AIC(SEXP YSEXP, SEXP kSEXP, SEXP pmaxSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< double >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP);
-    __result = Rcpp::wrap(AIC(Y, k, pmax));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< double >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP );
+        List __result = AIC(Y, k, pmax);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // BIC
 List BIC(mat& Y, double k, int pmax);
 RcppExport SEXP BigVAR_BIC(SEXP YSEXP, SEXP kSEXP, SEXP pmaxSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< double >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP);
-    __result = Rcpp::wrap(BIC(Y, k, pmax));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< double >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP );
+        List __result = BIC(Y, k, pmax);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // EvalIC
 List EvalIC(mat& Y, int T1, int k, int pmax, std::string IC);
 RcppExport SEXP BigVAR_EvalIC(SEXP YSEXP, SEXP T1SEXP, SEXP kSEXP, SEXP pmaxSEXP, SEXP ICSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< int >::type T1(T1SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP);
-    Rcpp::traits::input_parameter< std::string >::type IC(ICSEXP);
-    __result = Rcpp::wrap(EvalIC(Y, T1, k, pmax, IC));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type Y(YSEXP );
+        Rcpp::traits::input_parameter< int >::type T1(T1SEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP );
+        Rcpp::traits::input_parameter< std::string >::type IC(ICSEXP );
+        List __result = EvalIC(Y, T1, k, pmax, IC);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // QRCons
 List QRCons(mat& Z, int T, int k, mat B2, int R2, int p);
 RcppExport SEXP BigVAR_QRCons(SEXP ZSEXP, SEXP TSEXP, SEXP kSEXP, SEXP B2SEXP, SEXP R2SEXP, SEXP pSEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< mat& >::type Z(ZSEXP);
-    Rcpp::traits::input_parameter< int >::type T(TSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< mat >::type B2(B2SEXP);
-    Rcpp::traits::input_parameter< int >::type R2(R2SEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    __result = Rcpp::wrap(QRCons(Z, T, k, B2, R2, p));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< mat& >::type Z(ZSEXP );
+        Rcpp::traits::input_parameter< int >::type T(TSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< mat >::type B2(B2SEXP );
+        Rcpp::traits::input_parameter< int >::type R2(R2SEXP );
+        Rcpp::traits::input_parameter< int >::type p(pSEXP );
+        List __result = QRCons(Z, T, k, B2, R2, p);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // GamLoopSGLX
 List GamLoopSGLX(NumericVector beta_, List Activeset, NumericVector gamm, double alpha, const mat& Y1, const mat& Z1, List jj, List jjfull, List jjcomp, double eps, colvec YMean2, colvec ZMean2, int k, int pk, List M2f_, NumericVector eigs, int k1);
 RcppExport SEXP BigVAR_GamLoopSGLX(SEXP beta_SEXP, SEXP ActivesetSEXP, SEXP gammSEXP, SEXP alphaSEXP, SEXP Y1SEXP, SEXP Z1SEXP, SEXP jjSEXP, SEXP jjfullSEXP, SEXP jjcompSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP kSEXP, SEXP pkSEXP, SEXP M2f_SEXP, SEXP eigsSEXP, SEXP k1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< List >::type Activeset(ActivesetSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type gamm(gammSEXP);
-    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP);
-    Rcpp::traits::input_parameter< List >::type jj(jjSEXP);
-    Rcpp::traits::input_parameter< List >::type jjfull(jjfullSEXP);
-    Rcpp::traits::input_parameter< List >::type jjcomp(jjcompSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< colvec >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< colvec >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type pk(pkSEXP);
-    Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type eigs(eigsSEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    __result = Rcpp::wrap(GamLoopSGLX(beta_, Activeset, gamm, alpha, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigs, k1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< List >::type Activeset(ActivesetSEXP );
+        Rcpp::traits::input_parameter< NumericVector >::type gamm(gammSEXP );
+        Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP );
+        Rcpp::traits::input_parameter< List >::type jj(jjSEXP );
+        Rcpp::traits::input_parameter< List >::type jjfull(jjfullSEXP );
+        Rcpp::traits::input_parameter< List >::type jjcomp(jjcompSEXP );
+        Rcpp::traits::input_parameter< double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< colvec >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< colvec >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type pk(pkSEXP );
+        Rcpp::traits::input_parameter< List >::type M2f_(M2f_SEXP );
+        Rcpp::traits::input_parameter< NumericVector >::type eigs(eigsSEXP );
+        Rcpp::traits::input_parameter< int >::type k1(k1SEXP );
+        List __result = GamLoopSGLX(beta_, Activeset, gamm, alpha, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigs, k1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // proxvx2
 colvec proxvx2(colvec v2, int L, double lambda, int m, int k, int F1);
 RcppExport SEXP BigVAR_proxvx2(SEXP v2SEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP mSEXP, SEXP kSEXP, SEXP F1SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< colvec >::type v2(v2SEXP);
-    Rcpp::traits::input_parameter< int >::type L(LSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< int >::type m(mSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type F1(F1SEXP);
-    __result = Rcpp::wrap(proxvx2(v2, L, lambda, m, k, F1));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< colvec >::type v2(v2SEXP );
+        Rcpp::traits::input_parameter< int >::type L(LSEXP );
+        Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP );
+        Rcpp::traits::input_parameter< int >::type m(mSEXP );
+        Rcpp::traits::input_parameter< int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< int >::type F1(F1SEXP );
+        colvec __result = proxvx2(v2, L, lambda, m, k, F1);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
 // GamLoopSGL
 List GamLoopSGL(NumericVector beta_, List Activeset, const NumericVector gamm, const double alpha, const mat& Y1, const mat& Z1, List jj, const List jjfull, const List jjcomp, const double eps, const colvec YMean2, const colvec ZMean2, const int k, const int pk, const List M1f_, const List M2f_, const NumericVector eigs_);
 RcppExport SEXP BigVAR_GamLoopSGL(SEXP beta_SEXP, SEXP ActivesetSEXP, SEXP gammSEXP, SEXP alphaSEXP, SEXP Y1SEXP, SEXP Z1SEXP, SEXP jjSEXP, SEXP jjfullSEXP, SEXP jjcompSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP kSEXP, SEXP pkSEXP, SEXP M1f_SEXP, SEXP M2f_SEXP, SEXP eigs_SEXP) {
 BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
-    Rcpp::traits::input_parameter< List >::type Activeset(ActivesetSEXP);
-    Rcpp::traits::input_parameter< const NumericVector >::type gamm(gammSEXP);
-    Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP);
-    Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP);
-    Rcpp::traits::input_parameter< List >::type jj(jjSEXP);
-    Rcpp::traits::input_parameter< const List >::type jjfull(jjfullSEXP);
-    Rcpp::traits::input_parameter< const List >::type jjcomp(jjcompSEXP);
-    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< const colvec >::type YMean2(YMean2SEXP);
-    Rcpp::traits::input_parameter< const colvec >::type ZMean2(ZMean2SEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< const int >::type pk(pkSEXP);
-    Rcpp::traits::input_parameter< const List >::type M1f_(M1f_SEXP);
-    Rcpp::traits::input_parameter< const List >::type M2f_(M2f_SEXP);
-    Rcpp::traits::input_parameter< const NumericVector >::type eigs_(eigs_SEXP);
-    __result = Rcpp::wrap(GamLoopSGL(beta_, Activeset, gamm, alpha, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M1f_, M2f_, eigs_));
-    return __result;
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP );
+        Rcpp::traits::input_parameter< List >::type Activeset(ActivesetSEXP );
+        Rcpp::traits::input_parameter< const NumericVector >::type gamm(gammSEXP );
+        Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Y1(Y1SEXP );
+        Rcpp::traits::input_parameter< const mat& >::type Z1(Z1SEXP );
+        Rcpp::traits::input_parameter< List >::type jj(jjSEXP );
+        Rcpp::traits::input_parameter< const List >::type jjfull(jjfullSEXP );
+        Rcpp::traits::input_parameter< const List >::type jjcomp(jjcompSEXP );
+        Rcpp::traits::input_parameter< const double >::type eps(epsSEXP );
+        Rcpp::traits::input_parameter< const colvec >::type YMean2(YMean2SEXP );
+        Rcpp::traits::input_parameter< const colvec >::type ZMean2(ZMean2SEXP );
+        Rcpp::traits::input_parameter< const int >::type k(kSEXP );
+        Rcpp::traits::input_parameter< const int >::type pk(pkSEXP );
+        Rcpp::traits::input_parameter< const List >::type M1f_(M1f_SEXP );
+        Rcpp::traits::input_parameter< const List >::type M2f_(M2f_SEXP );
+        Rcpp::traits::input_parameter< const NumericVector >::type eigs_(eigs_SEXP );
+        List __result = GamLoopSGL(beta_, Activeset, gamm, alpha, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M1f_, M2f_, eigs_);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
 END_RCPP
 }
