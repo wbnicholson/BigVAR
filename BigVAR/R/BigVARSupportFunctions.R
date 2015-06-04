@@ -1006,30 +1006,47 @@ return(vv)
 ## return(S1)
 ## }
 
-# Sparsity Plot for VAR models
-SparsityPlot <- function(B,p,k,title=NULL)
-    {
-text <- c()
-for(i in 1:p)
-    {
-        text1 <- as.expression(bquote(bold(B)^.(i)))
-        text <- append(text,text1)
-          
+# Sparsity Plot for VAR and VARX models
+SparsityPlot <-  
+function (B, p, k,s,m, title = NULL) 
+{
+
+    text <- c()
+    for (i in 1:p) {
+        text1 <- as.expression(bquote(bold(B)^(.(i))))
+        text <- append(text, text1)
     }
-f <- function(m) t(m)[,nrow(m):1]
-
-rgb.palette <- colorRampPalette(c("white", "blue" ),space = "Lab")
-
-
-at <- seq(k/2+.5,p*(k)+.5,by=k)
-
-se2=seq(1.75,by=k,length=k)
-
-L2 <- levelplot(f(abs(B)),col.regions=rgb.palette,colorkey=NULL,xlab=NULL,ylab=NULL,main=list(label=title,cex=1),panel=function(...){ panel.levelplot(...);panel.abline(a=NULL,b=1,h=seq(1.5,p*k+.5,by=1),v=seq(1.5,by=1,length=p*k));panel.abline(a=NULL,b=1,v=seq(k+.5,p*k+.5,by=k),lwd=3)},scales=list(x=list(alternating=1,labels=text,cex=1,at=at,tck=c(0,0)),y=list(alternating=0,tck=c(0,0))))
-
-return(L2)
-
-        }
+    ## text <- c()
+     for (i in (p+1):(p+s+1)) {
+        text1 <- as.expression(bquote(bold(theta)^(.(i-p))))
+        text <- append(text, text1)
+    }
+    f <- function(m) t(m)[, nrow(m):1]
+    
+    rgb.palette <- colorRampPalette(c("white", "blue" ),space = "Lab")
+    at <- seq(k/2 + 0.5, p * (k)+ 0.5, by = k)
+    at2 <- seq(p*k+s/2+.5,p*k+s*m+.5,by=m)
+    at <- c(at,at2)
+    se2 = seq(1.75, by = k, length = k)
+    L2 <- levelplot(f(abs(B)), col.regions = rgb.palette, colorkey = NULL, 
+        xlab = NULL, ylab = NULL, main = list(label = title, 
+            cex = 1), panel = function(...) {
+            panel.levelplot(...)
+            panel.abline(a = NULL, b = 1, h = seq(1.5, m*s+p* k + 
+                0.5, by = 1), v = seq(1.5, by = 1, length = p * 
+                k+m*s))
+            bl1 <- seq(k + 0.5, p * 
+                k + 0.5, by = k)
+            bl2 <- seq(p*k + 0.5, p * 
+                k + 0.5+s*m, by = 1)
+            b1 <- c(bl1,bl2)
+            panel.abline(a = NULL, b = 1, v = p*k+.5, lwd = 7,col='green')
+            panel.abline(a = NULL, b = 1, v = b1, lwd = 3)
+        }, scales = list(x = list(alternating = 1, labels = text, 
+            cex = 1, at = at, tck = c(0, 0)), y = list(alternating = 0, 
+            tck = c(0, 0))))
+    return(L2)
+}
 
 # grouping functions for varX
 
