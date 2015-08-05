@@ -40,6 +40,8 @@ To construct an object of class BigVAR, use the function "ConstructModel"
 \item{\code{T2}}{Index of times series in which to start forecast evaluation}
 
 \item{\code{ONESE}}{Indicator for "One Standard Error Heuristic"}
+
+\item{\code{ownlambdas}}{Indicator for user-supplied lambdas}
 }}
 \seealso{
 \code{\link{constructModel}}

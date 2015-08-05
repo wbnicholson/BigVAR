@@ -41,8 +41,8 @@ GamLoopGL2 <- function(beta_, Activeset, gamm, Y1, Z1, jj, jjfull, jjcomp, eps, 
     .Call('BigVAR_GamLoopGL2', PACKAGE = 'BigVAR', beta_, Activeset, gamm, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigvalF_, eigvecF_)
 }
 
-GroupLassoVAR <- function(beta_, Y, Z, gamm, eps, k, p, INIActive_, jj, Compgroups, k1, s) {
-    .Call('BigVAR_GroupLassoVAR', PACKAGE = 'BigVAR', beta_, Y, Z, gamm, eps, k, p, INIActive_, jj, Compgroups, k1, s)
+GroupLassoVAR <- function(beta_, Y, Z, gamm, eps, k, p, INIActive_, jj, Compgroups, k1, s, MN) {
+    .Call('BigVAR_GroupLassoVAR', PACKAGE = 'BigVAR', beta_, Y, Z, gamm, eps, k, p, INIActive_, jj, Compgroups, k1, s, MN)
 }
 
 BlockUpdate2 <- function(ZZ1, lam, Y1, eps, groups, fullgroups, compgroups, k, M2f_, eigvalF_, eigvecF_, B, k1) {

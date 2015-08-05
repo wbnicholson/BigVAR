@@ -410,8 +410,22 @@ mat ThreshUpdate(mat& betaActive,const mat& Z1, double lam, const mat& Y1,double
     return(betaActive);
   }
 
-List GamLoopGL(cube& betafin, List Activeset, colvec gamm, const mat& Y1, const mat& Z1,List jj, List jjfull, List jjcomp, double eps,const colvec& YMean2, const colvec&  ZMean2,int k,int pk,const List M2f_, const List eigvalF_, const List eigvecF_,int k1)
+List GamLoopGL(cube& betafin, List Activeset, colvec gamm, const mat& Y1, const mat& Z1,List jj, List jjfull, List jjcomp, double eps,const colvec& YMean2, const colvec&  ZMean2,int k,int pk,const List M2f_, const List eigvalF_, const List eigvecF_,int k1,bool MN)
 {
+
+    mat C(k1,pk);
+    C.zeros();
+
+  if(MN){
+    // mat C(k1,k1*p+(k-k1)*s);
+    // C.zeros();
+    C.diag(1);
+    // Y=trans(Y);
+    // Y=Y-C*Z;
+    // Y=trans(Y);
+  }
+
+
  int gran2=gamm.size();
  List activefinal(gran2);
  cube beta2=betafin.subcube(0,1,0,k1-1,pk,gran2-1);
@@ -446,6 +460,16 @@ List GamLoopGL(cube& betafin, List Activeset, colvec gamm, const mat& Y1, const 
              k2+=1;
 
 	  }
+
+	if(MN)
+	  {
+	    for(int i=0;i<gran2;++i)
+	      {
+		betaF=betaF+C;
+	      }
+	  }
+
+
   colvec nu= YMean2 - betaF *ZMean2;
   betafin.slice(i)=mat(join_horiz(nu, betaF));
     activefinal[i]=Active;
@@ -498,18 +522,44 @@ List GamLoopGL2(NumericVector beta_, List Activeset, NumericVector gamm, const m
              k2+=1;
 
 	  }
+	// if(MN)
+	//   {
+	//     cube beta2f=as<cube>(beta3("beta"));
+	//     for(int i=0;i<gran2;++i)
+	//       {
+	// 	beta2f.slice(i)=beta2f.slice(i)+C;
+	//       }
+	//     beta3("beta")=beta2f;
+	//   }
+
+
   colvec nu= YMean2 - betaF *ZMean2;
   betafin.slice(i)=mat(join_horiz(nu, betaF));
     activefinal[i]=Active;
   iterations[i]=k2; 
     }
+
+
+
  List Results=List::create(Named("beta")=betafin,Named("active")=wrap(activefinal),Named("iterations")=iterations);
    return(Results);
     }
 
 // [[Rcpp::export]]
-List GroupLassoVAR(NumericVector beta_, mat& Y, mat& Z, const colvec& gamm, double eps, int k, int p,List INIActive_, List jj,List Compgroups, int k1,int s)
+List GroupLassoVAR(NumericVector beta_, mat Y, mat Z, const colvec& gamm, double eps, int k, int p,List INIActive_, List jj,List Compgroups, int k1,int s,bool MN)
 {
+    mat C(k1,k1*p+(k-k1)*s);
+    C.zeros();
+
+  if(MN){
+    // mat C(k1,k1*p+(k-k1)*s);
+    // C.zeros();
+    C.diag(1);
+    Y=trans(Y);
+    Y=Y-C*Z;
+    Y=trans(Y);
+  }
+  
 	Y=trans(Y);
 	colvec YMean=arma::mean(Y,1);
 
@@ -527,7 +577,7 @@ List GroupLassoVAR(NumericVector beta_, mat& Y, mat& Z, const colvec& gamm, doub
 	List eigvecs_= Eigsys_("eigvec");
 	int gran2=gamm.n_elem;
 	cube beta2(beta_.begin(),k1,p*k1+s*(k-k1)+1,gran2,false);
-	beta3=	GamLoopGL(beta2,INIActive_,gamm,Y,Z,jj,jjfull,Compgroups,eps,YMean,ZMean,k,p*k1+s*(k-k1),M2_,eigvals_,eigvecs_,k1);
+	beta3=	GamLoopGL(beta2,INIActive_,gamm,Y,Z,jj,jjfull,Compgroups,eps,YMean,ZMean,k,p*k1+s*(k-k1),M2_,eigvals_,eigvecs_,k1,MN);
 	// }
 	// else{
 	// mat Y1=Y-YMean*trans(yones);
@@ -543,6 +593,17 @@ List GroupLassoVAR(NumericVector beta_, mat& Y, mat& Z, const colvec& gamm, doub
     // cube beta2(beta_.begin(),k1,p*k1+s*(k-k1)+1,gran2,false);
 	// beta3=	GamLoopGL(beta2,INIActive_,gamm,Y1,Z1,jj,jjfull,Compgroups,eps,YMean,ZMean,k,p*k,M2_,eigvals_,eigvecs_,k1);
 	// }
+
+	// if(MN)
+	//   {
+	//     cube beta2f=as<cube>(beta3("beta"));
+	//     for(int i=0;i<gran2;++i)
+	//       {
+	// 	beta2f.slice(i)=beta2f.slice(i)+C;
+	//       }
+	//     beta3("beta")=beta2f;
+	//   }
+
 	return(beta3);
 
 }
@@ -1987,10 +2048,15 @@ List BIC(mat& Y, double k, int pmax)
 	
 	for(int i=1;i<=pmax;++i)
 		{
-			if((int)k*i>T)
-				{break;}
-
+			// if((int)k*i>T-10)
 		    mat Z=Zmat1(Y,i,k);
+				  // Rcout<<cond(Z*trans(Z))<<std::endl;
+
+		    if(cond(Z*trans(Z))>pow(10,6))
+				{
+break;}
+
+
 
 			mat Y2=Y.rows(i,T-1);
 
@@ -2000,6 +2066,8 @@ List BIC(mat& Y, double k, int pmax)
 			double T2=Y2.n_rows;
 			double p=(double) i;
 			double BICi=log(det(sigmaU))+log(T2)*pow(k,2)*p/T2;
+			// Rcout <<BICi<<std::endl;
+
 			BIC.push_back(BICi);
 			
 
@@ -2036,7 +2104,7 @@ List EvalIC(mat& Y, int T1, int k, int pmax,std::string IC)
 
 	for(int i=T1;i<T2;++i)
 		{
-			mat Y1a=Y.rows(0,i-2);
+			mat Y1a=Y.rows(0,i-1);
 
 			List popt;
             if(IC=="AIC"){
@@ -2138,6 +2206,10 @@ while(thresh>eps)
     
     beta=thetaOLD+(l/(l+3))*(STS-thetaOLD);
     l+=1;
+    if(l>1000){
+      Rcout<< "Warning: Sparse GL Did Not Converge" <<std::endl;
+      break;
+    }
     mat thresh1=beta-STS;
      thresh=norm(thresh1,"inf");
  
@@ -2151,6 +2223,7 @@ return(beta);
 List blockUpdateSGLX(mat& beta,const mat& Z1, double lam, double alpha,const mat& Y1, double eps, List groups, List fullgroups, List compgroups, int k1, List M2f_,NumericVector Eigs)
 {
 
+  int iters=0;
  int n1=groups.size();
   List active(n1);
   int n=beta.n_rows, m=beta.n_cols;
@@ -2252,7 +2325,7 @@ converge=0;
 
 mat ThreshUpdateSGLX(mat& betaActive,const mat& Z, double lam,const mat& Y,double eps, List groups, List fullgroups, List compgroups,List M2f, NumericVector eigs, double alpha, int k1)
   {
-
+    int iter=0;
     int n=betaActive.n_rows, m=betaActive.n_cols;
   int n1=groups.size();
   mat betaLast=betaActive;
@@ -2283,7 +2356,10 @@ mat ThreshUpdateSGLX(mat& betaActive,const mat& Z, double lam,const mat& Y,doubl
         threshold=arma::norm(thresh1,"inf");
         active=betaActive2("active");
 	betaLast=betaActive;
-
+	if(iter>500){
+	  Rcout<<"Warning: SGL ThreshUpdate Did not Converge"<<std::endl;
+	  break;
+	    }
       }
   }
     return(betaActive);

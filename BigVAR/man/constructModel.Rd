@@ -6,7 +6,8 @@
 \usage{
 constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
   MN = FALSE, verbose = TRUE, IC = TRUE, VARX = list(),
-  T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3), ONESE = FALSE)
+  T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3), ONESE = FALSE,
+  ownlambdas = FALSE)
 }
 \arguments{
 \item{Y}{\eqn{T x k} multivariate time series or Y \eqn{T x k+m} endogenous and exogenous series, respectively}
@@ -15,7 +16,7 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
 
 \item{struct}{The choice of penalty structure (see details).}
 
-\item{gran}{vector containing how deep to construct the penalty grid (parameter 1) and how many gridpoints to use (parameter 2)}
+\item{gran}{vector containing how deep to construct the penalty grid (parameter 1) and how many gridpoints to use (parameter 2)  If ownlambas is set to TRUE, gran denotes the user-supplied penalty parameters.}
 
 \item{RVAR}{True or False: whether to refit using the Relaxed-VAR procedure}
 
@@ -36,6 +37,8 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
 \item{T2}{Index of times series in which to start forecast evaluation}
 
 \item{ONESE}{True or False: whether to use the "One Standard Error Heuristic"}
+
+\item{ownlambdas}{True or False: Indicator for user-supplied penalty parameters"}
 }
 \description{
 Construct an object of class BigVAR

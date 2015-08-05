@@ -5,7 +5,7 @@ Version: 1.0
 Date: 2014-06-19
 Author: Will Nicholson
 Maintainer: Will Nicholson <wbn8@cornell.edu>
-Description: Estimates VAR and VARX models with structured Lasso Penalties
+Description: Estimates VAR and VARX models with structured Lasso Penalties.
 Depends:
     R (>= 3.1.0),
     RcppArmadillo,	

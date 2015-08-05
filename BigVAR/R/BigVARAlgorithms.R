@@ -111,7 +111,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
          {
      for(i in 1:(dim(BB$beta)[3]))
              {
-         BB$beta[,2:ncol(BB$beta[,,i]),i] <- beta[,2:ncol(BB$beta[,,i]),i]+C
+         BB$beta[,2:ncol(BB$beta[,,i]),i] <- BB$beta[,2:ncol(BB$beta[,,i]),i]+C
           }
           }
     return(BB)

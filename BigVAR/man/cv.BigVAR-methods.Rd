@@ -4,7 +4,8 @@
 \name{cv.BigVAR}
 \alias{cv.BigVAR}
 \alias{cv.BigVAR,BigVAR-method}
-\title{Cross Validation for BigVAR}
+\title{Cross Validation for BigVAR
+Performs rolling cross-validation on a BigVAR object}
 \usage{
 cv.BigVAR(object)
 }
@@ -15,6 +16,7 @@ cv.BigVAR(object)
 An object of class \code{BigVAR.results}.
 }
 \description{
+Cross Validation for BigVAR
 Performs rolling cross-validation on a BigVAR object
 }
 \details{

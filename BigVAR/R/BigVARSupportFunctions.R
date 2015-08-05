@@ -22,7 +22,8 @@
 # random walk benchmark
 .evalRW <- function(Y,T1,T2)
 {
-  MSFE <- rep(0,T2-T1-1)
+  MSFE <- c()
+  ## MSFE <- rep(0,T2-T1-1)
   k <- ncol(Y)
  for (u in (T1 + 1):T2) {
         trainY1 <- Y[u - 1, ]
@@ -30,7 +31,9 @@
         uhat <- matrix(Y[u, ] - trainY1, 
             ncol = k)
         MSFE[u - T1 ] <- norm2(uhat)^2
+        ## print(MSFE[u-T1])
     }
+  ## browser()
   return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MSFE)))))
   }
 
@@ -235,7 +238,9 @@ return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MS
             beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-05,p,MN,k,k1,s,m)
         }
         if (group == "Lag") {
-            GG <- GroupLassoVAR(beta,trainY,trainZ,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s)
+            ## GG <- GroupLassoVAR(beta,trainY,trainZ,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s,MN)
+               GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s)
+            
             beta <- GG$beta
             activeset <- GG$active
         }
@@ -263,6 +268,7 @@ return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MS
             if(group=="EFX")
             {
 
+                
               beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-4,MN,k1,s,m,p)
 
                 }
@@ -281,24 +287,27 @@ else{
    }
    
 
-if(h==1){
-                if(MN==TRUE){MSFE[v-T2] <- norm2(Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2}
+## if(h==1){
+    ## browser()
+    ##     print("FOO")
+   
+                if(MN==TRUE){MSFE[v-T2] <- norm2(ZFull$Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2}
 
                else{MSFE[v-T2] <- norm2(ZFull$Y[v,1:k1] - betaEVAL %*% eZ)^2
 
                     
                 }
-}
+## }
 
-      else{
-            if(v+h>T){break}
-            eZ2 <- as.matrix(.Zmat2(Y[(v - p):v, ], p, k)$Z, ncol = 1)
+      ## else{
+      ##       if(v+h>T){break}
+      ##       eZ2 <- as.matrix(.Zmat2(Y[(v - p):v, ], p, k)$Z, ncol = 1)
  
-            B <- VarptoVar1MC(betaEVAL[,2:ncol(betaEVAL)],p,k)
+      ##       B <- VarptoVar1MC(betaEVAL[,2:ncol(betaEVAL)],p,k)
 
-            MSFE[v - (T2 )] <- norm2(Y[v+h,]-(B%^%h)%*%eZ2)^2
+      ##       MSFE[v - (T2 )] <- norm2(Y[v+h,]-(B%^%h)%*%eZ2)^2
             
-            }
+      ##       }
             
         
 
@@ -316,8 +325,9 @@ eZ <- as.matrix(.Zmat2(Y[(nrow(Y) - p):nrow(Y), ], p, k)$Z, ncol = 1)
             betaPred <- .lassoVARFistX(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,k,k1,s,m)
         }
         if (group == "Lag") {
-                 GG <- GroupLassoVAR(beta,ZFull$Y,ZFull$Z,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s)
-      
+                 ## GG <- .GroupLassoVAR(beta,ZFull$Y,ZFull$Z,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s,MN)
+                 GG <- .GroupLassoVAR1(beta,jj,jjcomp,ZFull$Y,ZFull$Z,gamm,activeset,1e-04,p,MN,k,k1,s)
+
             betaPred <- GG$beta
         }
         if (group == "SparseLag") {
@@ -353,8 +363,10 @@ eZ <- as.matrix(.Zmat2(Y[(nrow(Y) - p):nrow(Y), ], p, k)$Z, ncol = 1)
 ## {
     betaPred <- as.matrix(betaPred[,,1])
 ## }
-            
-return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ))
+
+resid <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
+    
+return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ,resids=resid))
  
     }
 
@@ -385,6 +397,7 @@ return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ))
             activeset <- rep(list(rep(rep(list(0), length(jj)))), 
             gran2)
 
+        
       }
     if (group == "Diag") {
         kk <- .lfunction3cpp(p, k)
@@ -414,7 +427,8 @@ return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ))
             beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-05,p,MN)
         }
         if (group == "Lag") {
-            GG <- GroupLassoVAR(beta,trainY,trainZ,gamm,1e-04,k,p,activeset,jj,jjcomp,k,s)
+            ## GG <- GroupLassoVAR(beta,trainY,trainZ,gamm,1e-04,k,p,activeset,jj,jjcomp,k,s,MN)
+           GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s)
             beta <- GG$beta
             activeset <- GG$active
         }
@@ -477,8 +491,9 @@ else{
    
 
 if(h==1){
+    ## if(v==T2){browser()}
               # We don't consider an intercept for the MN lasso
-                if(MN==TRUE){MSFE[v-T1+1] <- norm2(Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2}
+                if(MN==TRUE){MSFE[v-T1] <- norm2(ZFull$Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2}
 
                else{MSFE[v-T1] <- norm2(ZFull$Y[v,] - betaEVAL %*% eZ)^2
 
@@ -502,7 +517,7 @@ if(h==1){
             betaPred <- .lassoVARFist(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN)
         }
         if (group == "Lag") {
-                 GG <- GroupLassoVAR(beta,ZFull$Y,ZFull$Z,gamm,1e-04,k,p,activeset,jj,jjcomp,k,s)
+                 GG <- GroupLassoVAR(beta,ZFull$Y,ZFull$Z,gamm,1e-04,k,p,activeset,jj,jjcomp,k,s,MN)
       
             betaPred <- GG$beta
         }
@@ -553,8 +568,11 @@ if(h==1){
 ## {
     betaPred <- as.matrix(betaPred[,,1])
 ## }
-            
-return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ))
+   ## browser() 
+resid <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
+
+    
+return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ,resids=resid))
  
     }
 
@@ -1007,46 +1025,46 @@ return(vv)
 ## }
 
 # Sparsity Plot for VAR and VARX models
-SparsityPlot <-  
-function (B, p, k,s,m, title = NULL) 
-{
+## SparsityPlot <-  
+## function (B, p, k,s,m, title = NULL) 
+## {
 
-    text <- c()
-    for (i in 1:p) {
-        text1 <- as.expression(bquote(bold(B)^(.(i))))
-        text <- append(text, text1)
-    }
-    ## text <- c()
-     for (i in (p+1):(p+s+1)) {
-        text1 <- as.expression(bquote(bold(theta)^(.(i-p))))
-        text <- append(text, text1)
-    }
-    f <- function(m) t(m)[, nrow(m):1]
+##     text <- c()
+##     for (i in 1:p) {
+##         text1 <- as.expression(bquote(bold(B)^(.(i))))
+##         text <- append(text, text1)
+##     }
+##     ## text <- c()
+##      for (i in (p+1):(p+s+1)) {
+##         text1 <- as.expression(bquote(bold(theta)^(.(i-p))))
+##         text <- append(text, text1)
+##     }
+##     f <- function(m) t(m)[, nrow(m):1]
     
-    rgb.palette <- colorRampPalette(c("white", "blue" ),space = "Lab")
-    at <- seq(k/2 + 0.5, p * (k)+ 0.5, by = k)
-    at2 <- seq(p*k+s/2+.5,p*k+s*m+.5,by=m)
-    at <- c(at,at2)
-    se2 = seq(1.75, by = k, length = k)
-    L2 <- levelplot(f(abs(B)), col.regions = rgb.palette, colorkey = NULL, 
-        xlab = NULL, ylab = NULL, main = list(label = title, 
-            cex = 1), panel = function(...) {
-            panel.levelplot(...)
-            panel.abline(a = NULL, b = 1, h = seq(1.5, m*s+p* k + 
-                0.5, by = 1), v = seq(1.5, by = 1, length = p * 
-                k+m*s))
-            bl1 <- seq(k + 0.5, p * 
-                k + 0.5, by = k)
-            bl2 <- seq(p*k + 0.5, p * 
-                k + 0.5+s*m, by = 1)
-            b1 <- c(bl1,bl2)
-            panel.abline(a = NULL, b = 1, v = p*k+.5, lwd = 7,col='green')
-            panel.abline(a = NULL, b = 1, v = b1, lwd = 3)
-        }, scales = list(x = list(alternating = 1, labels = text, 
-            cex = 1, at = at, tck = c(0, 0)), y = list(alternating = 0, 
-            tck = c(0, 0))))
-    return(L2)
-}
+##     rgb.palette <- colorRampPalette(c("white", "blue" ),space = "Lab")
+##     at <- seq(k/2 + 0.5, p * (k)+ 0.5, by = k)
+##     at2 <- seq(p*k+s/2+.5,p*k+s*m+.5,by=m)
+##     at <- c(at,at2)
+##     se2 = seq(1.75, by = k, length = k)
+##     L2 <- levelplot(f(abs(B)), col.regions = rgb.palette, colorkey = NULL, 
+##         xlab = NULL, ylab = NULL, main = list(label = title, 
+##             cex = 1), panel = function(...) {
+##             panel.levelplot(...)
+##             panel.abline(a = NULL, b = 1, h = seq(1.5, m*s+p* k + 
+##                 0.5, by = 1), v = seq(1.5, by = 1, length = p * 
+##                 k+m*s))
+##             bl1 <- seq(k + 0.5, p * 
+##                 k + 0.5, by = k)
+##             bl2 <- seq(p*k + 0.5, p * 
+##                 k + 0.5+s*m, by = 1)
+##             b1 <- c(bl1,bl2)
+##             panel.abline(a = NULL, b = 1, v = p*k+.5, lwd = 7,col='green')
+##             panel.abline(a = NULL, b = 1, v = b1, lwd = 3)
+##         }, scales = list(x = list(alternating = 1, labels = text, 
+##             cex = 1, at = at, tck = c(0, 0)), y = list(alternating = 0, 
+##             tck = c(0, 0))))
+##     return(L2)
+## }
 
 # grouping functions for varX
 
