@@ -122,7 +122,6 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
 # Group Lasso Own/Other Lags
 .GroupLassoOOX <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s) 
 {
-
     m=k-k1
    if(MN==TRUE)
         {
@@ -137,15 +136,13 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
-if(k>1){
+if(k1>1){
     YMEAN <- apply(Y, 1, mean)
-}
-   else{YMEAN <- mean(Y)}         
+}else{YMEAN <- mean(Y)}         
     ZMEAN <- apply(Z,1,mean)
 
         if(k>1){    
-    Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))}
-    else{Y <- Y-mean(Y)}    
+    Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))}else{Y <- Y-mean(Y)}    
   Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
 
     kk=diaggroupfunVARX(p,k,k1,s)
@@ -360,8 +357,7 @@ return(BB)
      Z <- Z - ZMean %*% t(c(rep(1, ncol(Z))))
     Y <- t(Y)
     tk <- 1/max(Mod(eigen(Z%*%t(Z),only.values=TRUE)$values))
-
-    BFOO1 <- as.matrix(B[, 2:ncol(B[, , 1]), 1])
+    BFOO1 <- matrix(B[, 2:dim(B)[2], 1],nrow=k,ncol=k*p)
     BFOO <- array(B[,2:ncol(as.matrix(B[,,1])),],dim=c(k,k*p,length(gamm)))
 
        beta <- gamloopFista(BFOO, Y, Z, gamm, eps, 

@@ -105,9 +105,13 @@ if(cond1==FALSE){stop(cat("struct must be one of",structures))}
 if(h<1){stop("Forecast Horizon must be at least 1")}
 if(cv!="Rolling" & cv!="LOO"){stop("Cross-Validation type must be one of Rolling or LOO")}
 if(length(gran)!=2&ownlambdas==FALSE){stop("Granularity must have two parameters")}
-structure2 <- c("None","Group","HVAR")
+structure2 <- c("None","Lag","HVARC")
 cond2=struct %in% structure2
-if(ncol(Y)==1 & cond2==FALSE ){stop("Univariate support is only available for Lasso and Componentwise HVAR")}
+k1=0
+if(length(VARX)!=0){k1 <- VARX$k}else{k=0}
+nseries <- ncol(Y)-k1
+
+if(nseries==1 & cond2==FALSE ){stop("Univariate support is only available for Lasso, Lag Group, and Componentwise HVAR")}
 if(length(VARX)==0 & struct=="EFX"){stop("EFX is only supported in the VARX framework")}
 structs=c("HVARC","HVAROO","HVARELEM")
 if(length(VARX)!=0& struct %in% structs){stop("EFX is the only nested model supported in the VARX framework")}
@@ -252,42 +256,57 @@ setMethod(
      T2=object@T2
      s <- ifelse(length(object@VARX)!=0,object@VARX$s,0)
      ## T <- nrow(Y)-max(p,s)
-
+if(object@ownlambdas==TRUE){gamm=object@Granularity
+gran2 <- length(gamm)
+}
    ONESE=object@ONESE
      VARX=object@VARX
      if(object@ownlambdas==FALSE){
   gran2 = object@Granularity[2]
     gran1=object@Granularity[1]
   }
+          ## browser()
+
      if(length(VARX)!=0){
      VARX=TRUE
      k1=object@VARX$k
      s=object@VARX$s
      m=k-k1
-  if(k1>1){
-     Z1 <- Zmat1(Y[,1:k1],p,k1)
-     Z1 <- Z1[2:nrow(Z1),]}else{
-         Z1<-matrix(t(.ZScalar(Y[,k1],p)$Z),nrow=p)}
+ ##  if(k1>1){
+ ##     Z1 <- Zmat1(Y[,1:k1],p,k1)
+ ##     Z1 <- Z1[2:nrow(Z1),]}else{
+ ##         Z1<-matrix(t(.ZScalar(Y[,k1],p)$Z),nrow=p)}
+ ##     if(m>1){
+ ##     Z2 <- Zmat1(Y[,(k1+1):k],s,k-k1)
+ ##     Z2 <- Z2[2:nrow(Z2),]
+ ## }else{Z2<-matrix(t(.ZScalar(Y[,m],s)$Z),nrow=p)}
 
-     Z2 <- Zmat1(Y[,(k1+1):k],s,k-k1)
-     Z2 <- Z2[2:nrow(Z2),]
+ ##     trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
+ ##     if(p<s){Z1 <- Z1[,(s-p+1):ncol(Z1)]
+ ##         }
+ ##     if(p>s){Z2 <- Z2[,(p-s+1):ncol(Z2)]}
+ ##     trainZ <- rbind(Z1,Z2)
 
+ ##     if(k1>1){
+ ##     Z3 <- Zmat1(Y[,1:k1],p,k1)
+ ##     } else{Z3=t(.ZScalar(Y[,k1],p)$Z)}
+ ##     if(m>1){
+ ##     Z4 <- Zmat1(Y[,(k1+1):k],s,k-k1)
+ ##     Z4 <- Z4[2:nrow(Z4),]
+ ## }else{Z4<-matrix(t(.ZScalar(Y[,m],s)$Z),nrow=s)}
+ ##     if(p<s){Z3 <- Z3[,(s-p+1):ncol(Z3)]
+ ##         }
+ ##     if(p>s){Z4 <- Z4[,(p-s+1):ncol(Z4)]}
+ ##     ZF2 <- rbind(Z3,Z4)
+     ## browser()
+     Y1 <-matrix(Y[,1:k1],ncol=k1)
+     ## if(VARX==TRUE){
+     X <- matrix(Y[,ncol(Y)-k1],ncol=ncol(Y)-k1)
+ ## }else{X=matrix(0,nrow=nrow(Y))}
+     trainZ <- VARXCons(Y,X,k1,p,m,s)
+     trainZ <- trainZ[2:nrow(trainZ),]
      trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
-     if(p<s){Z1 <- Z1[,(s-p+1):ncol(Z1)]
-         }
-     if(p>s){Z2 <- Z2[,(p-s+1):ncol(Z2)]}
-     trainZ <- rbind(Z1,Z2)
 
-     if(k1>1){
-     Z3 <- Zmat1(Y[,1:k1],p,k1)
-     }
-     else{Z3=t(.ZScalar(Y[,k1],p)$Z)}
-     Z4 <- Zmat1(Y[,(k1+1):k],s,k-k1)
-     Z4 <- Z4[2:nrow(Z4),]
-     if(p<s){Z3 <- Z3[,(s-p+1):ncol(Z3)]
-         }
-     if(p>s){Z4 <- Z4[,(p-s+1):ncol(Z4)]}
-     ZF2 <- rbind(Z3,Z4)
     if(group=="Lag"|group=="SparseLag"){
         alpha=1/(k1+1)
         jj=groupfunVARXLG(p,k,k1,s)
@@ -302,7 +321,7 @@ setMethod(
 
             }
      if(object@ownlambdas==FALSE){
-     gamm <- .LambdaGridX(gran1, gran2, jj, trainY[1:T2,], trainZ[,1:T2],group,p,k1,s,m,k)
+     gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s,m,k)
      }
      beta=array(0,dim=c(k1,k1*p+(k-k1)*s+1,gran2))
 
@@ -350,10 +369,12 @@ setMethod(
      }else{
       jj <- .lfunction3(p,k)
       }
-           Z1=Zmat1(Y,p,k)
+
+        Z1=VARXCons(Y,matrix(0,nrow=nrow(Y)),k,p,0,0) 
+           ## Z1=Zmat1(Y,p,k)
         trainZ=Z1[2:nrow(Z1),]   
-        trainY=Y[(p+1):nrow(Y),]          
-      GY=trainY[1:T2,]
+        trainY=matrix(Y[(p+1):nrow(Y),],ncol=k)          
+      GY=matrix(trainY[1:T2,],ncol=k)
       GZ=trainZ[,1:T2]
       if(object@ownlambdas==FALSE){   
       gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k)
@@ -403,6 +424,9 @@ setMethod(
     activeL <- rep(list(list()), gran2)
     activeset = activeL
      ZFull <- list()
+     if(!is.matrix(trainZ)){trainZ <- matrix(trainZ,ncol=1)}
+     if(!is.matrix(trainY)){trainY <- matrix(trainY,ncol=1)}
+     
      ZFull$Z=trainZ
      ZFull$Y <- trainY
      T <- nrow(trainY)
@@ -580,11 +604,23 @@ if(group!="Tapered")
      }
      MSFEOOSAgg <- na.omit(OOSEval$MSFE)
      betaPred <- OOSEval$betaPred
-     Zvals <- OOSEval$zvals
-     resids <- OOSEval$resids
+Y <- object@Data
+
+## browser()
+if(VARX==TRUE){
+    Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,TRUE)
+}else{Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(0,nrow=nrow(Y)),k1,p,m,s,TRUE)}
+
+Zvals <- matrix(Zvals[,ncol(Zvals)],ncol=1)
+## tail(Y)
+     ## Zvals <- OOSEval$zvals
+     ## resids <- OOSEval$resids
+if(ncol(Y)==1){betaPred <- matrix(betaPred,nrow=1)}
+resids <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
+                                                               
      MSFEOOS<-mean(na.omit(MSFEOOSAgg))
      seoos=sd(na.omit(MSFEOOSAgg))/sqrt(length(na.omit(MSFEOOSAgg)))
-     if(class(Y)!="matrix"){Y=matrix(Y,ncol=1)}
+     ## if(class(Y)!="matrix"){Y=matrix(Y,ncol=1)}
 if(VARX==FALSE){k1=k}
       meanbench=.evalMean(ZFull$Y[,1:k1],T2,T)
 	RWbench=.evalRW(ZFull$Y[,1:k1],T2,T)
@@ -596,18 +632,18 @@ if(VARX==FALSE){k1=k}
        BICbench$Mean=0
        BICbench$SD=0                          
                       }else{
-    AICbench1 <- EvalIC(ZFull$Y[,1:k1],T2,k1,p,"AIC")
+    AICbench1 <- EvalIC(matrix(ZFull$Y[,1:k1],ncol=k1),T2,k1,p,"AIC")
     AICbench <- list()
     AICbench$Mean <- mean(AICbench1$MS)
     AICbench$SD <- sd(AICbench1$MS)/sqrt(length(AICbench1$MS))
-    BICbench1 <- EvalIC(ZFull$Y[,1:k1],T2,k1,p,"BIC")
+    BICbench1 <- EvalIC(matrix(ZFull$Y[,1:k1],ncol=k1),T2,k1,p,"BIC")
     BICbench <- list()
     BICbench$Mean <- mean(BICbench1$MS)
     BICbench$SD <- sd(BICbench1$MS)/sqrt(length(BICbench1$MS))
  
 }
  
-    results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=which.min(colMeans(na.omit(MSFE))),OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,RWMSFE=RWbench$Mean,MeanSD=meanbench$SD,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX)
+    results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=which.min(colMeans(na.omit(MSFE))),OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,RWMSFE=RWbench$Mean,MeanSD=meanbench$SD,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=list(k=k1,s=s))
      
     return(results)
      }
@@ -650,7 +686,9 @@ setMethod(
   signature="BigVAR",
   definition=function(object){
      p=object@lagmax
-
+if(object@ownlambdas==TRUE){gamm=object@Granularity
+gran2 <- length(gamm)
+}      
     Y <- object@Data
      k <- ncol(Y)
      alpha <- 1/(k+1)
@@ -801,7 +839,6 @@ if(object@ownlambdas==FALSE){
      }
     beta=array(0,dim=c(k,k*p+1,gran2))
     }           
-if(object@ownlambdas==TRUE){gamm=object@Granularity} 
      if(group=="Tapered")
          {
 palpha=seq(0,1,length=10)
@@ -817,7 +854,7 @@ beta=array(0,dim=c(k,k*p+1,gran2))
             else{beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-04,p,MN)}
            }
         if (group == "Lag") {
-            GG <- GroupLassoVAR(beta,trainY,trainZ,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s)
+            GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s)
             beta <- GG$beta
             activeset <- GG$active
         }
@@ -1027,18 +1064,30 @@ setMethod("show","BigVAR.results",
 setMethod("predict","BigVAR.results",
           function(object,n.ahead,...)
 {
+    if(object@Minnesota==TRUE){
+eZ <- object@Zvals
+}else{
 eZ <- object@Zvals[2:nrow(object@Zvals),]
+
+    }
+    ## browser()
+## object@VARX
 betaPred <- object@betaPred
-k <- nrow(betaPred)
+## str(object)    
+k <-object@VARX$k
+m <- ncol(object@Data)-k
 p <- object@lagmax
+s <- object@VARX$s
 nu=betaPred[,1]
 betaPred <- betaPred[,2:ncol(betaPred)]
-B <- VarptoVar1MC(betaPred,p,k)
 if(n.ahead==1)
     {
 fcst <- betaPred%*%eZ+nu
         }
 else{
+if(object@VARXI){stop("multi step ahead predictions not supported for VARX models")}    
+B <- VarptoVAR1MC(betaPred,p,k,m,s)
+    
 fcst <- ((B%^%n.ahead)%*%eZ)[1:k,]+nu
     }
 return(fcst)
@@ -1084,13 +1133,13 @@ f="SparsityPlot.BigVAR.results",
       else{m=0;s=0}
     text <- c()
     for (i in 1:p) {
-        text1 <- as.expression(bquote(bold(B)^(.(i))))
+        text1 <- as.expression(bquote(bold(Phi)^(.(i))))
         text <- append(text, text1)
     }
     ## text <- c()
     if(m>0){
      for (i in (p+1):(p+s+1)) {
-        text1 <- as.expression(bquote(bold('theta')^(.(i-p))))
+        text1 <- as.expression(bquote(bold(beta)^(.(i-p))))
         text <- append(text, text1)
     }
      }

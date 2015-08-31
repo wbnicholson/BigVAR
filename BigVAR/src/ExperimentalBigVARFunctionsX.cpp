@@ -780,7 +780,9 @@ List GamLoopGLOO(NumericVector beta_, List Activeset, NumericVector gamm, const 
  betafin.fill(0);
  List iterations(gran2);
  mat betaPrev=zeros<mat>(k1,pk);
+
  arma::colvec B=arma::vectorise(betaPrev);
+ // B.print();
  NumericVector betaF2(k1*pk);
 
  for(int i=0; i<gran2;++i)
@@ -803,6 +805,7 @@ List GamLoopGLOO(NumericVector beta_, List Activeset, NumericVector gamm, const 
          k2+=1;
 
 	  }
+	// Rcout<<betaF2<<std::endl;
 	mat betaF(betaF2.begin(),k1,pk,false);
   colvec nu= YMean2 - betaF *ZMean2;
   betafin.slice(i)=mat(join_horiz(nu, betaF));

@@ -3,10 +3,43 @@
 
 #include "../inst/include/BigVAR.h"
 #include <RcppArmadillo.h>
+#include <RcppEigen.h>
 #include <Rcpp.h>
 
 using namespace Rcpp;
 
+// ZmatF
+MatrixXd ZmatF(MatrixXd Y, const int p, const int k, bool intercept, bool oos);
+RcppExport SEXP BigVAR_ZmatF(SEXP YSEXP, SEXP pSEXP, SEXP kSEXP, SEXP interceptSEXP, SEXP oosSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< MatrixXd >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< bool >::type intercept(interceptSEXP);
+    Rcpp::traits::input_parameter< bool >::type oos(oosSEXP);
+    __result = Rcpp::wrap(ZmatF(Y, p, k, intercept, oos));
+    return __result;
+END_RCPP
+}
+// VARXCons
+MatrixXd VARXCons(MatrixXd Y, MatrixXd X, const int k, const int p, const int m, const int s, bool oos);
+RcppExport SEXP BigVAR_VARXCons(SEXP YSEXP, SEXP XSEXP, SEXP kSEXP, SEXP pSEXP, SEXP mSEXP, SEXP sSEXP, SEXP oosSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< MatrixXd >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< MatrixXd >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< bool >::type oos(oosSEXP);
+    __result = Rcpp::wrap(VARXCons(Y, X, k, p, m, s, oos));
+    return __result;
+END_RCPP
+}
 // ST1a
 double ST1a(double z, double gam);
 RcppExport SEXP BigVAR_ST1a(SEXP zSEXP, SEXP gamSEXP) {

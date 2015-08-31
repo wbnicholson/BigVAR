@@ -10,6 +10,7 @@ Depends:
     R (>= 3.1.0),
     RcppArmadillo,	
     Rcpp,
+    RcppEigen,	
     expm,
     methods
 Imports:
@@ -18,5 +19,5 @@ Imports:
     lattice
 License: GPL (>=2)
 LazyLoad: yes
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 Packaged: 2014-09-28 14:34:16 UTC; will

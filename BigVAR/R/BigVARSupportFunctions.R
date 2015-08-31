@@ -5,6 +5,7 @@
 # mean benchmark
 .evalMean <- function(Y,T1,T2)
 {
+  if(class(Y)!="matrix"){Y <- matrix(Y,ncol=1)}
   MSFE <- rep(0,T2-T1-1)
   k <- ncol(Y)
  for (u in (T1 + 1):T2) {
@@ -22,6 +23,8 @@
 # random walk benchmark
 .evalRW <- function(Y,T1,T2)
 {
+  if(class(Y)!="matrix"){Y <- matrix(Y,ncol=1)}
+
   MSFE <- c()
   ## MSFE <- rep(0,T2-T1-1)
   k <- ncol(Y)
@@ -319,8 +322,11 @@ else{
 	    setTxtProgressBar(pb, v)
             }
         }
-eZ <- as.matrix(.Zmat2(Y[(nrow(Y) - p):nrow(Y), ], p, k)$Z, ncol = 1)
-
+## eZ <- as.matrix(.Zmat2(Y[(nrow(Y) - p):nrow(Y), ], p, k)$Z, ncol = 1)
+   ##  browser()
+## ZFull$Z    
+## eZ <- VARXCons(matrix(Y[(nrow(Y) - p):nrow(Y),1:k1],ncol=k1),matrix(Y[(nrow(Y) - p):nrow(Y),ncol(Y)-k1],ncol=ncol(Y)-k1), p, k,m,s)
+    
         if (group == "None") {
             betaPred <- .lassoVARFistX(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,k,k1,s,m)
         }
@@ -363,11 +369,14 @@ eZ <- as.matrix(.Zmat2(Y[(nrow(Y) - p):nrow(Y), ], p, k)$Z, ncol = 1)
 ## {
     betaPred <- as.matrix(betaPred[,,1])
 ## }
-
-resid <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
+## if(ncol(Y)==1){betaPred <- matrix(betaPred,nrow=1)}
+## resid <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
     
-return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ,resids=resid))
- 
+## return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ,resids=resid))
+
+return(list(MSFE=MSFE,betaPred=betaPred))
+    
+    
     }
 
 
@@ -567,12 +576,13 @@ if(h==1){
 	## if(group!="BVAR")
 ## {
     betaPred <- as.matrix(betaPred[,,1])
+    betaPred <- matrix(betaPred,nrow=k)
 ## }
    ## browser() 
-resid <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
+## resid <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
 
     
-return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ,resids=resid))
+return(list(MSFE=MSFE,betaPred=betaPred))
  
     }
 
