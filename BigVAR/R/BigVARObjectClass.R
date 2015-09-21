@@ -321,7 +321,7 @@ gran2 <- length(gamm)
 
             }
      if(object@ownlambdas==FALSE){
-     gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s,m,k)
+     gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s,m,k,MN)
      }
      beta=array(0,dim=c(k1,k1*p+(k-k1)*s+1,gran2))
 
@@ -377,7 +377,7 @@ gran2 <- length(gamm)
       GY=matrix(trainY[1:T2,],ncol=k)
       GZ=trainZ[,1:T2]
       if(object@ownlambdas==FALSE){   
-      gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k)
+      gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN)
       }
         VARX=FALSE
         k1=k
@@ -609,7 +609,9 @@ Y <- object@Data
 ## browser()
 if(VARX==TRUE){
     Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,TRUE)
-}else{Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(0,nrow=nrow(Y)),k1,p,m,s,TRUE)}
+}else{
+m=0;s=0
+Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(0,nrow=nrow(Y)),k1,p,m,s,TRUE)}
 
 Zvals <- matrix(Zvals[,ncol(Zvals)],ncol=1)
 ## tail(Y)

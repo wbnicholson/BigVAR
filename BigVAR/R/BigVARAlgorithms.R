@@ -378,12 +378,7 @@ return(BB)
     if(class(Y)!="matrix")
         {Y <- matrix(Y,ncol=1)}
     k <- ncol(Y)
-    betafin <- beta
-    YOLD <- Y
-    ZOLD <- Z
-    YMean <- c(apply(Y, 2, mean))
-    ZMean <- c(apply(Z, 1, mean))
-            if(MN==TRUE)
+    if(MN==TRUE)
         {
     C=matrix(0,nrow=k,ncol=k*p)        
     diag(C) <- rep(1,k)
@@ -392,6 +387,12 @@ return(BB)
     Y <- t(Y)
         }
 
+    betafin <- beta
+    YOLD <- Y
+    ZOLD <- Z
+    YMean <- c(apply(Y, 2, mean))
+    ZMean <- c(apply(Z, 1, mean))
+   
     if(k>1){
     Y <- Y -  matrix(c(rep(1, nrow(Y))),ncol=1)%*%matrix(c(apply(Y, 2, mean)),nrow=1)
     }
