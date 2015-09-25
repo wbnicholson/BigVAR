@@ -1024,7 +1024,7 @@ setMethod("show","BigVAR.results",
             ## cat("Forecast Horizon \n") ;print(object@horizon)
             if(object@Relaxed==TRUE){
             cat("Relaxed VAR \n") ;print(object@Relaxed)}
-            if(length(object@VARX)!=0){
+            if(object@VARXI){
             cat("VARX Specs \n") ;print(object@VARX)}
             cat("Maximum Lag Order \n") ;print(object@lagmax)
             cat("Optimal Lambda \n"); print(round(object@OptimalLambda,digits=4))
