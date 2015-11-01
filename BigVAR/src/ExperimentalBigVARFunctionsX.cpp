@@ -107,6 +107,11 @@ mat FistaLV(const mat& Y, const mat& Z, mat& B, const double gam, const double e
 	  BOLDOLD=BOLD;
 	  BOLD=B1;
 	  j+=1;
+	  	  if(j>10000){
+		  Rcout<<"Convergence Failed"<<std::endl;
+		  break;
+		  }
+
     }
       B.col(i)=B1;
     }
@@ -1212,7 +1217,10 @@ mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lam
       phiOLDOLD=phiOLD;
       phiOLD=phiR;
       j+=1;
-  
+	  if(j>10000){
+		  Rcout<<"Convergence Failed"<<std::endl;
+		  break;
+	  }
  }
    phiFIN.row(i)=phiR;
 
@@ -1341,6 +1349,10 @@ mat FistaOO(const mat Y, const mat Z, mat phi, const int p, const int k, double 
       phiOLDOLD=phiOLD;
       phiOLD=phiR;
       j+=1;
+	  	  if(j>10000){
+		  Rcout<<"Convergence Failed"<<std::endl;
+		  break;
+		  }
     }
   phiFin.row(i)=phiR;
     }
@@ -1506,6 +1518,11 @@ mat FistaElem(const mat& Y,const mat& Z, mat phi, const int p,const int k,double
       phiOLDOLD=phiOLD;
       phiOLD=phiR;
       j+=1;
+	  	  if(j>10000){
+		  Rcout<<"Convergence Failed"<<std::endl;
+		  break;
+		  }
+	  
     }
   phiFin.row(i)=phiR;
     }
