@@ -390,7 +390,8 @@ return(list(MSFE=MSFE,betaPred=betaPred))
     s=p;k1=k
     MSFE <- rep(0,T2-T1-1)
     alpha=1/(ncol(Y)+1)
-    beta=array(0,dim=c(k,p*k+1,1))  
+    beta=array(0,dim=c(k,p*k+1,1))
+    betaFULL <<- array(0,dim=c(k,p*k+1,T2-T1))
         if (group == "Lag") {
         jj <- .groupfuncpp(p,k)
         jjcomp <- .groupfuncomp(p,k)
@@ -502,10 +503,12 @@ else{
 if(h==1){
     ## if(v==T2){browser()}
               # We don't consider an intercept for the MN lasso
-                if(MN==TRUE){MSFE[v-T1] <- norm2(ZFull$Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2}
-
+                if(MN==TRUE){MSFE[v-T1] <- norm2(ZFull$Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                  betaFULL[,,v-T1] <<- betaEVAL
+                         }
+                
                else{MSFE[v-T1] <- norm2(ZFull$Y[v,] - betaEVAL %*% eZ)^2
-
+                    
                     
                 }
 }

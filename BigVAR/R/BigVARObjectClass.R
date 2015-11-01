@@ -303,7 +303,7 @@ gran2 <- length(gamm)
      ## if(VARX==TRUE){
      X <- matrix(Y[,ncol(Y)-k1],ncol=ncol(Y)-k1)
  ## }else{X=matrix(0,nrow=nrow(Y))}
-     trainZ <- VARXCons(Y,X,k1,p,m,s)
+     trainZ <- VARXCons(Y1,X,k1,p,m,s)
      trainZ <- trainZ[2:nrow(trainZ),]
      trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
 
