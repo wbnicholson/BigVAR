@@ -5,6 +5,7 @@
 # Sparse Group Lasso/Own/Other
 .SparseGroupLassoVAROO<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN) 
 {
+    m=0
     k <- ncol(Y)
     Y <- t(Y)
     YOLD <- Y
@@ -31,7 +32,7 @@
     jjfull=jj
     jjcomp = .lfunctioncomp(p, k)
     beta <- beta[,2:ncol(beta[,,1]),]
-    BB <- GamLoopSGLOO(beta,INIactive,gamm,alpha,Y,ZZ,jj,jj,jjcomp,eps,YMean,ZMean,k,p*k,M2f,eigs)
+    BB <- GamLoopSGLOO(beta,INIactive,gamm,alpha,Y,ZZ,jj,jj,jjcomp,eps,YMean,ZMean,k,p*k,M2f,eigs,m)
    BB$q1 <- q1
     return(BB)
 }
@@ -153,7 +154,8 @@ if(k1>1){
     eigvals <- Eigsys$eigval
     eigvecs <- Eigsys$eigvec
     kkfull=kk
-    beta <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k1,(k1)*p+m*s,length(gamm)))            
+    beta <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k1,(k1)*p+m*s,length(gamm)))
+    ## browser()
     BB <- GamLoopGLOO(beta,INIactive,gamm,Y,ZZ,kk,kkfull,kkcomp,eps,YMEAN,ZMEAN,k1,p*(k1)+m*s,M2,eigvals,eigvecs,k1)
         if(MN==TRUE)
          {
@@ -639,15 +641,15 @@ BB$q1 <- q1
                  kk=diaggroupfunVARX(p,k,k1,s)
                  jjcomp <- diaggroupfunVARXcomp(p,k,k1,s)
    ZZ <- kronecker(t(Z),diag(k1))  
-
+    
     for (j in 1:length(jj)) {
         M2f[[j]] <- crossprod(ZZ[,jj[[j]]])
         eigs[j] <- max(Mod(eigen(M2f[[j]],only.values=TRUE)$values))
     }
     jjfull=kk
     beta <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k1,k1*p+m*s,length(gamm)))
-BB <- GamLoopSGLOO(beta,INIactive,gamm,alpha,Y,ZZ,kk,jjfull,jjcomp,eps,YMean,ZMean,k1,p*k1+m*s,M2f,eigs)
-
+BB <- GamLoopSGLOO(beta,INIactive,gamm,alpha,Y,ZZ,kk,jjfull,jjcomp,eps,YMean,ZMean,k1,p*k1+m*s,M2f,eigs,m)
+if(BB$converge==0){warn("Warning! Non-convergence.")}
          if(MN==TRUE)
          {
      for(i in 1:(dim(BB$beta)[3]))

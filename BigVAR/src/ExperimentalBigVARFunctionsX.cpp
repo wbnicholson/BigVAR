@@ -878,7 +878,10 @@ while(thresh>eps)
     l=l+1;
 	//Relative thresholds seem to help with computation time
     thresh=max(abs(beta-STS)/(one+abs(STS)));
-	// Rcout<<thresh<<std::endl;
+	if(l>1000){
+	Rcout<<thresh<<std::endl;
+	Rcout<<"Warning! nonconvergence"<<std::endl;
+	}
 	// thresh=max(abs(beta-STS));
 	// thresh=
     thetaOLD=STS;
@@ -887,7 +890,7 @@ while(thresh>eps)
 return(beta);
   }
 
-List blockUpdateSGLOO( colvec& beta,const mat& Z1, double lam, double alpha,const colvec& Y2, double eps, List groups_, const List fullgroups_, List compgroups_,const List M2f_,const NumericVector Eigs_,double k1)
+List blockUpdateSGLOO( colvec& beta,const mat& Z1, double lam, double alpha,const colvec& Y2, double eps, List groups_, const List fullgroups_, List compgroups_,const List M2f_,const NumericVector Eigs_,double k1, double m)
 {
  
   int n1=groups_.size();
@@ -976,8 +979,8 @@ List blockUpdateSGLOO( colvec& beta,const mat& Z1, double lam, double alpha,cons
 	    // Rcout<<betaS.n_elem<<std::endl;
 		// Rcout<<"Foo"<<std::endl;
 	   const double t=1/Eigs_(i);
-
-	   const  mat astar2= sparseWLOO(M1, r,k1, betaS, t,  alpha, lam, eps,rho);
+	   //this is the issue, I need to specify ngroups as k1+m rather than k1
+	   const  mat astar2= sparseWLOO(M1, r,k1+m, betaS, t,  alpha, lam, eps,rho);
 
 	    beta.elem(s4)=astar2;
 	    active(i)=s4;  
@@ -1009,13 +1012,13 @@ converge=0;
 }
   // mat beta3(beta.begin(),n,m,false);
 
-  Rcpp::List results=Rcpp::List::create(Named("beta")=wrap(beta),Named("active")=wrap(active),Named("Converge")=wrap(converge));
+  Rcpp::List results=Rcpp::List::create(Named("beta")=wrap(beta),Named("active")=wrap(active),Named("Converge")=wrap(converge),Named("thresh")=wrap(thresh));
   return(results);
 
 }
 
 
-mat ThreshUpdateSGLOO(colvec& betaActive,const mat& Z,const double lam,const colvec& Y,const double eps, List groups_, const List fullgroups_,const List compgroups_,const List M2f_,const NumericVector eigs_,const double alpha,double k1)
+mat ThreshUpdateSGLOO(colvec& betaActive,const mat& Z,const double lam,const colvec& Y,const double eps, List groups_, const List fullgroups_,const List compgroups_,const List M2f_,const NumericVector eigs_,const double alpha,double k1,double m)
   {
     
  // int kp = betaActive.n_elem;
@@ -1041,20 +1044,31 @@ mat ThreshUpdateSGLOO(colvec& betaActive,const mat& Z,const double lam,const col
     }
   else{
 	int converge=0;
-   // double threshold=10*eps;
-      while(converge==0)	
+   double th=10*eps;
+	int iters=0;
+      while(converge==0|th>eps)	
       {
-		  betaActive2=blockUpdateSGLOO(betaActive,Z,lam,alpha,Y,eps,groups_,fullgroups_,compgroups_,M2f_,eigs_,k1);	 
+		  colvec betaOld=betaActive;
+		  betaActive2=blockUpdateSGLOO(betaActive,Z,lam,alpha,Y,eps,groups_,fullgroups_,compgroups_,M2f_,eigs_,k1,m);	 
         betaActive=as<colvec>(betaActive2("beta"));
         converge =betaActive2("Converge");
-
+		iters+=1;
+	    th=betaActive2("thresh");
+		
+		// if(iters % 500==0){
+		// 		Rcout<<"number of iterations"<<iters<<std::endl;
+		// 		Rcout<<"threshold"<<th<<std::endl;
+		// 		Rcout<<"Convergence Indicator"<<converge<<std::endl;
+		// 		Rcout<<"Beta"<<abs(betaActive-betaOld)<<std::endl;
+		// 	}
+		if(iters>1000){break;}
       }
   }
     return(betaActive);
   }
 
 // [[Rcpp::export]]
-List GamLoopSGLOO(NumericVector beta_,const List Activeset_,const NumericVector gamm,const double alpha,const mat& Y,const mat& Z,List jj_,const List jjfull_, List jjcomp_,const double eps,const colvec& YMean2,const colvec& ZMean2,const int k1,const int pk,const List M2f_,const NumericVector eigs_)
+List GamLoopSGLOO(NumericVector beta_,const List Activeset_,const NumericVector gamm,const double alpha,const mat& Y,const mat& Z,List jj_,const List jjfull_, List jjcomp_,const double eps,const colvec& YMean2,const colvec& ZMean2,const int k1,const int pk,const List M2f_,const NumericVector eigs_,double m)
 {
 
  int gran2=gamm.size();
@@ -1066,31 +1080,38 @@ List GamLoopSGLOO(NumericVector beta_,const List Activeset_,const NumericVector 
  mat betaPrev=zeros<mat>(k1,pk);
  NumericVector betaF2(k1*pk);
 const arma:: colvec& Y2=arma::vectorise(Y,0);
-
+ int converge;
  for(int i=0; i<gran2;++i)
     {
         double gam=gamm[i];
 	betaPrev=beta2.slice(i);
 	List Active = Activeset_[i];
 	int k2=0;
-	int converge=0;
+	converge=0;
         // mat betaF=zeros(k,pk);
 	colvec B=vectorise(betaPrev);
 	List betaFull(3);
 	//Three components in the list
-	while(converge==0)
+	    int iters=0;
+		int maxiters=1000;
+	while(converge==0 | iters<maxiters)
 	  {
  // Rcout<<"TEST@"<<std::endl;
-	    
-		  B = ThreshUpdateSGLOO(B, Z, gam, Y2, eps, Active, jjfull_, jjcomp_, M2f_, eigs_, alpha,(double) k1);
- // Rcout<<"TEST"<<std::endl;
-	 
-		  betaFull=blockUpdateSGLOO(B,Z,gam,alpha,Y2,eps,jjfull_,jjfull_,jjcomp_,M2f_,eigs_,(double) k1);
+		  // Rcout<<"starting threshold update over Active set " <<std::endl;
+		  B = ThreshUpdateSGLOO(B, Z, gam, Y2, eps, Active, jjfull_, jjcomp_, M2f_, eigs_, alpha,(double) k1,m);
+ // Rcout<<"TEST"<<std::endl;	
+		  // Rcout<<"finished threshold update over Active set, starting full pass " <<std::endl;
+ 
+		  betaFull=blockUpdateSGLOO(B,Z,gam,alpha,Y2,eps,jjfull_,jjfull_,jjcomp_,M2f_,eigs_,(double) k1,m);
+		  // Rcout<<"finished full pass through everything " <<std::endl;
+
 	    betaF2=as<NumericVector>(betaFull("beta"));
 
 	     Active=betaFull("active");
 	     converge =betaFull("Converge");
-             k2+=1;
+		 iters+=1;
+             // k2+=1;
+			 // Rcout<<k2<<std::endl;
 
 	  }
   mat betaF(betaF2.begin(),k1,pk,false);
@@ -1101,7 +1122,7 @@ const arma:: colvec& Y2=arma::vectorise(Y,0);
   iterations[i]=k2; 
     }
  // betafin.print();
- List Results=List::create(Named("beta")=betafin,Named("active")=wrap(activefinal),Named("iterations")=iterations);
+ List Results=List::create(Named("beta")=betafin,Named("active")=wrap(activefinal),Named("iterations")=iterations,Named("converge")=converge);
    return(Results);
     }
 
@@ -2413,9 +2434,9 @@ List GamLoopSGLX(NumericVector beta_, List Activeset, NumericVector gamm,double 
 	while(converge==0)
 	  {
 	    
-       	    betaPrev = ThreshUpdateSGLX(betaPrev, Z1, gam, Y1, eps, jjfull, jjfull, jjcomp, M2f_, eigs, alpha,k1);
+		  betaPrev = ThreshUpdateSGLX(betaPrev, Z1, gam, Y1, eps, jjfull, jjfull, jjcomp, M2f_, eigs, alpha,k1);
 	 
-	    betaFull=blockUpdateSGLX(betaPrev,Z1,gam,alpha,Y1,eps,jjfull,jjfull,jjcomp,k1,M2f_,eigs);
+		  betaFull=blockUpdateSGLX(betaPrev,Z1,gam,alpha,Y1,eps,jjfull,jjfull,jjcomp,k1,M2f_,eigs);
 	     betaF=as<mat>(betaFull("beta"));
 
 	     Active=betaFull("active");

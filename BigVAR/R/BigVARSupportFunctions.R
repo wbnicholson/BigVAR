@@ -196,24 +196,27 @@ return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MS
 
 
 # Forecast evaluation (called in cv.bigvar)
-.EvalLVARX <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m)
+.EvalLVARX <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp)
   {
+   if(contemp){s1=1
+   }else{s1=0}
+
     gran2=1	
     gamm <- gamopt
     Y <- ZFull$Y
     MSFE <- rep(0,T-T2-1)
     alpha=1/(k1+1)
-    beta=array(0,dim=c(k1,k1*p+(k-k1)*s+1,1))  
+    beta=array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,1))  
         if (group == "Lag") {
-        jj <- groupfunVARX(p,k,k1,s)
-        jjcomp <- groupfunVARXcomp(p,k,k1,s)
+        jj <- groupfunVARX(p,k,k1,s+s1)
+        jjcomp <- groupfunVARXcomp(p,k,k1,s+s1)
         activeset <- rep(list(rep(rep(list(0), length(jj)))), 
             gran2)
     }
     if (group == "SparseLag") {
-        jj <- groupfunVARX(p, k,k1,s)
+        jj <- groupfunVARX(p, k,k1,s+s1)
         q1a <- list()
-        for (i in 1:(p+s)) {
+        for (i in 1:(p+s+s1)) {
             q1a[[i]] <- matrix(runif(k1, -1, 1), ncol = 1)
         }
             activeset <- rep(list(rep(rep(list(0), length(jj)))), 
@@ -221,12 +224,12 @@ return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MS
 
       }
     if (group == "Diag") {
-        kk <- diaggroupfunVARX(p, k,k1,s)
+        kk <- diaggroupfunVARX(p, k,k1,s+s1)
         activeset <- rep(list(rep(rep(list(0), length(kk)))), 
             gran2)
     }
          if (group == "SparseDiag") {
-        kk <- diaggroupfunVARX(p, k,k1,s)
+        kk <- diaggroupfunVARX(p, k,k1,s+s1)
        activeset <- rep(list(rep(rep(list(0), length(kk)))), 
             gran2)
       }
@@ -238,32 +241,32 @@ return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MS
         trainY <- ZFull$Y[1:(v-1), ]
        trainZ <- ZFull$Z[,1:(v-1)]
         if (group == "None") {
-            beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-05,p,MN,k,k1,s,m)
+            beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-05,p,MN,k,k1,s+s1,m)
         }
         if (group == "Lag") {
             ## GG <- GroupLassoVAR(beta,trainY,trainZ,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s,MN)
-               GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s)
+               GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s+s1)
             
             beta <- GG$beta
             activeset <- GG$active
         }
         if (group == "SparseLag") {
             GG <- .SparseGroupLassoVARX(beta, jj, trainY, trainZ, 
-                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s,k1)
+                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
             beta <- GG$beta
             activeset = GG$active
             q1a <- GG$q1
         }
         if (group == "Diag") {
             GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
-                activeset, 1e-04,p,MN,k,k1,s)
+                activeset, 1e-04,p,MN,k,k1,s+s1)
             beta <- GG$beta
             activeset <- GG$active
         }
           if (group == "SparseDiag") {
  
             GG <- .SparseGroupLassoVAROOX(beta, kk, trainY, trainZ, 
-                gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s,k)
+                gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k)
             beta <- GG$beta
             activeset = GG$active
         }
@@ -277,9 +280,9 @@ return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MS
                 }
 
         
-    betaEVAL <- matrix(beta[,,1],nrow=k1,ncol=(k1*p+(k-k1)*s+1))
+    betaEVAL <- matrix(beta[,,1],nrow=k1,ncol=(k1*p+(k-k1)*(s+s1)+1))
             if (RVAR == TRUE) {
-                         betaEVAL <- RelaxedLS(cbind(t(trainZ),trainY),betaEVAL,k,p,k1,s)
+                         betaEVAL <- RelaxedLS(cbind(t(trainZ),trainY),betaEVAL,k,p,k1,s+s1)
        
              }
 
@@ -328,34 +331,34 @@ else{
 ## eZ <- VARXCons(matrix(Y[(nrow(Y) - p):nrow(Y),1:k1],ncol=k1),matrix(Y[(nrow(Y) - p):nrow(Y),ncol(Y)-k1],ncol=ncol(Y)-k1), p, k,m,s)
     
         if (group == "None") {
-            betaPred <- .lassoVARFistX(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,k,k1,s,m)
+            betaPred <- .lassoVARFistX(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,k,k1,s+s1,m)
         }
         if (group == "Lag") {
                  ## GG <- .GroupLassoVAR(beta,ZFull$Y,ZFull$Z,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s,MN)
-                 GG <- .GroupLassoVAR1(beta,jj,jjcomp,ZFull$Y,ZFull$Z,gamm,activeset,1e-04,p,MN,k,k1,s)
+                 GG <- .GroupLassoVAR1(beta,jj,jjcomp,ZFull$Y,ZFull$Z,gamm,activeset,1e-04,p,MN,k,k1,s+s1)
 
             betaPred <- GG$beta
         }
         if (group == "SparseLag") {
             GG <- .SparseGroupLassoVARX(beta, jj, ZFull$Y, ZFull$Z, 
-                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s,k1)
+                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
             betaPred <- GG$beta
         }
         if (group == "Diag") {
             GG <- .GroupLassoOOX(beta, kk, ZFull$Y, ZFull$Z, gamm, 
-                activeset, 1e-04,p,MN,k,k1,s)
+                activeset, 1e-04,p,MN,k,k1,s+s1)
             betaPred <- GG$beta
         }
           if (group == "SparseDiag") {
             GG <- .SparseGroupLassoVAROOX(beta, kk, ZFull$Y, ZFull$Z, 
-                gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s,k)
+                gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k)
             betaPred <- GG$beta
           
         }
             if(group=="EFX")
             {
 
-              betaPred <- .EFVARX(beta,ZFull$Y,ZFull$Z,gamm,1e-4,MN,k1,s,m,p)
+              betaPred <- .EFVARX(beta,ZFull$Y,ZFull$Z,gamm,1e-4,MN,k1,s+s1,m,p)
 
                 }
             

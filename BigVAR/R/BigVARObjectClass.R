@@ -113,6 +113,7 @@ nseries <- ncol(Y)-k1
 
 if(nseries==1 & cond2==FALSE ){stop("Univariate support is only available for Lasso, Lag Group, and Componentwise HVAR")}
 if(length(VARX)==0 & struct=="EFX"){stop("EFX is only supported in the VARX framework")}
+if(struct=="EFX" & is.null(VARX$contemp)){stop("EFX does not support contemporaneuous dependence")}
 structs=c("HVARC","HVAROO","HVARELEM")
 if(length(VARX)!=0& struct %in% structs){stop("EFX is the only nested model supported in the VARX framework")}
 
@@ -252,7 +253,11 @@ setMethod(
     MN <- object@Minnesota
      jj=0
      if(class(Y)!="matrix"){Y=matrix(Y,ncol=1)}
+     if(object@crossval=="Rolling"){
      T1=object@T1
+     }else{
+     T1=p+2    
+         }
      T2=object@T2
      s <- ifelse(length(object@VARX)!=0,object@VARX$s,0)
      ## T <- nrow(Y)-max(p,s)
@@ -271,6 +276,12 @@ gran2 <- length(gamm)
      VARX=TRUE
      k1=object@VARX$k
      s=object@VARX$s
+     if(!is.null(object@VARX$contemp)){
+         contemp=TRUE
+         s1=1
+         }else{
+             contemp=FALSE
+             s1=0}
      m=k-k1
  ##  if(k1>1){
  ##     Z1 <- Zmat1(Y[,1:k1],p,k1)
@@ -304,40 +315,41 @@ gran2 <- length(gamm)
 ## browser()
      X <- matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m)
      ## }else{X=matrix(0,nrow=nrow(Y))}
-     trainZ <- VARXCons(Y1,X,k1,p,m,s)
+     trainZ <- VARXCons(Y1,X,k1,p,m,s,contemp=contemp)
+     ## browser()
      trainZ <- trainZ[2:nrow(trainZ),]
      trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
 
     if(group=="Lag"|group=="SparseLag"){
         alpha=1/(k1+1)
-        jj=groupfunVARXLG(p,k,k1,s)
+        jj=groupfunVARXLG(p,k,k1,s+s1)
         activeset <- rep(list(rep(rep(list(0), length(jj)))), 
             gran2)
 
         }
         if(group=="Diag"|group=="SparseDiag"){
-            jj=diaggroupfunVARXLG(p,k,k1,s)
+            jj=diaggroupfunVARXLG(p,k,k1,s+s1)
             activeset <- rep(list(rep(rep(list(0), length(jj)))), 
             gran2)
 
             }
      if(object@ownlambdas==FALSE){
-     gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s,m,k,MN)
+     gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN)
      }
-     beta=array(0,dim=c(k1,k1*p+(k-k1)*s+1,gran2))
+     beta=array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,gran2))
 
 
         if (group == "Lag") {
-          jj=groupfunVARX(p,k,k1,s)
-          jjcomp <- groupfunVARXcomp(p,k,k1,s)
+          jj=groupfunVARX(p,k,k1,s+s1)
+          jjcomp <- groupfunVARXcomp(p,k,k1,s+s1)
         activeset <- rep(list(rep(rep(list(0), length(jj)))), 
             gran2)
     }
     if (group == "SparseLag") {
-        jj <- groupfunVARX(p, k,k1,s)
+        jj <- groupfunVARX(p, k,k1,s+s1)
         q1a <- list()
         alpha=1/(k1+1)
-        for (i in 1:(p+s)) {
+        for (i in 1:(p+s+s1)) {
             q1a[[i]] <- matrix(runif(length(jj[[i]]), -1, 1), ncol = 1)
         }
              activeset <- rep(list(rep(rep(list(0), length(jj)))), 
@@ -345,13 +357,13 @@ gran2 <- length(gamm)
    
     }
     if (group == "Diag") {
-        kk <- diaggroupfunVARX(p,k,k1,s)
+        kk <- diaggroupfunVARX(p,k,k1,s+s1)
         activeset <- rep(list(rep(rep(list(0), length(kk)))), 
             gran2)
     }
          if (group == "SparseDiag") {
              alpha=1/(k1+1)
-        kk <- diaggroupfunVARX(p,k,k1,s)
+        kk <- diaggroupfunVARX(p,k,k1,s+s1)
         activeset <- rep(list(rep(rep(list(0), length(kk)))), 
             gran2)
           q1a <- list()
@@ -363,7 +375,7 @@ gran2 <- length(gamm)
       
      }
      }else{
-         s=p
+         ## s=p
        if(group=="Lag"|group=="SparseLag")
       {
       jj=.groupfun(p,k)
@@ -447,28 +459,46 @@ beta=array(0,dim=c(k,k*p+1,gran2))
   if(verbose==TRUE){
     pb <- txtProgressBar(min = T1, max = T2, style = 3)
     cat("Cross-Validation Stage:",group)}
+    YT <- Y[1:T2,]
     for (v in T1:T2) {
       if(cvtype=="Rolling")
         {
         trainY <- ZFull$Y[1:(v-1), ]
         trainZ <- ZFull$Z[, 1:(v-1)]
-        }     
+        }else{
+            if(VARX==TRUE)
+                {
+                   YT2 <- YT[-v,]
+                    Y1 <-matrix(YT2[,1:k1],ncol=k1)
+                    X <- matrix(YT2[,(ncol(YT2)-m+1):ncol(YT2)],ncol=m)
+                    trainZ <- VARXCons(Y1,X,k1,p,m,s,contemp=contemp)
+                    trainZ <- trainZ[2:nrow(trainZ),]
+                    trainY <- matrix(YT2[(max(c(p,s))+1):nrow(YT2),1:k1],ncol=k1)
+                    }else{
+
+                        YT2 <- YT[-v,]
+                        Z1=VARXCons(YT2,matrix(0,nrow=nrow(YT2)),k,p,0,0) 
+                        trainZ=Z1[2:nrow(Z1),]        
+                        trainY=matrix(YT2[(p+1):nrow(YT2),],ncol=k)                                  
+                        }
+            }
+      ## browser()
         if (group == "None") {
             if(VARX==TRUE){
-           beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s,m)
+           beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s+s1,m)
        }else{beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-04,p,MN)}
            }
         if (group == "Lag") {
             # Should be the same function for both cases
             ## GG <- GroupLassoVAR(beta,trainY,trainZ,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s,MN)
-             GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s)
+             GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s+s1)
             beta <- GG$beta
             activeset <- GG$active
         }
         if (group == "SparseLag") {
             if(VARX==TRUE){
             GG <- .SparseGroupLassoVARX(beta, jj, trainY, trainZ, 
-                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s,k1)
+                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
             }else{
                GG <- .SparseGroupLassoVAR(beta, jj, trainY, trainZ, 
                 gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN)
@@ -480,7 +510,7 @@ beta=array(0,dim=c(k,k*p+1,gran2))
         if (group == "Diag") {
             if(VARX==TRUE){
             GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
-                activeset, 1e-04,p,MN,k,k1,s)
+                activeset, 1e-04,p,MN,k,k1,s+s1)
             }else{
             GG <- .GroupLassoOO(beta, kk, trainY, trainZ, gamm, 
                 activeset, 1e-04,p,MN)
@@ -491,7 +521,7 @@ beta=array(0,dim=c(k,k*p+1,gran2))
           if (group == "SparseDiag") {
               if(VARX==TRUE){
             GG <- .SparseGroupLassoVAROOX(beta, kk, trainY, trainZ, 
-                gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s,k)
+                gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k)
                   }else{
             GG <- .SparseGroupLassoVAROO(beta, kk, trainY, trainZ, 
                 gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN)
@@ -535,20 +565,39 @@ beta=array(0,dim=c(k,k*p+1,gran2))
         for (ii in 1:gran2) {
             if (RVAR == TRUE) {
                 # Relaxed Least Squares (intercept ignored)
-                beta[,,ii] <- RelaxedLS(cbind(t(trainZ),trainY),beta[,,ii],k,p,k1,s)
+                beta[,,ii] <- RelaxedLS(cbind(t(trainZ),trainY),beta[,,ii],k,p,k1,s+s1)
             }
                         if(MN==TRUE){
             MSFE[v - (T1 - 1), ii] <- norm2(ZFull$Y[v,1:k1] - beta[,2:dim(beta)[2],ii] %*% eZ[2:length(eZ)])^2
 
                 }else{
+                    if(object@crossval=="Rolling"){
+            MSFE[v - (T1 - 1), ii] <- norm2(ZFull$Y[v,1:k1] - beta[,,ii] %*% eZ)^2
+                    }else{
+               ##     browser()     
+               ## sp <- max(p,s)
+              if(VARX==TRUE){          
+              eZ<- VARXCons(Y[(v-p):(v),1:k1],Y[(v-p):(v),ncol(Y):(ncol(Y)-k1)],k1,p,m,s,contemp=contemp)
+              }else{
+              eZ<- VARXCons(Y[(v-p):(v),1:k1],matrix(0,nrow=length((v-p):v)),k1,p,0,0)
+                  }
+        ## eZ <- as.matrix(.Zmat2(Y[(v - p-1):(v-1), ], p, k)$Z, ncol = 1)
+## head(eZ)
+##                    head(Y[v-1,])
+              ## eZ <- c(1,ZFull$Z[,v-1])
+             MSFE[v - (T1 - 1), ii] <- norm2(Y[v,1:k1] - beta[,,ii] %*% eZ)^2
+      
 
-            MSFE[v - (T1 - 1), ii] <- norm2(ZFull$Y[v,1:k1] - beta[,,ii] %*% eZ)^2}
+
+                    }
+                    
+            }
             }
         if(verbose==TRUE){
          setTxtProgressBar(pb, v)}
 
       }
-
+## browser()
 if(group=="Tapered")
     {
 indopt <- which.min(colMeans(MSFE))
@@ -599,7 +648,7 @@ if(group!="Tapered")
 
      }
      if(VARX==TRUE){
-     OOSEval <- .EvalLVARX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m)
+     OOSEval <- .EvalLVARX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp)
      }else{
     OOSEval <- .EvalLVAR(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T)
      }
@@ -607,18 +656,18 @@ if(group!="Tapered")
      betaPred <- OOSEval$betaPred
 Y <- object@Data
 
-## browser()
 if(VARX==TRUE){
-    Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,TRUE)
+    Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,oos=TRUE,contemp=contemp)
 }else{
 m=0;s=0
-Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(0,nrow=nrow(Y)),k1,p,m,s,TRUE)}
+Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(0,nrow=nrow(Y)),k1,p,m,s,oos=TRUE)}
 
 Zvals <- matrix(Zvals[,ncol(Zvals)],ncol=1)
 ## tail(Y)
      ## Zvals <- OOSEval$zvals
      ## resids <- OOSEval$resids
-if(ncol(Y)==1){betaPred <- matrix(betaPred,nrow=1)}
+if(ncol(Y)==1| k1==1){betaPred <- matrix(betaPred,nrow=1)}
+     ## browser()
 resids <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
                                                                
      MSFEOOS<-mean(na.omit(MSFEOOSAgg))
@@ -1081,6 +1130,10 @@ k <-object@VARX$k
 m <- ncol(object@Data)-k
 p <- object@lagmax
 s <- object@VARX$s
+contemp=object@VARX$contemp
+if(contemp){s1=1
+}else{s1=0}
+
 nu=betaPred[,1]
 betaPred <- betaPred[,2:ncol(betaPred)]
 if(n.ahead==1)
@@ -1089,7 +1142,7 @@ fcst <- betaPred%*%eZ+nu
         }
 else{
 if(object@VARXI){stop("multi step ahead predictions not supported for VARX models")}    
-B <- VarptoVAR1MC(betaPred,p,k,m,s)
+B <- VarptoVAR1MC(betaPred,p,k,m,s+s1)
     
 fcst <- ((B%^%n.ahead)%*%eZ)[1:k,]+nu
     }
@@ -1132,7 +1185,12 @@ f="SparsityPlot.BigVAR.results",
       p <- object@lagmax
       if(length(object@VARX!=0)){
           s=object@VARX$s
-          m=k-object@VARX$k}
+          m=k-object@VARX$k
+          contemp=VARX$contempt
+    if(contemp){s1=1
+        }else{s1=0}
+
+      }
       else{m=0;s=0}
     text <- c()
     for (i in 1:p) {
@@ -1141,13 +1199,13 @@ f="SparsityPlot.BigVAR.results",
     }
     ## text <- c()
     if(m>0){
-     for (i in (p+1):(p+s+1)) {
-        text1 <- as.expression(bquote(bold(beta)^(.(i-p))))
+     for (i in (p+1):(p+s+s1+1)) {
+        text1 <- as.expression(bquote(bold(beta)^(.(i-p-s1))))
         text <- append(text, text1)
     }
      }
     f <- function(m) t(m)[, nrow(m):1]
-    
+    s=s+s1
     rgb.palette <- colorRampPalette(c("white", "blue" ),space = "Lab")
     ## rgb.palette <- colorRampPalette(c("white", "blue"), space = "Lab")
     at <- seq(k/2 + 0.5, p * (k)+ 0.5, by = k)
