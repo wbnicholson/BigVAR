@@ -9,23 +9,24 @@
 using namespace Rcpp;
 
 // ZmatF
-MatrixXd ZmatF(MatrixXd Y, const int p, const int k, bool intercept, bool oos);
-RcppExport SEXP BigVAR_ZmatF(SEXP YSEXP, SEXP pSEXP, SEXP kSEXP, SEXP interceptSEXP, SEXP oosSEXP) {
+MatrixXd ZmatF(MatrixXd Y, int p, const int k, bool intercept, bool oos, bool contemp);
+RcppExport SEXP BigVAR_ZmatF(SEXP YSEXP, SEXP pSEXP, SEXP kSEXP, SEXP interceptSEXP, SEXP oosSEXP, SEXP contempSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< MatrixXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
     Rcpp::traits::input_parameter< const int >::type k(kSEXP);
     Rcpp::traits::input_parameter< bool >::type intercept(interceptSEXP);
     Rcpp::traits::input_parameter< bool >::type oos(oosSEXP);
-    __result = Rcpp::wrap(ZmatF(Y, p, k, intercept, oos));
+    Rcpp::traits::input_parameter< bool >::type contemp(contempSEXP);
+    __result = Rcpp::wrap(ZmatF(Y, p, k, intercept, oos, contemp));
     return __result;
 END_RCPP
 }
 // VARXCons
-MatrixXd VARXCons(MatrixXd Y, MatrixXd X, const int k, const int p, const int m, const int s, bool oos);
-RcppExport SEXP BigVAR_VARXCons(SEXP YSEXP, SEXP XSEXP, SEXP kSEXP, SEXP pSEXP, SEXP mSEXP, SEXP sSEXP, SEXP oosSEXP) {
+MatrixXd VARXCons(MatrixXd Y, MatrixXd X, const int k, const int p, const int m, int s, bool oos, bool contemp);
+RcppExport SEXP BigVAR_VARXCons(SEXP YSEXP, SEXP XSEXP, SEXP kSEXP, SEXP pSEXP, SEXP mSEXP, SEXP sSEXP, SEXP oosSEXP, SEXP contempSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -34,9 +35,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type k(kSEXP);
     Rcpp::traits::input_parameter< const int >::type p(pSEXP);
     Rcpp::traits::input_parameter< const int >::type m(mSEXP);
-    Rcpp::traits::input_parameter< const int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< bool >::type oos(oosSEXP);
-    __result = Rcpp::wrap(VARXCons(Y, X, k, p, m, s, oos));
+    Rcpp::traits::input_parameter< bool >::type contemp(contempSEXP);
+    __result = Rcpp::wrap(VARXCons(Y, X, k, p, m, s, oos, contemp));
     return __result;
 END_RCPP
 }
@@ -313,8 +315,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // GamLoopSGLOO
-List GamLoopSGLOO(NumericVector beta_, const List Activeset_, const NumericVector gamm, const double alpha, const mat& Y, const mat& Z, List jj_, const List jjfull_, List jjcomp_, const double eps, const colvec& YMean2, const colvec& ZMean2, const int k1, const int pk, const List M2f_, const NumericVector eigs_);
-RcppExport SEXP BigVAR_GamLoopSGLOO(SEXP beta_SEXP, SEXP Activeset_SEXP, SEXP gammSEXP, SEXP alphaSEXP, SEXP YSEXP, SEXP ZSEXP, SEXP jj_SEXP, SEXP jjfull_SEXP, SEXP jjcomp_SEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP k1SEXP, SEXP pkSEXP, SEXP M2f_SEXP, SEXP eigs_SEXP) {
+List GamLoopSGLOO(NumericVector beta_, const List Activeset_, const NumericVector gamm, const double alpha, const mat& Y, const mat& Z, List jj_, const List jjfull_, List jjcomp_, const double eps, const colvec& YMean2, const colvec& ZMean2, const int k1, const int pk, const List M2f_, const NumericVector eigs_, double m);
+RcppExport SEXP BigVAR_GamLoopSGLOO(SEXP beta_SEXP, SEXP Activeset_SEXP, SEXP gammSEXP, SEXP alphaSEXP, SEXP YSEXP, SEXP ZSEXP, SEXP jj_SEXP, SEXP jjfull_SEXP, SEXP jjcomp_SEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP k1SEXP, SEXP pkSEXP, SEXP M2f_SEXP, SEXP eigs_SEXP, SEXP mSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -334,7 +336,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type pk(pkSEXP);
     Rcpp::traits::input_parameter< const List >::type M2f_(M2f_SEXP);
     Rcpp::traits::input_parameter< const NumericVector >::type eigs_(eigs_SEXP);
-    __result = Rcpp::wrap(GamLoopSGLOO(beta_, Activeset_, gamm, alpha, Y, Z, jj_, jjfull_, jjcomp_, eps, YMean2, ZMean2, k1, pk, M2f_, eigs_));
+    Rcpp::traits::input_parameter< double >::type m(mSEXP);
+    __result = Rcpp::wrap(GamLoopSGLOO(beta_, Activeset_, gamm, alpha, Y, Z, jj_, jjfull_, jjcomp_, eps, YMean2, ZMean2, k1, pk, M2f_, eigs_, m));
     return __result;
 END_RCPP
 }
