@@ -97,6 +97,7 @@ Class="BigVAR",
 #' @export
 constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE)
   {
+if(any(is.na(Y))){stop("Remove NA values before running ConstructModel")}      
 if(dim(Y)[2]>dim(Y)[1] & length(VARX)==0){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
 if(p<1){stop("Maximal lag order must be at least 1")}
 structures=c("None","Lag","SparseLag","Diag","SparseDiag","HVARC","HVAROO","HVARELEM","Tapered","EFX")
