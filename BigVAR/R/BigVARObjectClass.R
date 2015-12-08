@@ -97,7 +97,7 @@ Class="BigVAR",
 #' @export
 constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE)
   {
-if(dim(Y)[2]>dim(Y)[1]){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
+if(dim(Y)[2]>dim(Y)[1] & length(VARX)==0){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
 if(p<1){stop("Maximal lag order must be at least 1")}
 structures=c("None","Lag","SparseLag","Diag","SparseDiag","HVARC","HVAROO","HVARELEM","Tapered","EFX")
 cond1=struct %in% structures
@@ -315,6 +315,7 @@ gran2 <- length(gamm)
 ## browser()
      X <- matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m)
      ## }else{X=matrix(0,nrow=nrow(Y))}
+     ## browser()
      trainZ <- VARXCons(Y1,X,k1,p,m,s,contemp=contemp)
      ## browser()
      trainZ <- trainZ[2:nrow(trainZ),]
@@ -657,7 +658,9 @@ if(group!="Tapered")
 Y <- object@Data
 
 if(VARX==TRUE){
-    Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,oos=TRUE,contemp=contemp)
+## browser()
+if(contemp){OOS=FALSE}else{OOS=TRUE}
+    Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,oos=OOS,contemp=contemp)
 }else{
 m=0;s=0
 Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(0,nrow=nrow(Y)),k1,p,m,s,oos=TRUE)}

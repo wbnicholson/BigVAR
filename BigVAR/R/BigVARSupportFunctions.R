@@ -139,7 +139,9 @@ return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MS
         gamstart <- max(unlist(mat))
     }
     if (group == "None") {
-        gamstart = max(t(Y) %*% t(Z[(k1*p+1):nrow(Z),]))
+        # commented out 12715
+        ## gamstart = max(t(Y) %*% t(Z[(k1*p+1):nrow(Z),]))
+        gamstart=max(t(Y)%*%t(Z))
     }
     if (group == "SparseLag") {
         mat = list()
@@ -1264,6 +1266,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN)
                 param=BOLD[,2:(k1*p+m*s+1),1]
             }
             if(group=="None"){
+                ## browser()
                 param <- .lassoVARFistX(BOLD,Z,Y[,1:k1],lambda,1e-04,p,MN,k1+m,k1,s,m)[,2:(k1*p+m*s+1),]
             }
             if(group=="Lag"){
