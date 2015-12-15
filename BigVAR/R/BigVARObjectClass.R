@@ -1199,6 +1199,7 @@ f="SparsityPlot.BigVAR.results",
 
       }
       else{m=0;s=0}
+	s=s+s1
     text <- c()
     for (i in 1:p) {
         text1 <- as.expression(bquote(bold(Phi)^(.(i))))
@@ -1206,7 +1207,7 @@ f="SparsityPlot.BigVAR.results",
     }
     ## text <- c()
     if(m>0){
-     for (i in (p+1):(p+s+s1+1)) {
+     for (i in (p+1):(p+s+1)) {
         text1 <- as.expression(bquote(bold(beta)^(.(i-p-s1))))
         text <- append(text, text1)
     }
