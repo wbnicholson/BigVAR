@@ -69,16 +69,20 @@ GamLoopSGLOO <- function(beta_, Activeset_, gamm, alpha, Y, Z, jj_, jjfull_, jjc
     .Call('BigVAR_GamLoopSGLOO', PACKAGE = 'BigVAR', beta_, Activeset_, gamm, alpha, Y, Z, jj_, jjfull_, jjcomp_, eps, YMean2, ZMean2, k1, pk, M2f_, eigs_, m)
 }
 
+vs2 <- function(p, k, j) {
+    .Call('BigVAR_vs2', PACKAGE = 'BigVAR', p, k, j)
+}
+
 proxcpp <- function(v2, L, lambda, k, w) {
     .Call('BigVAR_proxcpp', PACKAGE = 'BigVAR', v2, L, lambda, k, w)
 }
 
-Fistapar <- function(Y, Z, phi, L, lambda, vsubs_, eps, tk, k) {
-    .Call('BigVAR_Fistapar', PACKAGE = 'BigVAR', Y, Z, phi, L, lambda, vsubs_, eps, tk, k)
+Fistapar <- function(Y, Z, phi, L, lambda, eps, tk, k) {
+    .Call('BigVAR_Fistapar', PACKAGE = 'BigVAR', Y, Z, phi, L, lambda, eps, tk, k)
 }
 
-gamloopHVAR <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, vsubs_) {
-    .Call('BigVAR_gamloopHVAR', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, vsubs_)
+gamloopHVAR <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p) {
+    .Call('BigVAR_gamloopHVAR', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p)
 }
 
 proxcppOO <- function(v2, L, lambda, vsubs, k, w) {

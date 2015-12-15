@@ -1136,7 +1136,7 @@ const arma:: colvec& Y2=arma::vectorise(Y,0);
 // *
 // *
 
-
+// [[Rcpp::export]]
 uvec vs2(int p,int k,int j)
 {
   uvec vs(p*k-(j-1)*k);
@@ -1177,9 +1177,15 @@ rowvec proxcpp(colvec v2,int L,double lambda,int k,colvec w)
 
 	  
 	    
-       	      uvec res=vs2(L,k,q+1);
-	    
-	    
+       	      // uvec res=vs2(L,k,q+1);
+		// std::iota p*k-(j-1)*k
+	   std::vector<unsigned int> ivec(L*k-(q)*k);
+	   // if(F1==0){ 
+	   std::iota(ivec.begin(), ivec.end(), k*q);
+	   // else{std::iota(ivec.begin(), ivec.end(), 0);}
+	   uvec res = conv_to<uvec>::from(ivec);	
+
+			
 			  if(norm(r(res)/(lambda*w(q)),"fro")<1+pow(10,-8))
 	    {
 	  		  r(res)=zeros(res.n_elem);
@@ -1199,7 +1205,7 @@ rowvec proxcpp(colvec v2,int L,double lambda,int k,colvec w)
 }
 
 // [[Rcpp::export]]
-mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lambda,const List vsubs_,const double eps,const double tk,const int k)
+mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lambda,const double eps,const double tk,const int k)
 {
   mat phiFIN=phi;
 
@@ -1251,7 +1257,7 @@ mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lam
 }
 
 // [[Rcpp::export]]
-cube gamloopHVAR(NumericVector beta_, const mat& Y,const mat& Z, colvec gammgrid, const double eps,const colvec& YMean2, const colvec& ZMean2,mat& B1, const int k, const int p,List vsubs_){
+cube gamloopHVAR(NumericVector beta_, const mat& Y,const mat& Z, colvec gammgrid, const double eps,const colvec& YMean2, const colvec& ZMean2,mat& B1, const int k, const int p){
 
 
 vec eigval;
@@ -1273,7 +1279,7 @@ colvec nu=zeros<colvec>(k);
             
 
 	 B1=bcube.slice(i);
-	 B1 = Fistapar(Y,Z,B1,p,gammgrid[i],vsubs_,eps,tk,k); 
+	 B1 = Fistapar(Y,Z,B1,p,gammgrid[i],eps,tk,k); 
 	  
 	 nu = YMean2 - B1 *ZMean2;
          bcube2.slice(i) = mat(join_horiz(nu, B1)); 
@@ -1298,20 +1304,20 @@ colvec nu=zeros<colvec>(k);
 // *
 // *
 
-colvec zeropadOO(colvec& r, int& L,int& k,uvec& vs)
-{
-  colvec U=zeros(k*L/2);
-  int n=r.n_elem;
-  int n2=vs.n_elem;
+// colvec zeropadOO(colvec& r, int& L,int& k,uvec& vs)
+// {
+//   colvec U=zeros(k*L/2);
+//   int n=r.n_elem;
+//   int n2=vs.n_elem;
 
-      for(int j=0;j<n2;++j)
-	{
-	  U(vs(n2-j-1))=r(n-j-1);
-	}
+//       for(int j=0;j<n2;++j)
+// 	{
+// 	  U(vs(n2-j-1))=r(n-j-1);
+// 	}
     
 
-  return(U);
-}
+//   return(U);
+// }
 
 // [[Rcpp::export]]
 rowvec proxcppOO(colvec v2,int L,double lambda,List vsubs,int k,colvec w)
@@ -1366,7 +1372,7 @@ mat FistaOO(const mat Y, const mat Z, mat phi, const int p, const int k, double 
 
        phiR=proxcppOO(vectorise(v)+tk*vectorise((trans(Y.col(i))-v*Z)*trans(Z)),2*p,tk*lambda,vsubs,k,w);
        
-      thresh=norm(phiR-v,"inf");
+	  thresh=max(abs(phiR-v));
       phiOLDOLD=phiOLD;
       phiOLD=phiR;
       j+=1;
@@ -1535,7 +1541,7 @@ mat FistaElem(const mat& Y,const mat& Z, mat phi, const int p,const int k,double
 
        phiR=prox2(vectorise(v)+tk*vectorise((trans(Y.col(i))-v*Z)*trans(Z)),tk*lambda,k,p,res1,w);
        
-      thresh=norm(phiR-v,"fro");
+	   thresh=max(abs(phiR-v));
       phiOLDOLD=phiOLD;
       phiOLD=phiR;
       j+=1;

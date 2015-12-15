@@ -341,6 +341,19 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// vs2
+uvec vs2(int p, int k, int j);
+RcppExport SEXP BigVAR_vs2(SEXP pSEXP, SEXP kSEXP, SEXP jSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type j(jSEXP);
+    __result = Rcpp::wrap(vs2(p, k, j));
+    return __result;
+END_RCPP
+}
 // proxcpp
 rowvec proxcpp(colvec v2, int L, double lambda, int k, colvec w);
 RcppExport SEXP BigVAR_proxcpp(SEXP v2SEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP kSEXP, SEXP wSEXP) {
@@ -357,8 +370,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // Fistapar
-mat Fistapar(const mat Y, const mat Z, const mat phi, const int L, const double lambda, const List vsubs_, const double eps, const double tk, const int k);
-RcppExport SEXP BigVAR_Fistapar(SEXP YSEXP, SEXP ZSEXP, SEXP phiSEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP vsubs_SEXP, SEXP epsSEXP, SEXP tkSEXP, SEXP kSEXP) {
+mat Fistapar(const mat Y, const mat Z, const mat phi, const int L, const double lambda, const double eps, const double tk, const int k);
+RcppExport SEXP BigVAR_Fistapar(SEXP YSEXP, SEXP ZSEXP, SEXP phiSEXP, SEXP LSEXP, SEXP lambdaSEXP, SEXP epsSEXP, SEXP tkSEXP, SEXP kSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -367,17 +380,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const mat >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const int >::type L(LSEXP);
     Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< const List >::type vsubs_(vsubs_SEXP);
     Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
     Rcpp::traits::input_parameter< const double >::type tk(tkSEXP);
     Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    __result = Rcpp::wrap(Fistapar(Y, Z, phi, L, lambda, vsubs_, eps, tk, k));
+    __result = Rcpp::wrap(Fistapar(Y, Z, phi, L, lambda, eps, tk, k));
     return __result;
 END_RCPP
 }
 // gamloopHVAR
-cube gamloopHVAR(NumericVector beta_, const mat& Y, const mat& Z, colvec gammgrid, const double eps, const colvec& YMean2, const colvec& ZMean2, mat& B1, const int k, const int p, List vsubs_);
-RcppExport SEXP BigVAR_gamloopHVAR(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP vsubs_SEXP) {
+cube gamloopHVAR(NumericVector beta_, const mat& Y, const mat& Z, colvec gammgrid, const double eps, const colvec& YMean2, const colvec& ZMean2, mat& B1, const int k, const int p);
+RcppExport SEXP BigVAR_gamloopHVAR(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -391,8 +403,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< mat& >::type B1(B1SEXP);
     Rcpp::traits::input_parameter< const int >::type k(kSEXP);
     Rcpp::traits::input_parameter< const int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< List >::type vsubs_(vsubs_SEXP);
-    __result = Rcpp::wrap(gamloopHVAR(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, vsubs_));
+    __result = Rcpp::wrap(gamloopHVAR(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p));
     return __result;
 END_RCPP
 }
