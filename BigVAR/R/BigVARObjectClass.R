@@ -114,7 +114,7 @@ nseries <- ncol(Y)-k1
 
 if(nseries==1 & cond2==FALSE ){stop("Univariate support is only available for Lasso, Lag Group, and Componentwise HVAR")}
 if(length(VARX)==0 & struct=="EFX"){stop("EFX is only supported in the VARX framework")}
-if(struct=="EFX" & is.null(VARX$contemp)){stop("EFX does not support contemporaneuous dependence")}
+if(struct=="EFX" & !is.null(VARX$contemp)){stop("EFX does not support contemporaneuous dependence")}
 structs=c("HVARC","HVAROO","HVARELEM")
 if(length(VARX)!=0& struct %in% structs){stop("EFX is the only nested model supported in the VARX framework")}
 
@@ -271,7 +271,7 @@ gran2 <- length(gamm)
   gran2 = object@Granularity[2]
     gran1=object@Granularity[1]
   }
-          ## browser()
+
 
      if(length(VARX)!=0){
      VARX=TRUE
@@ -310,15 +310,15 @@ gran2 <- length(gamm)
  ##         }
  ##     if(p>s){Z4 <- Z4[,(p-s+1):ncol(Z4)]}
  ##     ZF2 <- rbind(Z3,Z4)
-     ## browser()
+
      Y1 <-matrix(Y[,1:k1],ncol=k1)
      ## if(VARX==TRUE){
-## browser()
+
      X <- matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m)
      ## }else{X=matrix(0,nrow=nrow(Y))}
-     ## browser()
+
      trainZ <- VARXCons(Y1,X,k1,p,m,s,contemp=contemp)
-     ## browser()
+
      trainZ <- trainZ[2:nrow(trainZ),]
      trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
 
@@ -338,6 +338,8 @@ gran2 <- length(gamm)
      if(object@ownlambdas==FALSE){
      gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN)
      }
+
+
      beta=array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,gran2))
 
 
@@ -445,7 +447,7 @@ gran2 <- length(gamm)
      ZFull$Z=trainZ
      ZFull$Y <- trainY
      T <- nrow(trainY)
-     ## browser()
+
   if(object@ownlambdas==TRUE){gamm <- object@Granularity}    
      if(group=="Tapered")
          {
@@ -484,7 +486,7 @@ beta=array(0,dim=c(k,k*p+1,gran2))
                         trainY=matrix(YT2[(p+1):nrow(YT2),],ncol=k)                                  
                         }
             }
-      ## browser()
+
         if (group == "None") {
             if(VARX==TRUE){
            beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s+s1,m)
@@ -576,7 +578,7 @@ beta=array(0,dim=c(k,k*p+1,gran2))
                     if(object@crossval=="Rolling"){
             MSFE[v - (T1 - 1), ii] <- norm2(ZFull$Y[v,1:k1] - beta[,,ii] %*% eZ)^2
                     }else{
-               ##     browser()     
+
                ## sp <- max(p,s)
               if(VARX==TRUE){          
               eZ<- VARXCons(Y[(v-p):(v),1:k1],Y[(v-p):(v),ncol(Y):(ncol(Y)-k1)],k1,p,m,s,contemp=contemp)
@@ -599,7 +601,7 @@ beta=array(0,dim=c(k,k*p+1,gran2))
          setTxtProgressBar(pb, v)}
 
       }
-## browser()
+
 if(group=="Tapered")
     {
 indopt <- which.min(colMeans(MSFE))
@@ -651,6 +653,7 @@ if(group!="Tapered")
      }
      if(VARX==TRUE){
      OOSEval <- .EvalLVARX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp)
+
      }else{
     OOSEval <- .EvalLVAR(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T)
      }
@@ -659,7 +662,7 @@ if(group!="Tapered")
 Y <- object@Data
 
 if(VARX==TRUE){
-## browser()
+
 if(contemp){OOS=FALSE}else{OOS=TRUE}
     Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,oos=OOS,contemp=contemp)
 }else{
@@ -671,7 +674,7 @@ Zvals <- matrix(Zvals[,ncol(Zvals)],ncol=1)
      ## Zvals <- OOSEval$zvals
      ## resids <- OOSEval$resids
 if(ncol(Y)==1| k1==1){betaPred <- matrix(betaPred,nrow=1)}
-     ## browser()
+
 resids <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
                                                                
      MSFEOOS<-mean(na.omit(MSFEOOSAgg))
@@ -698,7 +701,7 @@ if(VARX==FALSE){k1=k}
     BICbench$SD <- sd(BICbench1$MS)/sqrt(length(BICbench1$MS))
  
 }
- 
+
     results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=which.min(colMeans(na.omit(MSFE))),OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,RWMSFE=RWbench$Mean,MeanSD=meanbench$SD,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=list(k=k1,s=s))
      
     return(results)
@@ -804,6 +807,7 @@ if(object@ownlambdas==FALSE){
 if(object@ownlambdas==FALSE){
      gamm <- .LambdaGridX(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k)
 }
+
      beta=array(0,dim=c(k1,k1*p+(k-k1)*s+1,gran2))
 
         if (group == "Lag") {
@@ -1126,7 +1130,7 @@ eZ <- object@Zvals
 eZ <- object@Zvals[2:nrow(object@Zvals),]
 
     }
-    ## browser()
+
 ## object@VARX
 betaPred <- object@betaPred
 ## str(object)    
@@ -1184,7 +1188,11 @@ f="SparsityPlot.BigVAR.results",
   definition=function(object){
 
       B <- object@betaPred
-      B <- B[,2:ncol(B)]
+      if(nrow(B)==1){
+      B <- matrix(B[,2:ncol(B)],nrow=1)
+         }else{
+      B <- B[,2:ncol(B)]}
+
       k <- nrow(B)
       p <- object@lagmax
       s1=0
@@ -1213,6 +1221,7 @@ f="SparsityPlot.BigVAR.results",
     }
      }
     f <- function(m) t(m)[, nrow(m):1]
+
     rgb.palette <- colorRampPalette(c("white", "blue" ),space = "Lab")
     ## rgb.palette <- colorRampPalette(c("white", "blue"), space = "Lab")
     at <- seq(k/2 + 0.5, p * (k)+ 0.5, by = k)
@@ -1220,7 +1229,8 @@ f="SparsityPlot.BigVAR.results",
     at2 <- seq(p*k+m/2+.5,p*k+s*m+.5,by=m)}else{at2=c()}
     at <- c(at,at2)
     se2 = seq(1.75, by = k, length = k)
-    L2 <- levelplot(f(abs(B)), col.regions = rgb.palette, colorkey = NULL, 
+
+    L2 <- levelplot(as.matrix(f(abs(B))), col.regions = rgb.palette, colorkey = NULL, 
         xlab = NULL, ylab = NULL, main = list(label = "Sparsity Pattern Generated by BigVAR", 
             cex = 1), panel = function(...) {
             panel.levelplot(...)
@@ -1230,7 +1240,7 @@ f="SparsityPlot.BigVAR.results",
             bl1 <- seq(k + 0.5, p * 
                 k + 0.5, by = k)
             ## if(m>0){
-            ## browser()    
+
             ## bl2 <- seq(p*k + 0.5, p * 
             ##     k + 0.5+s*m, by = 1)}else(bl2=c())
             b23 <- seq(p*k + 0.5, p * 

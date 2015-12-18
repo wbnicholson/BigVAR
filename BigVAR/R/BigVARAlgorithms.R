@@ -155,7 +155,7 @@ if(k1>1){
     eigvecs <- Eigsys$eigvec
     kkfull=kk
     beta <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k1,(k1)*p+m*s,length(gamm)))
-    ## browser()
+
     BB <- GamLoopGLOO(beta,INIactive,gamm,Y,ZZ,kk,kkfull,kkcomp,eps,YMEAN,ZMEAN,k1,p*(k1)+m*s,M2,eigvals,eigvecs,k1)
         if(MN==TRUE)
          {
@@ -439,14 +439,18 @@ return(betafin)
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
     Y <- t(Y)
     tk <- 1/max(Mod(eigen(Z%*%t(Z))$values))
-    betaini <- beta[,2:ncol(beta[,,1]),]
+    if(k1==1){
+    betaini <- array(beta[,2:(k1*p+m*s+1),],dim=c(1,k1*p+m*s,dim(beta)[3]))
+        }else{betaini <- beta[,2:ncol(beta[,,1]),]}
+   
     for(i in 1:length(lambda))
         {
-    if(dim(beta)[3]>1){	
-     betaF <- fistaX(Y,Z,as.matrix(betaini[,,i]),p,k1,lambda[i],eps,tk,m,s)
+
+    if(dim(beta)[3]>1){
+     betaF <- fistaX(Y,Z,matrix(betaini[,,i],nrow=k1),p,k1,lambda[i],eps,tk,m,s)
    }
 else{ 
-     betaF <- fistaX(Y,Z,as.matrix(betaini),p,k1,lambda[i],eps,tk,m,s)
+     betaF <- fistaX(Y,Z,matrix(betaini,nrow=k1),p,k1,lambda[i],eps,tk,m,s)
    }
      nu <- YMEAN - betaF %*% ZMEAN
      betafin[,,i] <- cbind(nu, betaF)
