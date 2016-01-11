@@ -318,7 +318,7 @@ gran2 <- length(gamm)
      ## }else{X=matrix(0,nrow=nrow(Y))}
 
      trainZ <- VARXCons(Y1,X,k1,p,m,s,contemp=contemp)
-
+     ## browser()
      trainZ <- trainZ[2:nrow(trainZ),]
      trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
 
@@ -1139,7 +1139,10 @@ m <- ncol(object@Data)-k
 p <- object@lagmax
 s <- object@VARX$s
 contemp=object@VARX$contemp
-if(contemp){s1=1
+s1 <- 0
+    if(!is.null(contemp)){
+if(contemp){
+    s1=1}
 }else{s1=0}
 
 nu=betaPred[,1]

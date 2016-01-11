@@ -334,6 +334,7 @@ else{
     
         if (group == "None") {
             betaPred <- .lassoVARFistX(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,k,k1,s+s1,m)
+            ## browser()
         }
         if (group == "Lag") {
                  ## GG <- .GroupLassoVAR(beta,ZFull$Y,ZFull$Z,gamm,1e-04,k,p,activeset,jj,jjcomp,k1,s,MN)
