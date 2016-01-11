@@ -202,11 +202,11 @@ return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MS
   {
    if(contemp){s1=1
    }else{s1=0}
-
+     preds <- matrix(NA,nrow=length((T2+1):T),ncol=k1)
     gran2=1	
     gamm <- gamopt
     Y <- ZFull$Y
-    MSFE <- rep(0,T-T2-1)
+    MSFE <- rep(0,length((T2+1):T))
     alpha=1/(k1+1)
     beta=array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,1))  
         if (group == "Lag") {
@@ -299,10 +299,12 @@ else{
     ## browser()
     ##     print("FOO")
    
-                if(MN==TRUE){MSFE[v-T2] <- norm2(ZFull$Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2}
+                if(MN==TRUE){MSFE[v-T2] <- norm2(ZFull$Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                             preds[v-T2,] <-  betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+                         }
 
                else{MSFE[v-T2] <- norm2(ZFull$Y[v,1:k1] - betaEVAL %*% eZ)^2
-
+                    preds[v-T2,] <- betaEVAL %*% eZ
                     
                 }
 ## }
@@ -380,7 +382,7 @@ else{
     
 ## return(list(MSFE=MSFE,betaPred=betaPred,zvals=eZ,resids=resid))
 
-return(list(MSFE=MSFE,betaPred=betaPred))
+return(list(MSFE=MSFE,betaPred=betaPred,predictions=preds))
     
     
     }
@@ -390,14 +392,16 @@ return(list(MSFE=MSFE,betaPred=betaPred))
 .EvalLVAR <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2)
   {
       
-    gran2=1	
+     gran2=1
+     preds <- matrix(NA,nrow=length((T1+1):T2),ncol=k)
+
     gamm <- gamopt
     Y <- ZFull$Y
     s=p;k1=k
-    MSFE <- rep(0,T2-T1-1)
+    MSFE <- rep(0,length((T1+1):T2))
     alpha=1/(ncol(Y)+1)
     beta=array(0,dim=c(k,p*k+1,1))
-    betaFULL <<- array(0,dim=c(k,p*k+1,T2-T1))
+    ## betaFULL <<- array(0,dim=c(k,p*k+1,T2-T1))
         if (group == "Lag") {
         jj <- .groupfuncpp(p,k)
         jjcomp <- .groupfuncomp(p,k)
@@ -510,11 +514,14 @@ if(h==1){
     ## if(v==T2){browser()}
               # We don't consider an intercept for the MN lasso
                 if(MN==TRUE){MSFE[v-T1] <- norm2(ZFull$Y[v, ] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
-                  betaFULL[,,v-T1] <<- betaEVAL
+                  ## betaFULL[,,v-T1] <<- betaEVAL
+                    preds[v-T1,] <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+                             
                          }
                 
                else{MSFE[v-T1] <- norm2(ZFull$Y[v,] - betaEVAL %*% eZ)^2
                     
+                    preds[v-T1,] <- betaEVAL %*% eZ
                     
                 }
 }
@@ -591,7 +598,7 @@ if(h==1){
 ## resid <- t(t(ZFull$Y)-betaPred%*%rbind(rep(1,ncol(ZFull$Z)),ZFull$Z))
 
     
-return(list(MSFE=MSFE,betaPred=betaPred))
+return(list(MSFE=MSFE,betaPred=betaPred,predictions=preds))
  
     }
 
