@@ -38,7 +38,8 @@ Class="BigVAR",
     T1="numeric",
     T2="numeric",
     ONESE="logical",
-    ownlambdas="logical"  
+    ownlambdas="logical",
+    tf="logical"  
   )
   )
 
@@ -81,7 +82,7 @@ Class="BigVAR",
 #'
 #' @references William B Nicholson, Jacob Bien, and David S Matteson. "Hierarchical vector autoregression." arXiv preprint 1412.5250, 2014.
 #' 
-#' William B Nicholson, David S. Matteson, and Jacob Bien (2015), "Structured regularization for large vector
+#' William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector
 #' autoregressions with exogenous variables," \url{http://www.wbnicholson.com/Nicholsonetal2015.pdf}.
 #' 
 #' @examples
@@ -99,7 +100,8 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
   {
 if(any(is.na(Y))){stop("Remove NA values before running ConstructModel")}      
 if(dim(Y)[2]>dim(Y)[1] & length(VARX)==0){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
-if(p<1){stop("Maximal lag order must be at least 1")}
+if(p<0){stop("Maximal lag order must be at least 0")}
+if(p==0& struct!="None"){stop("Only Basic VARX-L supports a transfer function")}
 structures=c("None","Lag","SparseLag","Diag","SparseDiag","HVARC","HVAROO","HVARELEM","Tapered","EFX")
 cond1=struct %in% structures
 if(cond1==FALSE){stop(cat("struct must be one of",structures))}
@@ -111,7 +113,13 @@ cond2=struct %in% structure2
 k1=0
 if(length(VARX)!=0){k1 <- VARX$k}else{k=0}
 nseries <- ncol(Y)-k1
-
+if(p==0){tf=TRUE
+     }else{
+         tf=FALSE
+         }
+## if(!is.null(VARX$tf)){tf=TRUE}else{
+## tf=FALSE
+##     }
 if(nseries==1 & cond2==FALSE ){stop("Univariate support is only available for Lasso, Lag Group, and Componentwise HVAR")}
 if(length(VARX)==0 & struct=="EFX"){stop("EFX is only supported in the VARX framework")}
 if(struct=="EFX" & !is.null(VARX$contemp)){stop("EFX does not support contemporaneuous dependence")}
@@ -134,9 +142,8 @@ if(length(VARX)!=0& struct %in% structs){stop("EFX is the only nested model supp
       T1=T1,
       T2=T2,
       ONESE=ONESE,
-      ownlambdas=ownlambdas
-    
-
+      ownlambdas=ownlambdas,
+      tf=tf    
        ))
 
   return(BV1)
@@ -316,8 +323,11 @@ gran2 <- length(gamm)
 
      X <- matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m)
      ## }else{X=matrix(0,nrow=nrow(Y))}
-
+     if(!object@tf){
      trainZ <- VARXCons(Y1,X,k1,p,m,s,contemp=contemp)
+     }else{
+         trainZ <- VARXCons(matrix(0,ncol=1,nrow=nrow(X)),X,0,0,m,s,contemp=contemp)
+         }
      ## browser()
      trainZ <- trainZ[2:nrow(trainZ),]
      trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
@@ -579,9 +589,10 @@ beta=array(0,dim=c(k,k*p+1,gran2))
             MSFE[v - (T1 - 1), ii] <- norm2(ZFull$Y[v,1:k1] - beta[,,ii] %*% eZ)^2
                     }else{
 
-               ## sp <- max(p,s)
+                        ## browser()
+                        ## sp <- max(p,s)
               if(VARX==TRUE){          
-              eZ<- VARXCons(Y[(v-p):(v),1:k1],Y[(v-p):(v),ncol(Y):(ncol(Y)-k1)],k1,p,m,s,contemp=contemp)
+              eZ<- VARXCons(matrix(Y[(v-p):(v),1:k1],ncol=k1),Y[(v-p):(v),(ncol(Y)-k1):(ncol(Y))],k1,p,m,s,contemp=contemp)
               }else{
               eZ<- VARXCons(Y[(v-p):(v),1:k1],matrix(0,nrow=length((v-p):v)),k1,p,0,0)
                   }
@@ -665,7 +676,11 @@ Y <- object@Data
 if(VARX==TRUE){
 
 if(contemp){OOS=FALSE}else{OOS=TRUE}
-    Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,oos=OOS,contemp=contemp)
+## browser()
+if(!object@tf){
+    Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,oos=OOS,contemp=contemp)}else{
+    Zvals <- VARXCons(matrix(0,ncol=1,nrow=nrow(Y)),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),0,0,m,s,oos=FALSE,contemp=contemp)
+        }
 }else{
 m=0;s=0
 Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(0,nrow=nrow(Y)),k1,p,m,s,oos=TRUE)}
@@ -685,7 +700,7 @@ if(VARX==FALSE){k1=k}
       meanbench=.evalMean(ZFull$Y[,1:k1],T2,T)
 	RWbench=.evalRW(ZFull$Y[,1:k1],T2,T)
  
-     if(object@ic==FALSE){AICbench=list()
+     if(object@ic==FALSE|object@tf){AICbench=list()
        AICbench$Mean=0
        AICbench$SD=0
        BICbench=list()
