@@ -42,6 +42,21 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// VARXConsTF
+MatrixXd VARXConsTF(MatrixXd X, const int m, int s, bool oos, bool contemp);
+RcppExport SEXP BigVAR_VARXConsTF(SEXP XSEXP, SEXP mSEXP, SEXP sSEXP, SEXP oosSEXP, SEXP contempSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< MatrixXd >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type s(sSEXP);
+    Rcpp::traits::input_parameter< bool >::type oos(oosSEXP);
+    Rcpp::traits::input_parameter< bool >::type contemp(contempSEXP);
+    __result = Rcpp::wrap(VARXConsTF(X, m, s, oos, contemp));
+    return __result;
+END_RCPP
+}
 // ST1a
 double ST1a(double z, double gam);
 RcppExport SEXP BigVAR_ST1a(SEXP zSEXP, SEXP gamSEXP) {

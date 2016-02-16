@@ -326,7 +326,9 @@ gran2 <- length(gamm)
      if(!object@tf){
      trainZ <- VARXCons(Y1,X,k1,p,m,s,contemp=contemp)
      }else{
-         trainZ <- VARXCons(matrix(0,ncol=1,nrow=nrow(X)),X,0,0,m,s,contemp=contemp)
+       ## browser()
+         ## print("TEST")
+         trainZ <- VARXConsTF(matrix(X,ncol=m),m=m,s=s,contemp=contemp,oos=FALSE)
          }
      ## browser()
      trainZ <- trainZ[2:nrow(trainZ),]
@@ -349,7 +351,7 @@ gran2 <- length(gamm)
      gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN)
      }
 
-
+     
      beta=array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,gran2))
 
 
@@ -457,7 +459,7 @@ gran2 <- length(gamm)
      ZFull$Z=trainZ
      ZFull$Y <- trainY
      T <- nrow(trainY)
-
+## browser()
   if(object@ownlambdas==TRUE){gamm <- object@Granularity}    
      if(group=="Tapered")
          {
@@ -679,7 +681,7 @@ if(contemp){OOS=FALSE}else{OOS=TRUE}
 ## browser()
 if(!object@tf){
     Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,oos=OOS,contemp=contemp)}else{
-    Zvals <- VARXCons(matrix(0,ncol=1,nrow=nrow(Y)),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),0,0,m,s,oos=FALSE,contemp=contemp)
+    Zvals <- VARXConsTF(matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),m,s,oos=FALSE,contemp=contemp)
         }
 }else{
 m=0;s=0

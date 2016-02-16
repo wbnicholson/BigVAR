@@ -17,7 +17,7 @@ using namespace Rcpp;
 MatrixXd ZmatF(MatrixXd Y,  int p, const int k,bool intercept=true,bool oos=false,bool contemp=false)
 {
   int T=Y.rows();
-  // some issues with out of sample predictions and contemporaneous dependence
+	// some issues with out of sample predictions and contemporaneous dependence
     if(oos & !contemp){
 	  T+=1;
   }
@@ -42,13 +42,16 @@ MatrixXd ZmatF(MatrixXd Y,  int p, const int k,bool intercept=true,bool oos=fals
     VectorXd Y1N(Map<VectorXd>(Y1M.data(),Y1M.cols()*Y1M.rows()));
     Z.col(i)=Y1N.reverse();
   }
-  MatrixXd ones(1,T-p);
+  // Rcout<<p<<std::endl;
+  MatrixXd ones(1,M);
   ones.setOnes();
   if(p==0){return(ones);
 
   }
   if(intercept){
-  MatrixXd ZF(k*p+1,T-p);
+  MatrixXd ZF(k*p+1,M);
+  // Rcout<<Z.cols()<<endl;
+  // Rcout<<ones.cols()<<endl;	  
   ZF <<ones,Z;
     return(ZF);
   }else{
@@ -59,19 +62,32 @@ MatrixXd ZmatF(MatrixXd Y,  int p, const int k,bool intercept=true,bool oos=fals
 MatrixXd VARXCons(MatrixXd Y, MatrixXd X, const int k, const int p, const int m,  int s,bool oos=false,bool contemp=false)
 {
   // int T=Y.cols();
+    // Rcout<<T<<endl;
+ // Z1;
+ //   Z2;
+  // if(p!=0){
   int T=Y.rows();
-  MatrixXd Z1=ZmatF(Y,p,k,true,oos,false);
+
+  MatrixXd  Z1=ZmatF(Y,p,k,true,oos,false);
   MatrixXd Z2=ZmatF(X,s,m,false,oos,contemp);
   // Rcout<<Z1<<endl;
   // if(contemp){s-=1;}
   if(s==0 & !(contemp)){return(Z1);
-      }
-  if(p==0){
-  MatrixXd ones(1,T-s);
-  ones.setOnes();
-  MatrixXd ZF(m*s+1,T-s);
-  ZF <<ones,Z2;
-return(ZF);}
+  }
+  // }
+//   if(p==0){
+//   MatrixXd ZF=ZmatF(X,s,m,true,oos,contemp);
+	  
+//   // MatrixXd ones(1,T-s);
+//   // ones.setOnes();
+//   // Rcout<<ones.cols()<<std::endl;
+//   // MatrixXd ZF(m*s+1,T-s);
+//   // ZF <<ones,Z2;
+//   Rcout<<"test"<<endl;
+//   // Rcout<<ZF<<endl;
+// return(ZF);
+//   }
+	  
   //adjusting for contemp. dependence
   if(contemp & oos){Z1=Z1.rightCols(Z1.cols()-1);}
   if(p!=0 & (s!=0||contemp)){
@@ -93,3 +109,12 @@ Z1=Z1.rightCols(T1-(s-p));}
     return(ZZ);
 }
 }
+
+
+//[[Rcpp::export]]
+MatrixXd VARXConsTF(MatrixXd X,const int m,  int s,bool oos=false,bool contemp=false)
+{
+MatrixXd ZF=ZmatF(X,s,m,true,oos,contemp);	  
+return(ZF);
+  }
+

@@ -9,6 +9,10 @@ VARXCons <- function(Y, X, k, p, m, s, oos = FALSE, contemp = FALSE) {
     .Call('BigVAR_VARXCons', PACKAGE = 'BigVAR', Y, X, k, p, m, s, oos, contemp)
 }
 
+VARXConsTF <- function(X, m, s, oos = FALSE, contemp = FALSE) {
+    .Call('BigVAR_VARXConsTF', PACKAGE = 'BigVAR', X, m, s, oos, contemp)
+}
+
 ST1a <- function(z, gam) {
     .Call('BigVAR_ST1a', PACKAGE = 'BigVAR', z, gam)
 }
