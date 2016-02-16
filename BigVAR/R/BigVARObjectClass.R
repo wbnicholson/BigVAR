@@ -328,7 +328,7 @@ gran2 <- length(gamm)
      }else{
        ## browser()
          ## print("TEST")
-         trainZ <- VARXConsTF(matrix(X,ncol=m),m=m,s=s,contemp=contemp,oos=FALSE)
+         trainZ <- VARXCons(matrix(0,ncol=1,nrow=nrow(X)),matrix(X,ncol=m),k=0,p=0,m=m,s=s,contemp=contemp,oos=FALSE)
          }
      ## browser()
      trainZ <- trainZ[2:nrow(trainZ),]
@@ -681,7 +681,7 @@ if(contemp){OOS=FALSE}else{OOS=TRUE}
 ## browser()
 if(!object@tf){
     Zvals <- VARXCons(matrix(Y[,1:k1],ncol=k1),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),k1,p,m,s,oos=OOS,contemp=contemp)}else{
-    Zvals <- VARXConsTF(matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),m,s,oos=FALSE,contemp=contemp)
+    Zvals <- VARXCons(matrix(0,ncol=1,nrow=nrow(Y)),matrix(Y[,(ncol(Y)-m+1):ncol(Y)],ncol=m),0,0,m,s,oos=FALSE,contemp=contemp)
         }
 }else{
 m=0;s=0

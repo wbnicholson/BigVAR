@@ -75,8 +75,8 @@ MatrixXd VARXCons(MatrixXd Y, MatrixXd X, const int k, const int p, const int m,
   if(s==0 & !(contemp)){return(Z1);
   }
   // }
-//   if(p==0){
-//   MatrixXd ZF=ZmatF(X,s,m,true,oos,contemp);
+  if(p==0){
+  MatrixXd ZF=ZmatF(X,s,m,true,oos,contemp);
 	  
 //   // MatrixXd ones(1,T-s);
 //   // ones.setOnes();
@@ -85,8 +85,8 @@ MatrixXd VARXCons(MatrixXd Y, MatrixXd X, const int k, const int p, const int m,
 //   // ZF <<ones,Z2;
 //   Rcout<<"test"<<endl;
 //   // Rcout<<ZF<<endl;
-// return(ZF);
-//   }
+return(ZF);
+  }
 	  
   //adjusting for contemp. dependence
   if(contemp & oos){Z1=Z1.rightCols(Z1.cols()-1);}
@@ -111,10 +111,10 @@ Z1=Z1.rightCols(T1-(s-p));}
 }
 
 
-//[[Rcpp::export]]
-MatrixXd VARXConsTF(MatrixXd X,const int m,  int s,bool oos=false,bool contemp=false)
-{
-MatrixXd ZF=ZmatF(X,s,m,true,oos,contemp);	  
-return(ZF);
-  }
+// //[[Rcpp::export]]
+// MatrixXd VARXConsTF(MatrixXd X,const int m,  int s,bool oos=false,bool contemp=false)
+// {
+// MatrixXd ZF=ZmatF(X,s,m,true,oos,contemp);	  
+// return(ZF);
+//   }
 
