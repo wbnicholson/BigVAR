@@ -823,7 +823,7 @@ if(object@ownlambdas==FALSE){
 
             }
 if(object@ownlambdas==FALSE){
-     gamm <- .LambdaGridX(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k)
+     gamm <- .LambdaGridX(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN)
 }
 
      beta=array(0,dim=c(k1,k1*p+(k-k1)*s+1,gran2))
@@ -875,7 +875,7 @@ if(object@ownlambdas==FALSE){
         trainZ=Z1[2:nrow(Z1),]   
         trainY=Y[(p+1):nrow(Y),]          
 if(object@ownlambdas==FALSE){
-      gamm <- .LambdaGridE(gran1, gran2, jj, trainY, trainZ,group,p,k)
+      gamm <- .LambdaGridE(gran1, gran2, jj, trainY, trainZ,group,p,k,MN)
 }
         VARX=FALSE
         k1=k
@@ -1159,7 +1159,7 @@ s <- object@VARX$s
 contemp=object@VARX$contemp
 s1 <- 0
     if(!is.null(contemp)){
-if(contemp){
+if(object@contemp){
     s1=1}
 }else{s1=0}
 
