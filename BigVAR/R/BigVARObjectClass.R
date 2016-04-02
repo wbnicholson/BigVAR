@@ -1171,7 +1171,7 @@ fcst <- betaPred%*%eZ+nu
         }
 else{
 if(object@VARXI){stop("multi step ahead predictions not supported for VARX models")}    
-B <- VarptoVAR1MC(betaPred,p,k,m,s+s1)
+B <- VarptoVar1MC(betaPred,p,k)
     
 fcst <- ((B%^%n.ahead)%*%eZ)[1:k,]+nu
     }
