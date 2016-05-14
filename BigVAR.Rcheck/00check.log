@@ -1,0 +1,98 @@
+* using log directory ‘/home/will/Dropbox/School/Research/Git Repository: BigVAR/BigVAR.Rcheck’
+* using R version 3.2.4 Patched (2016-03-16 r70387)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* using session charset: UTF-8
+* using option ‘--as-cran’
+* checking for file ‘BigVAR/DESCRIPTION’ ... OK
+* checking extension type ... Package
+* this is package ‘BigVAR’ version ‘1.0’
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: ‘Will Nicholson <wbn8@cornell.edu>’
+New submission
+* checking package namespace information ... OK
+* checking package dependencies ... NOTE
+  No repository set, so cyclic dependency check skipped
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘BigVAR’ can be installed ... OK
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking DESCRIPTION meta-information ... OK
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking R files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking use of S3 registration ... OK
+* checking dependencies in R code ... OK
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+check.BigVAR,BigVAR: no visible binding for global variable ‘Y’
+cv.BigVAR,BigVAR: possible error in predictMS(pred, trainY, h - 1,
+  2:dim(beta)[2], ii, p, MN): unused argument (MN)
+cv.BigVAR,BigVAR: possible error in predictMS(pred, trainY, h - 1,
+  2:dim(beta)[2], (ii - 1) * nalpha + jj, p, MN): unused argument (MN)
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd line widths ... OK
+* checking Rd cross-references ... OK
+* checking for missing documentation entries ... OK
+* checking for code/documentation mismatches ... WARNING
+Codoc mismatches from documentation object 'VARXForecastEval':
+VARXForecastEval
+  Code: function(Y, X, p, s, T1, T2, IC, h, iterated = FALSE)
+  Docs: function(Y, X, p, s, T1, T2, IC)
+  Argument names in code not in docs:
+    h iterated
+
+Codoc mismatches from documentation object 'constructModel':
+constructModel
+  Code: function(Y, p, struct, gran, RVAR = FALSE, h = 1, cv =
+                 "Rolling", MN = FALSE, verbose = TRUE, IC = TRUE, VARX
+                 = list(), T1 = floor(nrow(Y)/3), T2 = floor(2 *
+                 nrow(Y)/3), ONESE = FALSE, ownlambdas = FALSE, alpha =
+                 as.double(NULL), recursive = FALSE)
+  Docs: function(Y, p, struct, gran, RVAR = FALSE, h = 1, cv =
+                 "Rolling", MN = FALSE, verbose = TRUE, IC = TRUE, VARX
+                 = list(), T1 = floor(nrow(Y)/3), T2 = floor(2 *
+                 nrow(Y)/3), ONESE = FALSE, ownlambdas = FALSE)
+  Argument names in code not in docs:
+    alpha recursive
+
+S4 class codoc mismatches from documentation object 'BigVAR-class':
+Slots for class 'BigVAR'
+  Code: Data Granularity Minnesota ONESE Relaxed Structure T1 T2 VARX
+        alpha crossval horizon ic lagmax ownlambdas recursive tf
+        verbose
+  Docs: Data Granularity Minnesota ONESE Relaxed Structure T1 T2 VARX
+        crossval horizon ic lagmax ownlambdas tf verbose
+
+* checking Rd \usage sections ... OK
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking contents of ‘data’ directory ... OK
+* checking data for non-ASCII characters ... OK
+* checking data for ASCII and uncompressed saves ... OK
+* checking line endings in C/C++/Fortran sources/headers ... OK
+* checking line endings in Makefiles ... OK
+* checking compilation flags in Makevars ... OK
+* checking for GNU extensions in Makefiles ... OK
+* checking for portable use of $(BLAS_LIBS) and $(LAPACK_LIBS) ... OK
+* checking compiled code ... OK
+* checking examples ... OK
+* checking PDF version of manual ... OK
+* DONE
+Status: 1 WARNING, 3 NOTEs

@@ -1,0 +1,17 @@
+Package: BigVAR
+Type: Package
+Title: Dimension Reduction Methods for Multivariate Time Series
+Version: 1.0
+Date: 2016-05-13
+Author: Will Nicholson
+Maintainer: Will Nicholson <wbn8@cornell.edu>
+Description: Estimates VAR and VARX models with structured Lasso Penalties.
+Depends: R (>= 3.1.0), methods
+Imports: MASS, zoo, lattice, Rcpp,
+License: GPL (>=2)
+LazyLoad: yes
+SystemRequirements: C++11
+LinkingTo: Rcpp, RcppArmadillo, RcppEigen
+Packaged: 2016-05-14 19:05:15 UTC; will
+RoxygenNote: 5.0.1
+NeedsCompilation: yes

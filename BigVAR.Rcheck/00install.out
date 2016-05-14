@@ -1,0 +1,18 @@
+* installing *source* package ‘BigVAR’ ...
+** libs
+icpc -std=c++11 -I/usr/local/lib/R/include -DNDEBUG  -I/usr/local/include -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/RcppArmadillo/include" -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/RcppEigen/include"   -fpic  -O3 -ipo -xavx -qopenmp -wd308 -c DataCons.cpp -o DataCons.o
+icpc -std=c++11 -I/usr/local/lib/R/include -DNDEBUG  -I/usr/local/include -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/RcppArmadillo/include" -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/RcppEigen/include"   -fpic  -O3 -ipo -xavx -qopenmp -wd308 -c ExperimentalBigVARFunctionsX.cpp -o ExperimentalBigVARFunctionsX.o
+icpc -std=c++11 -I/usr/local/lib/R/include -DNDEBUG  -I/usr/local/include -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/RcppArmadillo/include" -I"/home/will/R/x86_64-pc-linux-gnu-library/3.2/RcppEigen/include"   -fpic  -O3 -ipo -xavx -qopenmp -wd308 -c RcppExports.cpp -o RcppExports.o
+icpc -std=c++11 -shared -L/usr/local/lib/R/lib -L/usr/local/lib -o BigVAR.so DataCons.o ExperimentalBigVARFunctionsX.o RcppExports.o -L/opt/intel/composer_xe_2013_sp1.1.106/mkl/lib/intel64 -L/opt/intel/composer_xe_2013_sp1.1.106/compiler/lib -Wl,--start-group -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -lm -Wl,--end-group -liomp5 -lpthread -lifport -lifcore -limf -lsvml -lm -lipgo -lirc -lpthread -lirc_s -ldl -L/usr/local/lib/R/lib -lR
+installing to /home/will/Dropbox/School/Research/Git Repository: BigVAR/BigVAR.Rcheck/BigVAR/libs
+** R
+** data
+** inst
+** preparing package for lazy loading
+Creating a generic function for ‘plot’ from package ‘graphics’ in package ‘BigVAR’
+Creating a generic function for ‘predict’ from package ‘stats’ in package ‘BigVAR’
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded
+* DONE (BigVAR)

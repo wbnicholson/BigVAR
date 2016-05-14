@@ -1,9 +1,15 @@
+
+#' Realization of a simulated multivariate time series
+#' 
 #' @name Y
 #' @title Simulated Multivariate Time Series
 #' @docType data
+#' @details \eqn{100 \times 3} multivariate time series distributed according to the generator matrix \link{A}.
 #' @author Will Nicholson
 NULL
 
+#' Coefficient matrix for a stationary simulated multivariate time series
+#' 
 #' @name A
 #' @title Generator for Simulated Multivariate Time Series
 #' @docType data
