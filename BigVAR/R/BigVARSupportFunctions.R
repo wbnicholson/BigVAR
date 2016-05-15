@@ -79,7 +79,7 @@
         }
         gamstart <- max(unlist(mat))
     }
-    if (group == "None"|group=="Tapered") {
+    if (group == "Basic"|group=="Tapered") {
 
         gamstart <- max(t(Y) %*% t(Z))
 
@@ -112,7 +112,7 @@
         }
     }
 
-    if (group == "Diag") {
+    if (group == "OwnOther") {
 
         mat <- list()
 
@@ -128,7 +128,7 @@
         gamstart <- max(unlist(mat))
 
     }
-    if (group == "SparseDiag") {
+    if (group == "SparseOO") {
 
         mat <- list()
 
@@ -223,7 +223,7 @@
 
     }
 
-    if (group == "None") {
+    if (group == "Basic") {
 
         gamstart <- max(t(Y)%*%t(Z))
 
@@ -265,7 +265,7 @@
 
     }
 
-    if (group == "Diag") {
+    if (group == "OwnOther") {
 
         mat <- list()
 
@@ -282,7 +282,7 @@
 
     }
 
-    if (group == "SparseDiag") {
+    if (group == "SparseOO") {
 
         mat <- list()
 
@@ -397,14 +397,14 @@
 
         }
 
-        if (group == "Diag") {
+        if (group == "OwnOther") {
 
             kk <- diaggroupfunVARX(p, k,k1,s+s1)
             activeset <- rep(list(rep(rep(list(0), length(kk)))), 
                              gran2)
         }
 
-        if (group == "SparseDiag") {
+        if (group == "SparseOO") {
 
             kk <- diaggroupfunVARX(p, k,k1,s+s1)
 
@@ -430,7 +430,7 @@
 
             trainZ <- ZFull$Z[,1:(v-h)]
 
-            if (group == "None") {
+            if (group == "Basic") {
 
                 beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-6,p,MN,k,k1,s+s1,m)
             }
@@ -459,7 +459,7 @@
 
             }
 
-            if (group == "Diag") {
+            if (group == "OwnOther") {
 
                 GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
                                      activeset, 1e-04,p,MN,k,k1,s+s1)
@@ -469,7 +469,7 @@
                 activeset <- GG$active
 
             }
-            if (group == "SparseDiag") {
+            if (group == "SparseOO") {
                 
 
                 GG <- .SparseGroupLassoVAROOX(beta, kk, trainY, trainZ, 
@@ -528,7 +528,7 @@
             }
         }
                                         # Parameter estimates using all available data
-        if (group == "None") {
+        if (group == "Basic") {
 
             betaPred <- .lassoVARFistX(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,k,k1,s+s1,m)            
         }
@@ -549,7 +549,7 @@
 
         }
 
-        if (group == "Diag") {
+        if (group == "OwnOther") {
 
             GG <- .GroupLassoOOX(beta, kk, ZFull$Y, ZFull$Z, gamm, 
                                  activeset, 1e-04,p,MN,k,k1,s+s1)
@@ -557,7 +557,7 @@
             betaPred <- GG$beta
 
         }
-        if (group == "SparseDiag") {
+        if (group == "SparseOO") {
 
             GG <- .SparseGroupLassoVAROOX(beta, kk, ZFull$Y, ZFull$Z, 
                                           gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k)
@@ -642,7 +642,7 @@
             }
         
 
-        if (group == "Diag")
+        if (group == "OwnOther")
             {
 
 
@@ -653,7 +653,7 @@
 
             }
 
-        if (group == "SparseDiag") {
+        if (group == "SparseOO") {
 
             kk <- .lfunction3cpp(p, k)
 
@@ -706,7 +706,7 @@
                 if(v+h-1>T2){
                     break
                 }
-                if (group == "None") {
+                if (group == "Basic") {
 
                     beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-05,p,MN)
 
@@ -736,7 +736,7 @@
                 }
                 
 
-                if (group == "Diag") {
+                if (group == "OwnOther") {
 
                     GG <- .GroupLassoOO(beta, kk, trainY, trainZ, gamm, 
                                         activeset, 1e-04,p,MN)
@@ -747,7 +747,7 @@
 
                 }
 
-                if (group == "SparseDiag") {
+                if (group == "SparseOO") {
                     
                     GG <- .SparseGroupLassoVAROO(beta, kk, trainY, trainZ, 
                                                  gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN)
@@ -843,7 +843,7 @@
                 }
             }
 
-        if (group == "None") {
+        if (group == "Basic") {
 
             betaPred <- .lassoVARFist(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN)
 
@@ -867,7 +867,7 @@
 
         }
 
-        if (group == "Diag") {
+        if (group == "OwnOther") {
 
 
             GG <- .GroupLassoOO(beta, kk, ZFull$Y, ZFull$Z, gamm, 
@@ -877,7 +877,7 @@
 
         }
 
-        if (group == "SparseDiag") {
+        if (group == "SparseOO") {
 
             GG <- .SparseGroupLassoVAROO(beta, kk, ZFull$Y, ZFull$Z, 
                                          gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN)
@@ -1537,7 +1537,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
                     param <- BOLD[,2:(k1*p+m*s+1),1]
                 }
 
-                if(group=="None"){
+                if(group=="Basic"){
                     param <- .lassoVARFistX(BOLD,Z,Y[,1:k1],lambda,1e-04,p,MN,k1+m,k1,s,m)[,2:(k1*p+m*s+1),]
                 }
 
@@ -1552,7 +1552,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
                 }
                 
 
-                if(group=="Diag")
+                if(group=="OwnOther")
                     {
 
                         kk <- diaggroupfunVARX(p, k,k1,s)
@@ -1562,7 +1562,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
                         activeset <- BB$active
                     }
 
-                if(group=="SparseDiag")
+                if(group=="SparseOO")
                     {
 
                         kk <- diaggroupfunVARX(p, k,k1,s)
@@ -1620,7 +1620,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
         lambdal <- 0
         activeset <- list(rep(rep(list(0), length(gs))))
 
-        if(group=="SparseDiag")
+        if(group=="SparseOO")
             {
                 kk <- .lfunction3cpp(p, k)
                 activeset <- rep(list(rep(rep(list(0), length(kk)))),1)
@@ -1635,7 +1635,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
             {
 
                 lambda <- (lambdah+lambdal)/2
-                if(group=="None"){
+                if(group=="Basic"){
                     param <- .lassoVARFist(BOLD,Z,Y,lambda,1e-04,p,MN)[,2:(k*p+1),]
                 }
 
@@ -1671,7 +1671,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
                 }
                 
 
-                if(group=="Diag")
+                if(group=="OwnOther")
                     {
                         kk <- .lfunction3cpp(p, k)
                         BB <- .GroupLassoOO(BOLD, kk, Y, Z, lambda,activeset, 1e-04,p,MN)
@@ -1682,7 +1682,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
                     }
 
 
-                if(group=="SparseDiag")
+                if(group=="SparseOO")
                     {
                         BB <- .SparseGroupLassoVAROO(BOLD, kk, Y, Z, lambda,alpha,activeset, 1e-04,q1a,p,MN)
                         param <- BB$beta[,2:(k*p+1),]

@@ -24,7 +24,7 @@ Will perform cross validation to select penalty parameters over a training sampl
 data(Y)
 Y=Y[1:100,]
 # Fit a Basic VARX-L with rolling cross validation 
-Model1=constructModel(Y,p=4,struct="None",gran=c(50,10))
+Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10))
 results=cv.BigVAR(Model1)
 }
 \seealso{

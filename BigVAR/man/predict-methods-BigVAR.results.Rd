@@ -22,7 +22,7 @@ Provides \code{n.ahead} step forecasts using the model produced by cv.BigVAR.
 \examples{
 data(Y)
 Y=Y[1:100,]
-Model1=constructModel(Y,p=4,struct="None",gran=c(50,10),verbose=FALSE)
+Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE)
 results=cv.BigVAR(Model1)
 predict(results,n.ahead=1)
 }

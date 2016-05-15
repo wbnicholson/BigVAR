@@ -14,11 +14,11 @@ check.BigVAR <- function(object){
     if(object@lagmax<0){msg <- c("Maximal lag order must be at least 0")
                         errors <- c(errors,msg)
                     }
-    if(object@lagmax==0& object@Structure!="None"){
+    if(object@lagmax==0& object@Structure!="Basic"){
         msg <- c("Only Basic VARX-L supports a transfer function")
         errors <- c(errors,msg)
     }
-    structures=c("None","Lag","SparseLag","Diag","SparseDiag","HVARC","HVAROO","HVARELEM","Tapered","EFX","SparseLagDual")
+    structures=c("Basic","Lag","SparseLag","OwnOther","SparseOO","HVARC","HVAROO","HVARELEM","Tapered","EFX")
     cond1=object@Structure%in% structures
     if(cond1==FALSE){
         msg <- paste("struct must be one of",structures)
@@ -38,7 +38,7 @@ check.BigVAR <- function(object){
         msg <- c("Granularity parameters must be positive")
         errors <- c(errors,msg)
     }
-    structure2 <- c("None","Lag","HVARC")
+    structure2 <- c("Basic","Lag","HVARC")
     cond2=object@Structure %in% structure2
     k1=0
     if(length(VARX)!=0){
@@ -110,7 +110,7 @@ check.BigVAR <- function(object){
 #'
 #' An object class to be used with cv.BigVAR
 #' 
-#' @slot Data a \eqn{T x k} multivariate time Series
+#' @slot Data a \eqn{T \times k} multivariate time Series
 #' @slot lagmax Maximal lag order for modeled series
 #' @slot Structure Penalty Structure
 #' @slot Relaxed Indicator for relaxed VAR
@@ -182,11 +182,11 @@ setClass(
 
 #' @details The choices for "struct" are as follows
 #' \itemize{
-#' \item{  "None" (Basic VARX-L)}
+#' \item{  "Basic" (Basic VARX-L)}
 #' \item{  "Lag" (Lag Group VARX-L)} 
 #' \item{  "SparseLag" (Lag Sparse Group VARX-L)} 
-#' \item{  "Diag" (Own/Other Group VARX-L) }
-#' \item{  "SparseDiag" (Own/Other Sparse Group VARX-L) }
+#' \item{  "OwnOther" (Own/Other Group VARX-L) }
+#' \item{  "SparseOO" (Own/Other Sparse Group VARX-L) }
 #' \item{  "EFX" (Endogenous First VARX-L)}
 #' \item{  "HVARC" (Componentwise HVAR) }
 #' \item{  "HVAROO" (Own/Other HVAR) }
@@ -198,7 +198,7 @@ setClass(
 #'
 #' The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.  
 
-#' @note The specifications "None", "Lag," "SparseLag," "SparseDiag," and "Diag" can accommodate both VAR and VARX models.  EFX only applies to VARX models.  "HVARC," "HVAROO," "HVARELEM," and "Tapered" can only be used with VAR models.
+#' @note The specifications "Basic", "Lag," "SparseLag," "SparseOO," and "OwnOther" can accommodate both VAR and VARX models.  EFX only applies to VARX models.  "HVARC," "HVAROO," "HVARELEM," and "Tapered" can only be used with VAR models.
 #'
 #' @seealso \code{\link{cv.BigVAR}},\code{\link{BigVAR.est}}
 #' 
@@ -217,23 +217,25 @@ setClass(
 #' data(Y)
 #' T1=floor(nrow(Y)/3)
 #' T2=floor(2*nrow(Y)/3)
-#' Model1=constructModel(Y,p=4,struct="None",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
+#' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 #' @export
 constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE)
 {
     if(any(is.na(Y))){stop("Remove NA values before running ConstructModel")}      
     if(dim(Y)[2]>dim(Y)[1] & length(VARX)==0){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
     if(p<0){stop("Maximal lag order must be at least 0")}
-    if(p==0& struct!="None"){stop("Only Basic VARX-L supports a transfer function")}
-    structures=c("None","Lag","SparseLag","Diag","SparseDiag","HVARC","HVAROO","HVARELEM","Tapered","EFX","SparseLagDual")
+    if(p==0& struct!="Basic"){stop("Only Basic VARX-L supports a transfer function")}
+    oldnames <- c("None","Diag","SparseDiag")
+    if(struct%in%oldnames) stop("Naming Convention for these structures has changed. Use Basic, OwnOther, and SparseOO.")
+    structures=c("Basic","Lag","SparseLag","OwnOther","SparseOO","HVARC","HVAROO","HVARELEM","Tapered","EFX")
     cond1=struct %in% structures
-    if(cond1==FALSE){stop(cat("struct must be one of",structures))}
+    if(!cond1){stop(cat("struct must be one of",structures))}
     if(h<1){stop("Forecast Horizon must be at least 1")}
     if(cv!="Rolling" & cv!="LOO"){stop("Cross-Validation type must be one of Rolling or LOO")}
     if(length(gran)!=2&ownlambdas==FALSE){stop("Granularity must have two parameters")}
     if(any(gran<=0)){stop("Granularity parameters must be positive")}
 
-    structure2 <- c("None","Lag","HVARC")
+    structure2 <- c("Basic","Lag","HVARC")
     cond2=struct %in% structure2
     k1=0
     if(length(VARX)!=0){
@@ -409,7 +411,7 @@ setMethod(f="plot",signature="BigVAR",
 #' data(Y)
 #' Y=Y[1:100,]
 #' # Fit a Basic VARX-L with rolling cross validation 
-#' Model1=constructModel(Y,p=4,struct="None",gran=c(50,10))
+#' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10))
 #' results=cv.BigVAR(Model1)
 #' @export
 setGeneric(
@@ -454,7 +456,7 @@ setMethod(
         }
 
         
-        if(length(alpha)>1 & group%in%c("SparseLag","SparseDiag"))
+        if(length(alpha)>1 & group%in%c("SparseLag","SparseOO"))
             {
                 dual <- TRUE
 
@@ -548,7 +550,7 @@ setMethod(
                                  gran2*length(alpha))
 
             }
-            if(group=="Diag"|group=="SparseDiag"){
+            if(group=="OwnOther"|group=="SparseOO"){
                                         # Own other based groupings
                 jj <- diaggroupfunVARXLG(p,k,k1,s+s1)
                 activeset <- rep(list(rep(rep(list(0), length(jj)))), 
@@ -597,12 +599,12 @@ setMethod(
                                  gran2*length(alpha))
                 
             }
-            if (group == "Diag") {
+            if (group == "OwnOther") {
                 kk <- diaggroupfunVARX(p,k,k1,s+s1)
                 activeset <- rep(list(rep(rep(list(0), length(kk)))), 
                                  gran2)
             }
-            if (group == "SparseDiag") {
+            if (group == "SparseOO") {
                 kk <- diaggroupfunVARX(p,k,k1,s+s1)
                 activeset <- rep(list(rep(rep(list(0), length(kk)))), 
                                  gran2*length(alpha))
@@ -670,12 +672,12 @@ setMethod(
                                  gran2*length(alpha))
                 
             }
-            if (group == "Diag") {
+            if (group == "OwnOther") {
                 kk <- .lfunction3cpp(p, k)
                 activeset <- rep(list(rep(rep(list(0), length(kk)))), 
                                  gran2)
             }
-            if (group == "SparseDiag") {
+            if (group == "SparseOO") {
                 kk <- .lfunction3cpp(p, k)
                 jjcomp <- .lfunctioncomp(p,k)
                 jj <- .lfunction3(p,k)
@@ -791,7 +793,7 @@ setMethod(
                 }
 
 
-            if (group == "None") {
+            if (group == "Basic") {
 
                 if(VARX){
 
@@ -851,7 +853,7 @@ setMethod(
 
             }
 
-            if (group == "Diag") {
+            if (group == "OwnOther") {
 
                 if(VARX){
 
@@ -870,7 +872,7 @@ setMethod(
 
             }
 
-            if (group == "SparseDiag") {
+            if (group == "SparseOO") {
                 if(VARX){
 
 
@@ -1264,7 +1266,7 @@ setMethod(
 #' data(Y)
 #' Y=Y[1:100,]
 #' #construct a Basic VAR-L
-#' Model1=constructModel(Y,p=4,struct="None",gran=c(50,10))
+#' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10))
 #' BigVAR.est(Model1)
 #' @export
 setGeneric(
@@ -1308,7 +1310,7 @@ setMethod(
         }
 
         
-        if(length(alpha)>1 & group%in%c("SparseLag","SparseDiag"))
+        if(length(alpha)>1 & group%in%c("SparseLag","SparseOO"))
             {
                 dual <- TRUE
 
@@ -1379,7 +1381,7 @@ setMethod(
 
             }
 
-            if(group=="Diag"|group=="SparseDiag"){
+            if(group=="OwnOther"|group=="SparseOO"){
 
                 jj=diaggroupfunVARXLG(p,k,k1,s)
                 activeset <- rep(list(rep(rep(list(0), length(jj)))), 
@@ -1436,7 +1438,7 @@ setMethod(
                              gran2*length(alpha))
             
         }
-        if (group == "Diag") {
+        if (group == "OwnOther") {
 
             kk <- diaggroupfunVARX(p,k,k1,s+s1)
 
@@ -1444,7 +1446,7 @@ setMethod(
                              gran2)
 
         }
-        if (group == "SparseDiag") {
+        if (group == "SparseOO") {
 
 
             kk <- diaggroupfunVARX(p,k,k1,s+s1)
@@ -1538,7 +1540,7 @@ setMethod(
 
         }
 
-        if (group == "Diag") {
+        if (group == "OwnOther") {
 
             kk <- .lfunction3cpp(p, k)
 
@@ -1547,7 +1549,7 @@ setMethod(
 
         }
 
-        if (group == "SparseDiag") {
+        if (group == "SparseOO") {
 
             kk <- .lfunction3cpp(p, k)
             jjcomp <- .lfunctioncomp(p,k)
@@ -1576,7 +1578,7 @@ setMethod(
     }
 
 
-    if (group == "None") {
+    if (group == "Basic") {
 
         if(VARX){
             beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s,m)}
@@ -1629,7 +1631,7 @@ setMethod(
 
     }
 
-    if (group == "Diag") {
+    if (group == "OwnOther") {
         if(VARX){
             GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
                                  activeset, 1e-04,p,MN,k,k1,s)
@@ -1641,7 +1643,7 @@ setMethod(
         activeset <- GG$active
     }
 
-    if (group == "SparseDiag") {
+    if (group == "SparseOO") {
         if(VARX){
 
 
@@ -1842,7 +1844,7 @@ function(object)
 #' @examples
 #' data(Y)
 #' Y=Y[1:100,]
-#' Model1=constructModel(Y,p=4,struct="None",gran=c(50,10),verbose=FALSE)
+#' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE)
 #' results=cv.BigVAR(Model1)
 #' predict(results,n.ahead=1)
 #' @export
@@ -1913,7 +1915,7 @@ function(object,n.ahead,newxreg=NULL,...)
 #' @examples
 #' data(Y)
 #' Y <- Y[1:100,]
-#' Model1 <- constructModel(Y,p=4,struct="None",gran=c(50,10),verbose=FALSE)
+#' Model1 <- constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE)
 #' SparsityPlot.BigVAR.results(cv.BigVAR(Model1))
 #' @export
 #' @importFrom lattice levelplot

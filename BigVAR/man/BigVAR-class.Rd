@@ -13,7 +13,7 @@ To construct an object of class BigVAR, use the function "ConstructModel"
 \section{Slots}{
 
 \describe{
-\item{\code{Data}}{a \eqn{T x k} multivariate time Series}
+\item{\code{Data}}{a \eqn{T \times k} multivariate time Series}
 
 \item{\code{lagmax}}{Maximal lag order for modeled series}
 

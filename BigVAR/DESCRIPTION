@@ -23,3 +23,4 @@ LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 Packaged: 2014-09-28 14:34:16 UTC; will
 URL: http://www.github.com/wbnicholson/BigVAR
 RoxygenNote: 5.0.1
+

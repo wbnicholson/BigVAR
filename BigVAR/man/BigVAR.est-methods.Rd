@@ -24,7 +24,7 @@ Fits HVAR or VARX-L model on a BigVAR object.  Does not perform cross-validation
 data(Y)
 Y=Y[1:100,]
 #construct a Basic VAR-L
-Model1=constructModel(Y,p=4,struct="None",gran=c(50,10))
+Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10))
 BigVAR.est(Model1)
 }
 \seealso{

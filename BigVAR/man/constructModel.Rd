@@ -50,11 +50,11 @@ Construct an object of class BigVAR
 \details{
 The choices for "struct" are as follows
 \itemize{
-\item{  "None" (Basic VARX-L)}
+\item{  "Basic" (Basic VARX-L)}
 \item{  "Lag" (Lag Group VARX-L)} 
 \item{  "SparseLag" (Lag Sparse Group VARX-L)} 
-\item{  "Diag" (Own/Other Group VARX-L) }
-\item{  "SparseDiag" (Own/Other Sparse Group VARX-L) }
+\item{  "OwnOther" (Own/Other Group VARX-L) }
+\item{  "SparseOO" (Own/Other Sparse Group VARX-L) }
 \item{  "EFX" (Endogenous First VARX-L)}
 \item{  "HVARC" (Componentwise HVAR) }
 \item{  "HVAROO" (Own/Other HVAR) }
@@ -67,7 +67,7 @@ VARX specifications consist of a list with entry k denoting the series that are 
 The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.
 }
 \note{
-The specifications "None", "Lag," "SparseLag," "SparseDiag," and "Diag" can accommodate both VAR and VARX models.  EFX only applies to VARX models.  "HVARC," "HVAROO," "HVARELEM," and "Tapered" can only be used with VAR models.
+The specifications "Basic", "Lag," "SparseLag," "SparseOO," and "OwnOther" can accommodate both VAR and VARX models.  EFX only applies to VARX models.  "HVARC," "HVAROO," "HVARELEM," and "Tapered" can only be used with VAR models.
 }
 \examples{
 library(BigVAR)
@@ -79,7 +79,7 @@ VARX$s=2 # sets 2 as the maximal lag order for exogenous series
 data(Y)
 T1=floor(nrow(Y)/3)
 T2=floor(2*nrow(Y)/3)
-Model1=constructModel(Y,p=4,struct="None",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
+Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 }
 \references{
 William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint 1412.5250, 2016.
