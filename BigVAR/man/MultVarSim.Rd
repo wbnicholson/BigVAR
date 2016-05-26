@@ -4,7 +4,7 @@
 \alias{MultVarSim}
 \title{Simulate a VAR}
 \usage{
-MultVarSim(k, A1, p, Sigma, n)
+MultVarSim(k, A1, p, Sigma, T)
 }
 \arguments{
 \item{k}{Number of Series}
@@ -15,10 +15,10 @@ MultVarSim(k, A1, p, Sigma, n)
 
 \item{Sigma}{Residual Covariance Matrix of dimension \eqn{k\times k}}
 
-\item{n}{Number of simulations}
+\item{T}{Number of simulations}
 }
 \value{
-Returns a \eqn{n \times k} of realizations from a VAR.
+Returns a \eqn{T \times k} of realizations from a VAR.
 }
 \description{
 Simulate a VAR

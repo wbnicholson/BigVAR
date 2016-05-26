@@ -11,7 +11,7 @@ VARXFit(Y, p, IC, VARX = NULL)
 
 \item{p}{maximum lag order}
 
-\item{IC}{Information criterion indicator, if set to \code{NULL}, it will fit a least squares VAR(X) of orders p and s.  Otherwise, if set to "AIC" or "BIC" it return the model that minimizes the given IC.}
+\item{IC}{Information criterion indicator, if set to \code{NULL}, it will fit a least squares VAR(X) of orders p and s.  Otherwise, if set to "AIC" or "BIC" it return the model with lag orders that minimize the given IC.}
 
 \item{VARX}{a list of VARX specifications (as in \code{\link{constructModel}} (or NULL )}
 }
@@ -37,7 +37,7 @@ mod <- VARXFit(Y,3,NULL,NULL)
 # fit a VAR_3 with p= 6 and lag selected according to AIC
 modAIC <- VARXFit(Y,6,"AIC",NULL)
 # Fit a VARX_{2,1} with p=6, s=4 and lags selected by BIC
-modXBIC <- VARXFit(Y,6,"BIC",list(k=2,s=4))
+modXBIC <- VARXFit(Y,6,"BIC",list(k=1,s=4))
 
 }
 \references{

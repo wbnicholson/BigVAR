@@ -2,22 +2,23 @@
 # Most of the computationally expensive portions of the code have been exported to C++
 
 # Sparse Own/Other (VAR)
-.SparseGroupLassoVAROO<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,dual=FALSE) 
+.SparseGroupLassoVAROO<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,dual=FALSE,C1) 
 {
+## browser()
 
+    
+    m <- 0
+    k <- ncol(Y)
     if(MN)
         {
 
             C <- matrix(0,nrow=k,ncol=k*p)        
-            diag(C) <- rep(1,k)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
         }
 
-    
-    m <- 0
-    k <- ncol(Y)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
@@ -42,7 +43,8 @@
     jj <- .lfunction3cpp(p,k)
     jjfull <- jj
     jjcomp <- .lfunctioncomp(p, k)
-    beta <- beta[,2:ncol(beta[,,1]),]
+    dims <- dim(beta)
+    beta <- array(beta[,2:ncol(beta[,,1]),],dim=c(dims[1],dims[2]-1,dims[3]))
     if(!dual){
 
         BB <- GamLoopSGLOO(beta,INIactive,gamm,alpha,Y,ZZ,jj,jj,jjcomp,eps,YMean,ZMean,k,p*k,M2f,eigs,m)
@@ -50,6 +52,7 @@
 
     }else{
 
+        ## browser()
         BB <- GamLoopSGLOODP(beta,INIactive,gamm,alpha,Y,ZZ,jj,jj,jjcomp,eps,YMean,ZMean,k,p*k,M2f,eigs,m)
         
         }
@@ -71,20 +74,20 @@
 
 
 # Sparse Lag (VAR)
-.SparseGroupLassoVAR<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN) 
+.SparseGroupLassoVAR<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,C1) 
 {
+    k <- ncol(Y)
 
     if (MN)
         {
 
             C <- matrix(0,nrow=k,ncol=k*p)        
-            diag(C) <- rep(1,k)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
         }
 
-    k <- ncol(Y)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
@@ -111,7 +114,11 @@
     jj <- .groupfuncpp(p,k)
     jjfull <- jj
     jjcomp <- .groupfuncomp(p, k)
-    beta <- beta[,2:ncol(beta[,,1]),]
+    dims <- dim(beta)
+    beta <- array(beta[,2:ncol(beta[,,1]),],dim=c(dims[1],dims[2]-1,dims[3]))
+    ## browser()    
+    ## beta <- beta[,2:ncol(beta[,,1]),]
+    
     BB <- GamLoopSGL(beta,INIactive,gamm,alpha,Y,Z,jj,jjfull,jjcomp,eps,YMean,ZMean,k,p*k,M1f,M2f,eigs)
     BB$q1 <- q1
 
@@ -129,20 +136,20 @@
 }
 
 # Sparse Lag (VAR) Dual Search
-.SparseGroupLassoVARDual<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN) 
+.SparseGroupLassoVARDual<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,C1) 
 {
-
+k <- ncol(Y)
     if (MN)
         {
 
-            C <- matrix(0,nrow=k,ncol=k*p)        
-            diag(C) <- rep(1,k)
+            C <- matrix(0,nrow=k,ncol=k*p)
+            diag(C) <- C1
+            ## diag(C) <- rep(1,k)
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
         }
 
-    k <- ncol(Y)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
@@ -167,7 +174,10 @@
     jj <- .groupfuncpp(p,k)
     jjfull <- jj
     jjcomp <- .groupfuncomp(p, k)
-    beta <- beta[,2:ncol(beta[,,1]),]
+    ngp <- length(alpha)*length(gamm)
+    dims <- dim(beta)
+    beta <- array(beta[,2:ncol(beta[,,1]),],dim=c(dims[1],dims[2]-1,dims[3]))
+    ## browser()
     BB <- GamLoopSGLDP(beta,INIactive,gamm,alpha,Y,Z,jj,jjfull,jjcomp,eps,YMean,ZMean,k,p*k,M1f,M2f,eigs)
     BB$q1 <- q1
 
@@ -187,7 +197,7 @@
 
 # Lag Group (VAR/VARX-L)
 .GroupLassoVAR1 <- 
-function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s) 
+function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1) 
 {
 
     
@@ -202,7 +212,8 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
     if(MN)
         {
             C <- matrix(0,nrow=k1,ncol=k1*p+s*m)        
-            diag(C) <- rep(1,k1)
+            ## diag(C) <- rep(1,k1)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
@@ -247,15 +258,15 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
 
 
 # Group Lasso Own/Other (VARXL)
-.GroupLassoOOX <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s) 
+.GroupLassoOOX <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1) 
 {
-
     m <- k-k1
 
     if(MN)
         {
             C <- matrix(0,nrow=k1,ncol=k1*p+s*m)        
-            diag(C) <- rep(1,k1)
+            ## diag(C) <- rep(1,k1)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
@@ -311,7 +322,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
 
 
 # Own/Other Group VAR-L
-.GroupLassoOO <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN) 
+.GroupLassoOO <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,C1) 
 {
 
     if(class(Y)!="matrix")
@@ -324,7 +335,8 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
     if(MN)
         {
     C <- matrix(0,nrow=k,ncol=k*p)        
-    diag(C) <- rep(1,k)
+    ## diag(C) <- rep(1,k)
+    diag(C) <- C1
     Y <- t(Y)
     Y <- Y-C%*%Z
     Y <- t(Y)
@@ -380,13 +392,15 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
 
 
 # Elementwise HVAR
-.HVARElemAlg <- function (beta, Y, Z, lambda, eps,p,MN) 
+.HVARElemAlg <- function (beta, Y, Z, lambda, eps,p,MN,C1) 
 {
 
+    k <- ncol(Y)
     if(MN)
         {
             C <- matrix(0,nrow=k,ncol=k*p)        
-            diag(C) <- rep(1,k)
+            ## diag(C) <- rep(1,k)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
@@ -421,7 +435,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
 }
 
 # Basic-VARX-L Fista Implementation
-.lassoVARFistX <- function (B, Z, Y, gamm, eps,p,MN,k,k1,s,m) 
+.lassoVARFistX <- function (B, Z, Y, gamm, eps,p,MN,k,k1,s,m,C1) 
 {
 
     if(class(Y)!="matrix")
@@ -433,7 +447,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
     if(MN)
         {
             C <- matrix(0,nrow=k1,ncol=k1*p+s*m)        
-            diag(C) <- rep(1,k1)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
@@ -466,7 +480,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
 
 
 #Basic VAR Fista Implementation
-.lassoVARFist <- function (B, Z, Y, gamm, eps,p,MN) 
+.lassoVARFist <- function (B, Z, Y, gamm, eps,p,MN,C1) 
 {
 
     if(class(Y)!="matrix")
@@ -479,7 +493,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
     if(MN)
         {
             C <- matrix(0,nrow=k,ncol=k*p)        
-            diag(C) <- rep(1,k)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
@@ -507,8 +521,8 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
     return(beta)
 }
 
-
-.HVARCAlg <- function(beta,Y,Z,lambda,eps,p,MN)
+# Componentwise HVAR
+.HVARCAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1)
     {
     if(class(Y)!="matrix")
         {
@@ -520,7 +534,8 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
     if(MN)
         {
             C <- matrix(0,nrow=k,ncol=k*p)        
-            diag(C) <- rep(1,k)
+            ## diag(C) <- rep(1,k)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
@@ -556,16 +571,18 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
 }
 
 # Endogenous First VARX-L
-.EFVARX <- function(beta,Y,Z,lambda,eps,MN,k1,s,m,p)
+.EFVARX <- function(beta,Y,Z,lambda,eps,MN,k1,s,m,p,C1)
     {        
 
+        
 
         if(MN)
         {
 
 
             C <- matrix(0,nrow=k1,ncol=k1*p+s*m)        
-            diag(C) <- rep(1,k1)
+            ## diag(C) <- rep(1,k1)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
@@ -630,7 +647,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
         }
 
 # HVAR Own/Other
-.HVAROOAlg <- function(beta,Y,Z,lambda,eps,p,MN)
+.HVAROOAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1)
     {
 
         k <- ncol(Y)
@@ -641,7 +658,8 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s)
         if(MN)
         {
             C <- matrix(0,nrow=k,ncol=k*p)        
-            diag(C) <- rep(1,k)
+            ## diag(C) <- rep(1,k)
+            diag(C) <- C1
             Y <- t(Y)
             Y <- Y-C%*%Z
             Y <- t(Y)
@@ -753,7 +771,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 }
 
 # Sparse Lag VARX-L
-.SparseGroupLassoVARX<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,k,s,k1) 
+.SparseGroupLassoVARX<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,k,s,k1,C1) 
 {
 
     m <- k-k1
@@ -761,7 +779,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
     if(MN)
     {
         C <- matrix(0,nrow=k1,ncol=k1*p+s*m)        
-        diag(C) <- rep(1,k1)
+        diag(C) <- C1
         Y <- t(Y)
         Y <- Y-C%*%Z
         Y <- t(Y)
@@ -826,7 +844,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 
 
 
-.SparseGroupLassoVARXDual<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,k,s,k1) 
+.SparseGroupLassoVARXDual<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,k,s,k1,C1) 
 {
 
     m <- k-k1
@@ -834,7 +852,8 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
     if(MN)
     {
         C <- matrix(0,nrow=k1,ncol=k1*p+s*m)        
-        diag(C) <- rep(1,k1)
+        ## diag(C) <- rep(1,k1)
+        diag(C) <- C1
         Y <- t(Y)
         Y <- Y-C%*%Z
         Y <- t(Y)
@@ -901,7 +920,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 
 
 # Sparse Own/Other (VARX)
-.SparseGroupLassoVAROOX<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,p,MN,k1,s,k,dual=FALSE) 
+.SparseGroupLassoVAROOX<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,p,MN,k1,s,k,dual=FALSE,C1) 
 {
 
     m <- k-k1
@@ -909,7 +928,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
     {
 
         C <- matrix(0,nrow=k1,ncol=k1*p+s*m)        
-        diag(C) <- rep(1,k1)
+        diag(C) <- C1
         Y <- t(Y)
         Y <- Y-C%*%Z
         Y <- t(Y)
@@ -981,7 +1000,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 
 # Lag weighted lasso: VAR only
 
-.lassoVARTL <- function (B, Z, Y, gamm, eps,p,MN,alpha) 
+.lassoVARTL <- function (B, Z, Y, gamm, eps,p,MN,alpha,C1) 
 {
 
     if(class(Y)!="matrix")
@@ -994,7 +1013,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
    if(MN)
    {
        C <- matrix(0,nrow=k,ncol=k*p)        
-       diag(C) <- rep(1,k)
+       diag(C) <- C1
        Y <- t(Y)
        Y <- Y-C%*%Z
        Y <- t(Y)

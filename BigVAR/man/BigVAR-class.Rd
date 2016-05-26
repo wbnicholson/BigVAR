@@ -8,7 +8,7 @@
 An object class to be used with cv.BigVAR
 }
 \details{
-To construct an object of class BigVAR, use the function "ConstructModel"
+To construct an object of class BigVAR, use the function \code{\link{constructModel}}
 }
 \section{Slots}{
 
@@ -50,6 +50,8 @@ To construct an object of class BigVAR, use the function "ConstructModel"
 \item{\code{alpha}}{Grid of candidate alpha values (applies only to Sparse VARX-L models)}
 
 \item{\code{recursive}}{Indicator as to whether recursive multi-step forecasts are used (applies only to multiple horizon VAR models)}
+
+\item{\code{constvec}}{vector indicating variables to shrink toward a random walk instead of toward zero (valid only if Minnesota is \code{TRUE})}
 }}
 \seealso{
 \code{\link{constructModel}}

@@ -1,9 +1,7 @@
 #include <RcppArmadillo.h>
-#include <math.h>
 #include <vector>
 #include <limits>
 #include <algorithm>
-#include <string>
 #include <numeric>      // std::iota
 
 // [[Rcpp::plugins(cpp11)]]
@@ -145,17 +143,19 @@ cube gamloopFista(NumericVector beta_, const mat& Y,const mat& Z,const  colvec g
 
 	mat b2=B1;
 	mat B1F2=B1;
-	const int ngridpts=gammgrid.size();
-	cube bcube(beta_.begin(),k1,k1*p+(k-k1)*s,ngridpts,false);
-	cube bcube2(k1,k1*p+(k-k1)*s+1,ngridpts);
+	// const int ngridpts=gammgrid.size();
+	IntegerVector dims=beta_.attr("dim");
+	
+	cube bcube(beta_.begin(),dims[0],dims[1],dims[2],false);
+	cube bcube2(dims[0],dims[1]+1,dims[2]);
 	bcube2.fill(0);
  
-	colvec nu=zeros<colvec>(k1);
+	colvec nu=zeros<colvec>(dims[0]);
 	double gam =0;
 
 	int i;
 	//loop through candidate lambda values
-	for (i=0; i<ngridpts;++i) {
+	for (i=0; i<dims[2];++i) {
 		gam=gammgrid[i];
 
 		mat B1F2=bcube.slice(i);
@@ -334,7 +334,7 @@ List BlockUpdateGL(mat& beta,const mat& Z1, double lam, const mat& Y1,double eps
 					mat r =beta.cols(scomp1)*Z1.rows(scomp1)-Y1 ;
 
 					colvec p=vectorise((r)*trans(Z1.rows(s45)));
-					double adjlam=sqrt(s45.n_elem)*lam;
+					double adjlam=sqrt(static_cast<double>(s45.n_elem))*lam;
 
 					// threshold to enforce sparsity 
 					if(arma::norm(p,"fro")<=adjlam)
@@ -431,13 +431,15 @@ mat ThreshUpdate(mat& betaActive,const mat& Z1, double lam, const mat& Y1,double
 // [[Rcpp::export]]
 List GamLoopGL2(NumericVector beta_, List Activeset, NumericVector gamm, const mat& Y1, const mat& Z1,List jj, List jjfull, List jjcomp, double eps,const colvec& YMean2, const colvec&  ZMean2,int k,int pk,const List M2f_, const List eigvalF_, const List eigvecF_)
 {
-	int gran2=gamm.size();
+	IntegerVector dims=beta_.attr("dim");
+
+	int gran2=dims[2];
 	List activefinal(gran2);
-	cube beta2(beta_.begin(),k,pk,gran2,false);
-	cube betafin(k,pk+1,gran2);
+	cube beta2(beta_.begin(),dims[0],dims[1],gran2,false);
+	cube betafin(dims[0],dims[1]+1,dims[2]);
 	betafin.fill(0);
 	List iterations(gran2);
-	mat betaPrev=zeros<mat>(k,pk);
+	mat betaPrev=zeros<mat>(dims[0],dims[1]);
  
 	//INDEX LISTS WITH PARENTHESES NOT BRACKETS 
 	// WHEN EXTRACTING FROM A LIST YOU NEED as<MAT>
@@ -528,7 +530,7 @@ List BlockUpdate2(const mat& ZZ1, double lam,const mat& Y1,double eps, List grou
 					arma::mat eigvec=eigvecF_(i);
 					arma::mat p=trans(M1)*r;
 
-					double rho=sqrt(s1.size());
+					double rho=sqrt(static_cast<double>(s1.size()));
 					double adjlam=rho*lam;
 
 					if(arma::norm(p,2)<=adjlam)
@@ -612,16 +614,18 @@ colvec ThreshUpdateOO(const mat& ZZ, double lam,const mat& Y,double eps, List gr
 // [[Rcpp::export]]
 List GamLoopGLOO(NumericVector beta_, List Activeset, NumericVector gamm, const mat& Y, const mat& Z,List jj, List jjfull, List jjcomp, double eps, colvec& YMean2, colvec& ZMean2,int k,int pk,List M2f_, List eigvalF_, List eigvecF_,int k1)
 {
+
+	IntegerVector dims=beta_.attr("dim");
 	int gran2=gamm.size();
 	List activefinal(gran2);
-	cube beta2(beta_.begin(),k1,pk,gran2,false);
-	cube betafin(k1,pk+1,gran2);
+	cube beta2(beta_.begin(),dims[0],dims[1],dims[2],false);
+	cube betafin(dims[0],dims[1]+1,dims[2]);
 	betafin.fill(0);
 	List iterations(gran2);
-	mat betaPrev=zeros<mat>(k1,pk);
+	mat betaPrev=zeros<mat>(dims[0],dims[1]);
 
 	arma::colvec B=arma::vectorise(betaPrev);
-	NumericVector betaF2(k1*pk);
+	NumericVector betaF2(dims[0]*dims[1]);
 
 	for(int i=0; i<gran2;++i)
 		{
@@ -643,7 +647,7 @@ List GamLoopGLOO(NumericVector beta_, List Activeset, NumericVector gamm, const 
 					k2+=1;
 
 				}
-			mat betaF(betaF2.begin(),k1,pk,false);
+			mat betaF(betaF2.begin(),dims[0],dims[1],false);
 			colvec nu= YMean2 - betaF *ZMean2;
 			betafin.slice(i)=mat(join_horiz(nu, betaF));
 			activefinal[i]=Active;
@@ -769,7 +773,7 @@ List blockUpdateSGLOO( colvec& beta,const mat& Z1, double lam, double alpha,cons
 					const arma::mat p=-trans(M1)*(r-M1*beta2);
 
 
-					double rho=sqrt(s4.n_elem);
+					double rho=sqrt(static_cast<double>(s4.n_elem));
 					colvec STS;
 						if(alpha>0){
 							STS=ST3a(vectorise(p),lam*alpha);
@@ -864,7 +868,7 @@ mat ThreshUpdateSGLOO(colvec& betaActive,const mat& Z,const double lam,const col
 		int converge=0;
 		double th=10*eps;
 		int iters=0;
-		while(converge==0 & th>eps)	
+		while((converge==0) & (th>eps))	
 			{
 				colvec betaOld=betaActive;
 				betaActive2=blockUpdateSGLOO(betaActive,Z,lam,alpha,Y,eps,groups_,fullgroups_,compgroups_,M2f_,eigs_,k1,m);	 
@@ -886,14 +890,17 @@ mat ThreshUpdateSGLOO(colvec& betaActive,const mat& Z,const double lam,const col
 List GamLoopSGLOO(NumericVector beta_,const List Activeset_,const NumericVector gamm,const double alpha,const mat& Y,const mat& Z,List jj_,const List jjfull_, List jjcomp_,const double eps,const colvec& YMean2,const colvec& ZMean2,const int k1,const int pk,const List M2f_,const NumericVector eigs_,double m)
 {
 
-	int gran2=gamm.size();
+	// int gran2=gamm.size();
+	IntegerVector dims=beta_.attr("dim");
+
+	int gran2=dims[2];
 	List activefinal(gran2);
-	cube beta2(beta_.begin(),k1,pk,gran2,false);
-	cube betafin(k1,pk+1,gran2);
+	cube beta2(beta_.begin(),dims[0],dims[1],gran2,false);
+	cube betafin(dims[0],dims[1]+1,gran2);
 	betafin.fill(0);
 	List iterations(gran2);
-	mat betaPrev=zeros<mat>(k1,pk);
-	NumericVector betaF2(k1*pk);
+	mat betaPrev=zeros<mat>(dims[0],dims[1]);
+	NumericVector betaF2(dims[0]*dims[1]);
 	const arma:: colvec& Y2=arma::vectorise(Y,0);
 	int converge;
 	for(int i=0; i<gran2;++i)
@@ -940,15 +947,17 @@ List GamLoopSGLOODP(NumericVector beta_,const List Activeset_,mat gamm,const col
 
 	int nlambda = gamm.n_rows;
 	int nalpha = gamm.n_cols;
-	List activefinal(nlambda*nalpha);
+	IntegerVector dims=beta_.attr("dim");
+	
+	List activefinal(dims[2]);
 
-	cube beta2(beta_.begin(),k1,pk,nlambda*nalpha,false);
-	cube betafin(k1,pk+1,nlambda*nalpha);
+	cube beta2(beta_.begin(),dims[0],dims[1],dims[2],false);
+	cube betafin(dims[0],dims[1]+1,dims[2]);
 
 	betafin.fill(0);
-	List iterations(nlambda*nalpha);
-	mat betaPrev=zeros<mat>(k1,pk);
-	NumericVector betaF2(k1*pk);
+	List iterations(dims[2]);
+	mat betaPrev=zeros<mat>(dims[0],dims[1]);
+	NumericVector betaF2(dims[0]*dims[1]);
 	const arma:: colvec& Y2=arma::vectorise(Y,0);
 	int converge;
 
@@ -968,7 +977,7 @@ List GamLoopSGLOODP(NumericVector beta_,const List Activeset_,mat gamm,const col
 			//Three components in the list
 			int iters=0;
 			int maxiters=1000;
-			while(converge==0 & iters<maxiters )
+			while((converge==0) & (iters<maxiters) )
 				{
 					B = ThreshUpdateSGLOO(B, Z, gam, Y2, eps, Active, jjfull_, jjcomp_, M2f_, eigs_, alpha1,(double) k1,m);
  
@@ -981,7 +990,7 @@ List GamLoopSGLOODP(NumericVector beta_,const List Activeset_,mat gamm,const col
 					iters+=1;
 				}
 			// Rcout<<iters<<endl;
-			mat betaF(betaF2.begin(),k1,pk,false);
+			mat betaF(betaF2.begin(),dims[0],dims[1],false);
 			colvec nu= YMean2 - betaF *ZMean2;
 			betafin.slice((i)*nalpha+j)=mat(join_horiz(nu, betaF));
 			activefinal[(i)*nalpha+j]=Active;
@@ -1014,7 +1023,7 @@ rowvec proxcpp(colvec v2,int L,double lambda,int k,colvec w)
 			uvec res = conv_to<uvec>::from(ivec);	
 
 			
-			if(norm(r(res)/(lambda*w(q)),"fro")<1+pow(10,-8))
+			if(norm(r(res)/(lambda*w(q)),"fro")<1+1e-8)
 				{
 					r(res)=zeros(res.n_elem);
 	
@@ -1041,7 +1050,7 @@ mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lam
 	for(int r=0;r<L;++r)
 
 		{
-			w(r)=sqrt(k);
+			w(r)=sqrt(static_cast<double>(k));
 
 		}
 	const colvec w2=w;
@@ -1084,12 +1093,13 @@ cube gamloopHVAR(NumericVector beta_, const mat& Y,const mat& Z, colvec gammgrid
 	eig_sym(eigval, eigvec, Zt);
 
 	double tk=1/max(eigval); 
+	IntegerVector dims=beta_.attr("dim");
 
-	const int ngridpts=gammgrid.n_elem;
-	cube bcube(beta_.begin(),k,k*p,ngridpts,false);
-	cube bcube2(k,k*p+1,ngridpts);
+	const int ngridpts=dims[2];
+	cube bcube(beta_.begin(),dims[0],dims[1],ngridpts,false);
+	cube bcube2(dims[0],dims[1]+1,ngridpts);
 	bcube2.fill(0);
-	colvec nu=zeros<colvec>(k);
+	colvec nu=zeros<colvec>(dims[0]);
 
 	int i;
 
@@ -1125,7 +1135,7 @@ rowvec proxcppOO(colvec v2,int L,double lambda,List vsubs,int k,colvec w)
 
 			uvec res=as<uvec>(vsubs(i));
 
-			if(norm(r(res)/(lambda*w(i)),"fro")<1+pow(10,-8))
+			if(norm(r(res)/(lambda*w(i)),"fro")<1+1e-8)
 				{
 					r(res)=zeros(res.n_elem);
 				}
@@ -1189,10 +1199,12 @@ cube gamloopOO(NumericVector beta_, const mat Y,const mat Z, colvec gammgrid, co
 
 	double tk=1/max(eigval); 
 
+	IntegerVector dims=beta_.attr("dim");
 
-	const int ngridpts=gammgrid.n_elem;
-	cube bcube(beta_.begin(),k,k*p,ngridpts,false);
-	cube bcube2(k,k*p+1,ngridpts);
+
+	const int ngridpts=dims[2];
+	cube bcube(beta_.begin(),dims[0],dims[1],ngridpts,false);
+	cube bcube2(dims[0],dims[1]+1,ngridpts);
 	bcube2.fill(0);
 	colvec nu=zeros<colvec>(k);
 
@@ -1253,7 +1265,7 @@ rowvec proxcppelem(colvec v2,int L,double lambda,uvec res1,colvec w)
 	  
 
 
-			if(norm(r(res)/(lambda*w(i)),"fro")<1+pow(10,-8))
+			if(norm(r(res)/(lambda*w(i)),"fro")<1+1e-8)
 				{
 					r(res)=zeros(res.n_elem);
 				}
@@ -1343,9 +1355,12 @@ cube gamloopElem(NumericVector beta_, const mat& Y,const mat& Z, colvec gammgrid
 	double tk=1/max(eigval); 
 
 
-	const int ngridpts=gammgrid.n_elem;
-	cube bcube(beta_.begin(),k,k*p,ngridpts,false);
-	cube bcube2(k,k*p+1,ngridpts);
+	IntegerVector dims=beta_.attr("dim");
+
+
+	const int ngridpts=dims[2];
+	cube bcube(beta_.begin(),dims[0],dims[1],ngridpts,false);
+	cube bcube2(dims[0],dims[1]+1,ngridpts);
 	bcube2.fill(0);
 	colvec nu=zeros<colvec>(k);
 
@@ -1426,7 +1441,7 @@ mat QRF(const mat& K, mat R5, int i, int kp, int k1, int p)
 		}
 	mat K2=K*RA;
 	int q=K2.n_cols;
-	double delta=(pow(q,2)+q+1)*sqrt(std::numeric_limits<double>::epsilon());
+	double delta=(pow(static_cast<double>(q),2)+q+1)*sqrt(std::numeric_limits<double>::epsilon());
 	colvec D1=zeros(K2.n_cols);
 	for(int i=0;i<q;++i)
 		{
@@ -1463,7 +1478,7 @@ mat RelaxedLS(const mat K,  mat B2, int k, int p,int k1, int s)
 		for(int i=0;i<k1;++i)
 			{
 				rowvec B3a=B3.row(i);
-				unsigned int thresh=pow(10,-8);
+				unsigned int thresh=1e-8;
 
 				uvec R1a=find(abs(B3a)>thresh);
 				if(R1a.n_elem<2){A.row(i)=B3a;}
@@ -1546,7 +1561,7 @@ mat sparseWLX(const mat& M1a,const  mat& R1, double ngroups, mat& beta,  double 
 List blockUpdateSGLX(mat& beta,const mat& Z1, double lam, double alpha,const mat& Y1, double eps, List groups, List fullgroups, List compgroups, int k1, List M2f_,NumericVector Eigs)
 {
 
-	int iters=0;
+	// int iters=0;
 	int n1=groups.size();
 	List active(n1);
 	int n=beta.n_rows, m=beta.n_cols;
@@ -1588,7 +1603,7 @@ List blockUpdateSGLX(mat& beta,const mat& Z1, double lam, double alpha,const mat
 					arma::mat p=(beta2*M1-r)*trans(M1);
 
 
-					double rho=sqrt(s45.size());
+					double rho=sqrt(static_cast<double>(s45.size()));
 
 
 					colvec STS;
@@ -1646,7 +1661,7 @@ List blockUpdateSGLX(mat& beta,const mat& Z1, double lam, double alpha,const mat
 
 mat ThreshUpdateSGLX(mat& betaActive,const mat& Z, double lam,const mat& Y,double eps, List groups, List fullgroups, List compgroups,List M2f, NumericVector eigs, double alpha, int k1)
   {
-	  int iter=0;
+	  // int iter=0;
 	  int n=betaActive.n_rows, m=betaActive.n_cols;
 	  int n1=groups.size();
 	  mat betaLast=betaActive;
@@ -1684,14 +1699,17 @@ mat ThreshUpdateSGLX(mat& betaActive,const mat& Z, double lam,const mat& Y,doubl
 // [[Rcpp::export]]
 List GamLoopSGLX(NumericVector beta_, List Activeset, NumericVector gamm,double alpha, const mat& Y1, const mat& Z1,List jj, List jjfull, List jjcomp, double eps, colvec YMean2, colvec ZMean2,int k,int pk, List M2f_, NumericVector eigs,int k1)
 {
-	int gran2=gamm.size();
+
+	IntegerVector dims=beta_.attr("dim");
+
+	int gran2=dims[2];
 	List activefinal(gran2);
 
-	cube beta2(beta_.begin(),k1,pk,gran2,false);
-	cube betafin(k1,pk+1,gran2);
+	cube beta2(beta_.begin(),dims[0],dims[1],dims[2],false);
+	cube betafin(dims[0],dims[1]+1,gran2);
 	betafin.fill(0);
 	List iterations(gran2);
-	mat betaPrev=zeros<mat>(k1,pk);
+	mat betaPrev=zeros<mat>(dims[0],dims[1]);
 
 	for(int i=0; i<gran2;++i)
 		{
@@ -1700,7 +1718,7 @@ List GamLoopSGLX(NumericVector beta_, List Activeset, NumericVector gamm,double 
 			List Active = Activeset[i];
 			int k2=0;
 			int converge=0;
-			mat betaF=zeros(k1,pk);
+			mat betaF=zeros(dims[0],dims[1]);
 			List betaFull(3);
 			while(converge==0)
 				{
@@ -1751,7 +1769,7 @@ colvec proxvx2(colvec v2,int L,double lambda,int m,int k,int F1)
 			else{std::iota(ivec.begin(), ivec.end(), 0);}
 			uvec res = conv_to<uvec>::from(ivec);	
 
-			if(norm(r(res)/(lambda),"fro")<1+pow(10,-8))
+			if(norm(r(res)/(lambda),"fro")<1+1e-8)
 				{
 					r(res)=zeros(res.n_elem);
 				}
@@ -1861,14 +1879,14 @@ List blockUpdateSGL(mat& beta,const mat& Z1, double lam, double alpha,const mat&
 
 					arma::uvec s4(s3.size());
 
-					for(int j=0; j<s3.size(); ++j)
+					for(int j=0; j< (int) s3.size(); ++j)
 						{
 							s4(j)=s3(j);
 						}
 	  
 					arma::uvec scomp2(scomp1.size());
 
-					for(int m=0; m<scomp1.size(); ++m)
+					for(int m=0; m< (int)scomp1.size(); ++m)
 						{
 							scomp2(m)=scomp1(m);
 						}
@@ -1983,14 +2001,16 @@ mat ThreshUpdateSGL(mat& betaActive,const mat& Z, double lam,const mat& Y,double
 // [[Rcpp::export]]
 List GamLoopSGL(NumericVector beta_, List Activeset,const NumericVector gamm,const double alpha, const mat& Y1, const mat& Z1,List jj,const List jjfull,const List jjcomp,const double eps,const colvec YMean2,const colvec ZMean2,const int k,const int pk,const List M1f_,const List M2f_, const NumericVector eigs_)
 {
-	int gran2=gamm.size();
+	IntegerVector dims=beta_.attr("dim");
+	int gran2=dims[2];
 	List activefinal(gran2);
 
-	cube beta2(beta_.begin(),k,pk,gran2,false);
-	cube betafin(k,pk+1,gran2);
+	// Rcout<<dims[2]<<std::endl;
+	cube beta2(beta_.begin(),dims[0],dims[1],dims[2],false);
+	cube betafin(dims[0],dims[1]+1,dims[2]);
 	betafin.fill(0);
 	List iterations(gran2);
-	mat betaPrev=zeros<mat>(k,pk);
+	mat betaPrev=zeros<mat>(dims[0],dims[1]);
 
 	for(int i=0; i<gran2;++i)
 		{
@@ -1999,7 +2019,7 @@ List GamLoopSGL(NumericVector beta_, List Activeset,const NumericVector gamm,con
 			List Active = Activeset[i];
 			int k2=0;
 			int converge=0;
-			mat betaF=zeros(k,pk);
+			mat betaF=zeros(dims[0],dims[1]);
 			List betaFull(3);
 			//Three components in the list
 			while(converge==0)
@@ -2032,12 +2052,13 @@ List GamLoopSGLDP(NumericVector beta_, List Activeset,const mat gamm,const colve
 	int nlambda = gamm.n_rows;
 	int nalpha = gamm.n_cols;
 	List activefinal(nlambda*nalpha);
+	IntegerVector dims=beta_.attr("dim");
 
-	cube beta2(beta_.begin(),k,pk,nlambda*nalpha,false);
-	cube betafin(k,pk+1,nlambda*nalpha);
+	cube beta2(beta_.begin(),dims[0],dims[1],dims[2],false);
+	cube betafin(dims[0],dims[1]+1,dims[2]);
 	betafin.fill(0);
 	List iterations(nlambda*nalpha);
-	mat betaPrev=zeros<mat>(k,pk);
+	mat betaPrev=zeros<mat>(dims[0],dims[1]);
 
 	for(int i=0; i<nlambda;++i)
 		{
@@ -2093,11 +2114,13 @@ List GamLoopSGLXDP(NumericVector beta_, List Activeset, mat gamm, colvec alpha, 
 	int nalpha = gamm.n_cols;
 	List activefinal(nlambda*nalpha);
 
-	cube beta2(beta_.begin(),k1,pk,nlambda*nalpha,false);
-	cube betafin(k1,pk+1,nlambda*nalpha);
+	IntegerVector dims=beta_.attr("dim");
+
+	cube beta2(beta_.begin(),dims[0],dims[1],dims[2],false);
+	cube betafin(dims[0],dims[1]+1,dims[2]);
 	betafin.fill(0);
 	List iterations(nlambda*nalpha);
-	mat betaPrev=zeros<mat>(k1,pk);
+	mat betaPrev=zeros<mat>(dims[0],dims[1]);
 
 	for(int i=0; i<nlambda;++i)
 		{

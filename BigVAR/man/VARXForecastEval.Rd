@@ -32,16 +32,18 @@ Returns the one-step ahead MSFE over the evaluation period.
 Evaluate forecasts from a VAR or VARX with lag orders selected by AIC/BIC
 }
 \details{
-This function evaluates the one-step ahead forecasts of a VAR or VARX fit by least squares over an evaluation period.  At every point in time, lag orders for the endogenous and exogenous series are selected according to AIC or BIC.  This function is run automatically when \code{\link{cv.BigVAR}} is called unless \code{ic} is set to \code{FALSE} in constructModel.
+This function evaluates the one-step ahead forecasts of a VAR or VARX fit by least squares over an evaluation period.  At every point in time, lag orders for the endogenous and exogenous series are selected according to AIC or BIC.  This function is run automatically when \code{\link{cv.BigVAR}} is called unless \code{ic} is set to \code{FALSE} in \code{\link{constructModel}}.
 }
 \examples{
 data(Y)
-# fit a VAR_3(3)
-mod <- VARXFit(Y,3,NULL,NULL)
-# fit a VAR_3 with p= 6 and lag selected according to AIC
-modAIC <- VARXFit(Y,6,"AIC",NULL)
-# Fit a VARX_{2,1} with p=6, s=4 and lags selected by BIC
-modXBIC <- VARXFit(Y,6,"BIC",list(k=2,s=4))
+
+# Evaluate the performance of a VAR with lags selected by BIC.
+p <- 4
+T1 <- floor(nrow(Y))/3
+T2 <- floor(2*nrow(Y))/3
+# Matrix of zeros for X
+X <- matrix(0,nrow=nrow(Y),ncol=ncol(Y))
+BICMSFE <- VARXForecastEval(Y,X,p,0,T1,T2,"BIC",1)
 
 }
 \references{

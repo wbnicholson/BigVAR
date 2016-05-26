@@ -18,12 +18,15 @@ NA, side effect is graph
 Sparsity Plot of a BigVAR.results object
 }
 \details{
-Uses \code{levelplot} from the \code{lattice} package to plot the magnitude of each coefficient
+Uses \code{levelplot} from the \code{lattice} package to plot the magnitude of each coefficient in the last coefficient estimated by \code{cv.BigVAR}.
 }
 \examples{
 data(Y)
 Y <- Y[1:100,]
 Model1 <- constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE)
 SparsityPlot.BigVAR.results(cv.BigVAR(Model1))
+}
+\seealso{
+\code{\link{cv.BigVAR}}, \code{\link{BigVAR.results}}
 }
 

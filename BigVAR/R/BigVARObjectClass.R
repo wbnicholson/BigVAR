@@ -47,7 +47,7 @@ check.BigVAR <- function(object){
         if(k1>ncol(Y)){msg <- c("k is greater than the number of columns in Y")
 
                        errors <- c(errors,msg)
-                   }
+                   }        
     }else{k=0}
     m <- ncol(Y)-k1
 
@@ -80,8 +80,10 @@ check.BigVAR <- function(object){
 
     
     if(object@Structure=="EFX" & !is.null(VARX$contemp)){
+        if(VARX$contemp){
         msg <- c("EFX does not support contemporaneous dependence")
         errors <- c(errors,msg)
+        }
 
     }
     structs=c("HVARC","HVAROO","HVARELEM")
@@ -119,7 +121,7 @@ check.BigVAR <- function(object){
 #' @slot crossval Cross-Validation Procedure
 #' @slot Minnesota Minnesota Prior Indicator
 #' @slot verbose Indicator for Verbose output
-#' @slot dates dates extracted from an xts object
+#' @slot dates dates extracted from an xts object 
 #' @slot ic Indicator for including AIC and BIC benchmarks
 #' @slot VARX VARX Model Specifications
 #' @slot T1 Index of time series in which to start cross validation
@@ -129,8 +131,8 @@ check.BigVAR <- function(object){
 #' @slot tf Indicator for transfer function
 #' @slot alpha Grid of candidate alpha values (applies only to Sparse VARX-L models)
 #' @slot recursive Indicator as to whether recursive multi-step forecasts are used (applies only to multiple horizon VAR models)
-
-#' @details To construct an object of class BigVAR, use the function "ConstructModel"
+#' @slot constvec vector indicating variables to shrink toward a random walk instead of toward zero (valid only if Minnesota is \code{TRUE})
+#' @details To construct an object of class BigVAR, use the function \code{\link{constructModel}}
 #' @seealso \code{\link{constructModel}}
 #' @export
 setClass(
@@ -154,16 +156,17 @@ setClass(
         tf="logical",
         alpha="numeric",
         recursive="logical",
-        dates="character"
+        dates="character",
+        constvec="numeric"
         ),validity=check.BigVAR
     )
 
 
 #' Construct an object of class BigVAR
-#' @param Y \eqn{T x k} multivariate time series or Y \eqn{T x (k+m)} endogenous and exogenous series, respectively 
+#' @param Y \eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively 
 #' @param p Predetermined maximal lag order (for modeled series)
 #' @param struct The choice of penalty structure (see details).
-#' @param gran vector containing how deep to construct the penalty grid (parameter 1) and how many gridpoints to use (parameter 2)  If ownlambas is set to TRUE, gran denotes the user-supplied penalty parameters.
+#' @param gran vector of penalty parameter specifications.  
 #' @param RVAR True or False: whether to refit based upon the support selected using the Relaxed-VAR procedure
 #' @param h Desired forecast horizon
 #' @param cv Cross-validation approach, either "Rolling" for rolling cross-validation or "LOO" for leave-one-out cross-validation.
@@ -177,10 +180,11 @@ setClass(
 #' @param ownlambdas True or False: Indicator for user-supplied penalty parameters
 #' @param alpha grid of candidate parameters for the alpha in the Sparse Lag and Sparse Own/Other VARX-L 
 #' @param recursive True or False: Indicator as to whether iterative multi-step predictions are desired in the VAR context if the forecast horizon is greater than 1
+#' @param C vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE})
+#' @param dates optional vector of dates corresponding to \eqn{Y}
+#'
 #' 
-
-
-#' @details The choices for "struct" are as follows
+#'  @details The choices for "struct" are as follows
 #' \itemize{
 #' \item{  "Basic" (Basic VARX-L)}
 #' \item{  "Lag" (Lag Group VARX-L)} 
@@ -194,6 +198,8 @@ setClass(
 #' \item{  "Tapered" (Lag weighted Lasso VAR)}
 #' }
 #'
+#' The first number in the vector "gran" specifies how deep to construct the penalty grid and the second specifies how many penalty parameters to use  If ownlambas is set to TRUE, gran should contain the user-supplied penalty parameters.
+#' 
 #' VARX specifications consist of a list with entry k denoting the series that are to be modeled and entry s to denote the maximal lag order for exogenous series.
 #'
 #' The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.  
@@ -202,13 +208,10 @@ setClass(
 #'
 #' @seealso \code{\link{cv.BigVAR}},\code{\link{BigVAR.est}}
 #' 
-#' @references William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint 1412.5250, 2016.
-#' 
-#' William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector
-#' autoregressions with exogenous variables," \url{http://www.wbnicholson.com/Nicholsonetal2015.pdf}.
-#' 
+#' @references  William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
+#' William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector autoregressions with exogenous variables," arXiv preprint arXiv:1508.07497, 2016.
+#' William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimension Reduction Reduction Methods for Multivariate Time Series," \url{http://www.wbnicholson.com/BigVAR.pdf}.
 #' @examples
-#' library(BigVAR)
 #' # VARX Example
 #' # Create a Basic VARX-L with k=2, m=1, s=2, p=4
 #' VARX=list()
@@ -219,9 +222,9 @@ setClass(
 #' T2=floor(2*nrow(Y)/3)
 #' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 #' @export
-constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE)
+constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE,C=as.double(NULL),dates=as.character(NULL))
 {
-    if(any(is.na(Y))){stop("Remove NA values before running ConstructModel")}      
+    if(any(is.na(Y))){stop("Remove NA values before running constructModel")}      
     if(dim(Y)[2]>dim(Y)[1] & length(VARX)==0){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
     if(p<0){stop("Maximal lag order must be at least 0")}
     if(p==0& struct!="Basic"){stop("Only Basic VARX-L supports a transfer function")}
@@ -237,13 +240,14 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
 
     structure2 <- c("Basic","Lag","HVARC")
     cond2=struct %in% structure2
-    k1=0
+    ## k <- ncol(Y)
+    
     if(length(VARX)!=0){
 
-        k1 <- VARX$k
-        if(k1>ncol(Y)){stop("k is greater than the number of columns in Y")}
-    }else{k=0}
-    m <- ncol(Y)-k1
+        k <- VARX$k
+        if(k>ncol(Y)){stop("k is greater than the number of columns in Y")}
+    }else{k=ncol(Y)}
+    m <- ncol(Y)-k
     nseries <- ncol(Y)-ifelse(m<ncol(Y),m,0)
     if(p==0){tf=TRUE
          }else{
@@ -251,7 +255,10 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
          }
     if(nseries==1 & cond2==FALSE ){stop("Univariate support is only available for Lasso, Lag Group, and Componentwise HVAR")}
     if(length(VARX)==0 & struct=="EFX"){stop("EFX is only supported in the VARX framework")}
-    if(struct=="EFX" & !is.null(VARX$contemp)){stop("EFX does not support contemporaneous dependence")}
+    if(struct=="EFX" & !is.null(VARX$contemp)){
+        if(VARX$contemp){
+        stop("EFX does not support contemporaneous dependence")}
+    }
     structs=c("HVARC","HVAROO","HVARELEM")
     if(length(VARX)!=0& struct %in% structs){stop("EFX is the only nested model supported in the VARX framework")}
     if(T1>nrow(Y) | T2>nrow(Y) |T2<T1){stop("Training dates exceed series length")}
@@ -264,14 +271,30 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
         }
 
     if(!is.null(alpha)){
-        if(any(alpha<0) || any(alpha>1)){stop("alpha must be between zero and 1")}
+        if(any(alpha<0) || any(alpha>1)){stop("alpha must be between 0 and 1")}
     }
-    if("xts"%in%class(Y)){
-        ind <- as.character(index(Y))
-        Y <- as.matrix(Y)
+    if(length(C)!=0){
+
+        if(length(C)!=k){stop("C must have length k")}
+        if(!all(C%in%c(0,1))){stop("Values of C must be either 0 or 1")}
+        
+        }else{
+
+            C <- rep(1,k)
+            
+            }
+    ## if("xts"%in%class(Y)){
+    ##     ind <- as.character(index(Y))
+    ##     Y <- as.matrix(Y)
+
+    if(length(dates)!=0){
+
+        ind <- dates
+
     }else{
         ind <- as.character(NULL)
     }
+    # Can't have a class named C
     (BV1 <- new(
         "BigVAR",
         Data=Y,
@@ -292,7 +315,8 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
         tf=tf,
         alpha=alpha,
         recursive=recursive,
-        dates=ind
+        dates=ind,
+        constvec=C
         ))
 
     return(BV1)
@@ -325,8 +349,11 @@ setMethod("show","BigVAR",
           function(object)
           {
               
-              T1P <- ifelse(!is.null(object@dates),object@dates[object@T1],object@T1)
-              T2P <- ifelse(!is.null(object@dates),object@dates[object@T2],object@T2)
+              
+              T1P <- ifelse(length(object@dates)!=0,object@dates[object@T1],object@T1)
+
+              T2P <- ifelse(length(object@dates)!=0,object@dates[object@T2],object@T2)
+
               nrowShow <- min(5,nrow(object@Data))
               cat("*** BIGVAR MODEL *** \n")
               cat("Data (First 5 Observations):\n")
@@ -365,6 +392,8 @@ setMethod("show","BigVAR",
 #' @importFrom zoo zoo
 #' @importFrom zoo as.yearqtr
 #' @importFrom zoo index
+#' @importFrom graphics abline
+#' @importFrom graphics legend
 setMethod(f="plot",signature="BigVAR",
           definition= function(x,y=NULL,...)
           {
@@ -375,8 +404,6 @@ setMethod(f="plot",signature="BigVAR",
 
               g=ncol(x@Data)
               names <- ifelse(rep(!is.null(colnames(x@Data)),ncol(x@Data)),colnames(x@Data),as.character(1:g))
-              ## browser()
-              ## dates <- ifelse(!is.null(x@dates),x@dates,1:nrow(Y))
               if(length(x@dates)!=0){
 
                   dates <- as.yearqtr(x@dates)
@@ -389,7 +416,6 @@ setMethod(f="plot",signature="BigVAR",
               plot.zoo(Yzoo,plot.type="single",col=1:g)
               legend('topright',names,lty=1,col=1:g)
 
-              ## index()
               abline(v=index(Yzoo[as.yearqtr(T1P)]))
               abline(v=index(Yzoo[as.yearqtr(T2P)]))
               
@@ -400,16 +426,15 @@ setMethod(f="plot",signature="BigVAR",
 #' 
 #' @usage cv.BigVAR(object)
 #' @param object BigVAR object created from \code{ConstructModel}
-#' @details Will perform cross validation to select penalty parameters over a training sample, then evaluate them over a test set.  Compares against sample mean, random walk, AIC, and BIC benchmarks.  Creates an object of class \code{BigVAR.results}
+#' @details The main function of the BigVAR package. Performs cross validation to select penalty parameters over a training sample (as the minimizer of in-sample MSFE), then evaluates them over a test set.  Compares against sample mean, random walk, AIC, and BIC benchmarks.  Creates an object of class \code{BigVAR.results}
 #' @return An object of class \code{BigVAR.results}.
-#' @seealso \code{\link{constructModel}}, \code{\link{BigVAR.results}} 
+#' @seealso \code{\link{constructModel}}, \code{\link{BigVAR.results}},\code{\link{BigVAR.est}} 
 #' @name cv.BigVAR
 #' @aliases cv.BigVAR,BigVAR-method
 #' @docType methods
 #' @rdname cv.BigVAR-methods
 #' @examples
 #' data(Y)
-#' Y=Y[1:100,]
 #' # Fit a Basic VARX-L with rolling cross validation 
 #' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10))
 #' results=cv.BigVAR(Model1)
@@ -455,6 +480,7 @@ setMethod(
             }
         }
 
+        C <- object@constvec
         
         if(length(alpha)>1 & group%in%c("SparseLag","SparseOO"))
             {
@@ -560,12 +586,12 @@ setMethod(
             if(object@ownlambdas==FALSE){
                 if(dual){
                                         # Constructs penalty grid if both alpha and lambda are selected
-                    gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha)
+                    gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha,C)
 
                 }else{
 
                                         # Penalty parameter grid for just lambda
-                    gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN,alpha)
+                    gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN,alpha,C)
                 }
             }
 
@@ -643,11 +669,11 @@ setMethod(
 
                 if(dual){
 
-                    gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha)
+                    gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C)
 
                 }else{
 
-                    gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha)
+                    gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C)
                 }
                 
             }
@@ -690,7 +716,8 @@ setMethod(
 
                 
             }
-            beta <- array(0,dim=c(k,k*p+1,gran2))
+         
+            beta <- array(0,dim=c(k,k*p+1,gran2*length(alpha)))
         }           
         h <- object@horizon
         verbose <- object@verbose         
@@ -797,18 +824,18 @@ setMethod(
 
                 if(VARX){
 
-                    beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s+s1,m)
+                    beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s+s1,m,C)
 
                 }else{
 
-                    beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-04,p,MN)
+                    beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-04,p,MN,C)
                 }
 
             }
 
             if (group == "Lag") {
 
-                GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s+s1)
+                GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s+s1,C)
 
                 beta <- GG$beta
 
@@ -823,23 +850,23 @@ setMethod(
                     if(!dual){
 
                         GG <- .SparseGroupLassoVARX(beta, jj, trainY, trainZ, 
-                                                    gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
+                                                    gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
 
                     }else{
 
                         GG <- .SparseGroupLassoVARXDual(beta, jj, trainY, trainZ, 
-                                                        gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
+                                                        gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
 
                     }
                 }else{
 
                     if(!dual){
                         GG <- .SparseGroupLassoVAR(beta, jj, trainY, trainZ, 
-                                                   gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN)
+                                                   gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
 
                     }else{
                         GG <- .SparseGroupLassoVARDual(beta, jj, trainY, trainZ, 
-                                                       gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN)
+                                                       gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
 
 
                     }
@@ -858,12 +885,12 @@ setMethod(
                 if(VARX){
 
                     GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
-                                         activeset, 1e-04,p,MN,k,k1,s+s1)
+                                         activeset, 1e-04,p,MN,k,k1,s+s1,C)
 
                 }else{
 
                     GG <- .GroupLassoOO(beta, kk, trainY, trainZ, gamm, 
-                                        activeset, 1e-04,p,MN)
+                                        activeset, 1e-04,p,MN,C)
                 }
 
                 beta <- GG$beta
@@ -877,12 +904,12 @@ setMethod(
 
 
                     GG <- .SparseGroupLassoVAROOX(beta, kk, trainY, trainZ, 
-                                                  gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k,dual)
+                                                  gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k,dual,C)
 
                 }else{
 
                     GG <- .SparseGroupLassoVAROO(beta, kk, trainY, trainZ, 
-                                                 gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN,dual)
+                                                 gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN,dual,C)
 
                     q1a <- GG$q1
 
@@ -897,31 +924,31 @@ setMethod(
             if(group=="Tapered")
                 {
 
-                    beta <- .lassoVARTL(beta,trainZ,trainY,gamm,1e-4,p,MN,palpha)    
+                    beta <- .lassoVARTL(beta,trainZ,trainY,gamm,1e-4,p,MN,palpha,C)    
                 }
 
             if(group=="EFX")
                 {
 
-                    beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-5,MN,k1,s,m,p)
+                    beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-5,MN,k1,s,m,p,C)
                     
                 }
 
             if(group=="HVARC")
                 {
-                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,1e-5,p,MN)
+                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
 
                 }
 
             if(group=="HVAROO")
                 {
-                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,1e-5,p,MN)
+                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
                 }
 
             if(group=="HVARELEM")
                 {
 
-                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,1e-5,p,MN)
+                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
 
                 }
             
@@ -953,7 +980,8 @@ setMethod(
                             
                             MSFE[v - (T1 - h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
                                         # Subtract one from diagonal for warm start purposes
-                            diag(beta[,2:(k1+1),ii]) <- diag(beta[,2:(k1+1),ii])-1
+                            
+                            diag(beta[,2:(k1+1),ii]) <- diag(beta[,2:(k1+1),ii])-C
                             
                         }else{
 
@@ -1024,7 +1052,8 @@ setMethod(
                                 
                                 if(object@crossval=="Rolling"){
                                     MSFE[v - (T1 - h), (ii-1)*nalpha+jj] <- norm2(ZFull$Y[v+h-1,1:k1] - beta[,,(ii-1)*nalpha+jj] %*% eZ)^2
-                                    err <- norm2(ZFull$Y[v,1:k1] - beta[,,ii] %*% eZ)^2          
+                                    err <- norm2(ZFull$Y[v,1:k1] - beta[,,ii] %*% eZ)^2
+                             
                                 }else{
                                     if(VARX){          
                                         eZ<- VARXCons(matrix(Y[(v-p):(v),1:k1],ncol=k1),Y[(v-p):(v),(ncol(Y)-m+1):(ncol(Y))],k1,p,m,s,contemp=contemp)
@@ -1032,6 +1061,7 @@ setMethod(
                                         eZ<- VARXCons(Y[(v-p):(v),1:k1],matrix(0,nrow=length((v-p):v)),k1,p,0,0)
                                     }
                                     MSFE[v - (T1 - h), (ii-1)*nalpha+jj] <- norm2(Y[v,1:k1] - beta[,,(ii-1)*nalpha+jj] %*% eZ)^2
+                                    
                                     
 
 
@@ -1044,8 +1074,6 @@ setMethod(
                 }
 
 
-
-            
 
             if(verbose){
                 setTxtProgressBar(pb, v)}
@@ -1097,35 +1125,41 @@ setMethod(
             }
 
 
-
                                         # one standard error correction     
         if(ONESE & !dual){
             MSFE2 <- MSFE 
             G2 <- colMeans(na.omit(MSFE2))
             G3 <- sd(na.omit(MSFE2))/sqrt(nrow(na.omit(MSFE2)))
-            gamopt <- gamm[min(which(G2<(min(G2)+G3)))]
+            optind <- min(which(G2<(min(G2)+G3)))
+            gamopt <- gamm[optind]
         }else{
 
             if(group!="Tapered" & !dual){
                                         # in rare cases in which MSFE is equal, the smaller penalty parameter is chosen.
                                         # This prevents extremely sparse solutions
-                gamopt <- gamm[max(which(colMeans(na.omit(MSFE))==min(colMeans(na.omit(MSFE)))))]
+                optind <- max(which(colMeans(na.omit(MSFE))==min(colMeans(na.omit(MSFE)))))
+                gamopt <- gamm[optind]
             }else if(dual){
                 
                 if(!ONESE){
-                    inds <- findind(which.min(colMeans(MSFE)),gamm[,1],alpha)                                   
+
+                    optind <- max(which(colMeans(na.omit(MSFE))==min(colMeans(na.omit(MSFE)))))
+
+                    inds <- findind(optind,gamm[,1],alpha)                                   
                 }else{
 
                     G2 <- colMeans(na.omit(MSFE))
 
                     G3 <- sd(na.omit(MSFE))/sqrt(nrow(na.omit(MSFE)))
 
-                    inds <- findind(min(which(G2<(min(G2)+G3))),gamm[,1],alpha)
+                    optind <- min(which(G2<(min(G2)+G3)))
+                    inds <- findind(optind,gamm[,1],alpha)
                     
                 }
                 gamopt <- gamm[inds[1],inds[2]]
                 gamm <- gamm[,inds[2]]
                 alphaopt <- alpha[inds[2]]
+                optind <- inds
                 ## print(paste("alphaopt",alphaopt))
             }
         }
@@ -1134,12 +1168,13 @@ setMethod(
         }
         
         if(VARX){
+
                                         # Out of sample forecast evaluation: VARX
-            OOSEval <- .BigVAREVALX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alphaopt)
+            OOSEval <- .BigVAREVALX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alphaopt,C)
 
         }else{
                                         # Out of sample evaluation for VAR    
-            OOSEval <- .BigVAREVAL(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alphaopt,recursive)
+            OOSEval <- .BigVAREVAL(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alphaopt,recursive,C)
         }
         MSFEOOSAgg <- na.omit(OOSEval$MSFE)
         betaPred <- OOSEval$betaPred
@@ -1199,7 +1234,7 @@ setMethod(
 
                 X <- matrix(0,nrow=nrow(Y),ncol=k)
 
-                AICbench1 <- VARXForecastEval(matrix(ZFull$Y[,1:k1],ncol=k1),X,p,0,T2,T,"AIC",h)
+                AICbench1 <- VARXForecastEval(matrix(ZFull$Y,ncol=k),X,p,0,T2,T,"AIC",h)
 
                 AICbench <- list()
 
@@ -1207,8 +1242,8 @@ setMethod(
 
                 AICbench$SD <- sd(AICbench1)/sqrt(length(AICbench1))
 
-                BICbench1 <- VARXForecastEval(matrix(ZFull$Y[,1:k1],ncol=k1),X,p,0,T2,T,"BIC",h)
-
+                BICbench1 <- VARXForecastEval(matrix(ZFull$Y,ncol=k),X,p,0,T2,T,"BIC",h)
+                
                 BICbench <- list()
 
                 BICbench$Mean <- mean(BICbench1)
@@ -1242,8 +1277,18 @@ setMethod(
         }
 
         if(!VARX){contemp=FALSE}
+
+        if(VARX & contemp){
+            VARXL <- list(k=k1,s=s,contemp=contemp)
+            }else if(VARX & !contemp){
+
+                VARXL <- list(k=k1,s=s,contemp=FALSE)
+                                
+            }else{
+                VARXL <- list()
+                }
                                         # Create a new BigVAR.Results Object
-        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=which.min(colMeans(na.omit(MSFE))),OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,RWMSFE=RWbench$Mean,MeanSD=meanbench$SD,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=list(k=k1,s=s,contemp=contemp),preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf)
+        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,RWMSFE=RWbench$Mean,MeanSD=meanbench$SD,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C)
         
         return(results)
     }
@@ -1252,10 +1297,10 @@ setMethod(
 
 #' BigVAR Estimation
 #' @description
-#' Fit a BigVAR object with a structured penalty
+#' Fit a BigVAR object with a structured penalty (VARX-L or HVAR).
 #' @usage BigVAR.est(object)
 #' @param object BigVAR object created from \code{ConstructModel}
-#' @details Fits HVAR or VARX-L model on a BigVAR object.  Does not perform cross-validation.
+#' @details Fits HVAR or VARX-L model on a BigVAR object.  Does not perform cross-validation.  This method allows the user to construct their own penalty parameter selection procedure.
 #' @return An array of \eqn{k \times kp \times n} or \eqn{k\times kp+ms \times n} coefficient matrices; one for each of the n values of lambda.
 #' @seealso \code{\link{constructModel}}, \code{\link{BigVAR.results}},\code{\link{cv.BigVAR}} 
 #' @name BigVAR.est
@@ -1289,6 +1334,7 @@ setMethod(
 
         }      
 
+        C <- object@constvec
         group <- object@Structure
         Y <- object@Data
         k <- ncol(Y)
@@ -1394,12 +1440,12 @@ setMethod(
             
             if(dual){
                                         # Constructs penalty grid if both alpha and lambda are selected
-                gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha)
+                gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha,C)
 
             }else{
 
                                         # Penalty parameter grid for just lambda
-                gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY), trainZ,group,p,k1,s+s1,m,k,MN,alpha)
+                gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY), trainZ,group,p,k1,s+s1,m,k,MN,alpha,C)
             }
         }else{
 
@@ -1492,12 +1538,12 @@ setMethod(
         if(!object@ownlambdas){
 
             if(dual){
-
-            gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha)
+ 
+            gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C)
             
 
         }else{
-            gamm <- .LambdaGridE(gran1, gran2, jj, trainY, trainZ,group,p,k,MN)
+            gamm <- .LambdaGridE(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,C)
             }
         }else{
 
@@ -1581,15 +1627,15 @@ setMethod(
     if (group == "Basic") {
 
         if(VARX){
-            beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s,m)}
+            beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s,m,C)}
         else{
-            beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-04,p,MN)
+            beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-04,p,MN,C)
         }
     }
 
     if (group == "Lag") {
 
-        GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s)
+        GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s,C)
         beta <- GG$beta
         activeset <- GG$active
     }
@@ -1601,23 +1647,23 @@ setMethod(
             if(!dual){
 
                 GG <- .SparseGroupLassoVARX(beta, jj, trainY, trainZ, 
-                                            gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
+                                            gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
 
             }else{
 
                 GG <- .SparseGroupLassoVARXDual(beta, jj, trainY, trainZ, 
-                                                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
+                                                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
 
             }
         }else{
 
             if(!dual){
                 GG <- .SparseGroupLassoVAR(beta, jj, trainY, trainZ, 
-                                           gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN)
+                                           gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
 
             }else{
                 GG <- .SparseGroupLassoVARDual(beta, jj, trainY, trainZ, 
-                                               gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN)
+                                               gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
 
 
             }
@@ -1634,10 +1680,10 @@ setMethod(
     if (group == "OwnOther") {
         if(VARX){
             GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
-                                 activeset, 1e-04,p,MN,k,k1,s)
+                                 activeset, 1e-04,p,MN,k,k1,s,C)
         }else{
             GG <- .GroupLassoOO(beta, kk, trainY, trainZ, gamm, 
-                                activeset, 1e-04,p,MN)
+                                activeset, 1e-04,p,MN,C)
         }
         beta <- GG$beta
         activeset <- GG$active
@@ -1648,12 +1694,12 @@ setMethod(
 
 
             GG <- .SparseGroupLassoVAROOX(beta, kk, trainY, trainZ, 
-                                          gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k,dual)
+                                          gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k,dual,C)
 
         }else{
 
             GG <- .SparseGroupLassoVAROO(beta, kk, trainY, trainZ, 
-                                         gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN,dual)
+                                         gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN,dual,C)
 
             q1a <- GG$q1
 
@@ -1668,34 +1714,34 @@ setMethod(
     if(group=="Tapered")
     {
 
-        beta <- .lassoVARTL(beta,trainZ,trainY,gamm,1e-4,p,MN,palpha)
+        beta <- .lassoVARTL(beta,trainZ,trainY,gamm,1e-4,p,MN,palpha,C)
         
     }
 
     if(group=="EFX")
     {
 
-        beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-5,MN,k1,s,m,p)
+        beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-5,MN,k1,s,m,p,C)
 
     }
 
     if(group=="HVARC")
     {
 
-        beta <- .HVARCAlg(beta,trainY,trainZ,gamm,1e-5,p,MN)
+        beta <- .HVARCAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
 
     }
     if(group=="HVAROO")
     {
 
-        beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,1e-5,p,MN)
+        beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
 
     }
 
     if(group=="HVARELEM")
     {
 
-        beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,1e-5,p,MN)
+        beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
     }      
     
     return(list(B=beta,lambdas=gamm))
@@ -1707,9 +1753,6 @@ setMethod(
 
 ## New object class: bigVAR results, inherits class bigVAR, prints results from cv.bigVAR
 
-                                        # Prints the results, but stores a lot more information if needed
-                                        # compares everything against AIC, Mean, Random Walk
-
 #' BigVAR.results
 #' This class contains the results from cv.BigVAR.
 #'
@@ -1718,28 +1761,28 @@ setMethod(
 #' @field InSampMSFE In-sample MSFE from optimal value of lambda
 #' @field LambdaGrid Grid of candidate lambda values
 #' @field index Rank of optimal lambda value 
-#' @field OptimalLambda Value of lambda which minimizes MSFE
-#' @field OOSMSFE Average Out of sample MSFE of BigVAR model with Optimal Lambda
-#' @field seoosfmsfe Standard Error of Out of sample MSFE of BigVAR model with Optimal Lambda
-#' @field MeanMSFE Average Out of sample MSFE of Unconditional Mean Forecast
-#' @field MeanSD Standard Error of out of sample MSFE of Unconditional Mean Forecast
-#' @field RWMSFE Average Out of sample MSFE of Random Walk Forecast
-#' @field RWSD Standard Error of out of sample MSFE of Random Walk Forecast
-#' @field AICMSFE Average Out of sample MSFE of AIC Forecast
-#' @field AICSD Standard Error of out of sample MSFE of AIC Forecast
-#' @field BICMSFE Average Out of sample MSFE of BIC Forecast
-#' @field BICSD Standard Error of out of sample MSFE of BIC Forecast
-#' @field betaPred The final out of sample coefficient matrix of \code{B}, to be used for prediction
+#' @field OptimalLambda Value of lambda that minimizes MSFE
+#' @field OOSMSFE Average Out of sample MSFE of BigVAR model with optimal lambda
+#' @field seoosfmsfe Standard error of out of sample MSFE of BigVAR model with optimal lambda
+#' @field MeanMSFE Average out of sample MSFE of unconditional mean forecast
+#' @field MeanSD Standard error of out of sample MSFE of unconditional mean forecast
+#' @field RWMSFE Average out of sample MSFE of random walk forecast
+#' @field RWSD Standard error of out of sample MSFE of random walk forecast
+#' @field AICMSFE Average out of sample MSFE of AIC forecast
+#' @field AICSD Standard error of out of sample MSFE of AIC forecast
+#' @field BICMSFE Average out of sample MSFE of BIC forecast
+#' @field BICSD Standard error of out of sample MSFE of BIC forecast
+#' @field betaPred The final estimated \eqn{k\times kp+ms+1} coefficient matrix, to be used for prediction
 #' @field Zvals The final lagged values of \code{Y}, to be used for prediction
 #' @field resids residuals obtained from betaPred
-#' @field Data a \eqn{T x k} multivariate time Series
+#' @field Data a \eqn{T \times k} or \eqn{T\times k + m} multivariate time Series
 #' @field lagmax Maximal lag order
-#' @field Structure Penalty Structure
+#' @field Structure Penalty structure
 #' @field Relaxed Indicator for relaxed VAR
-#' @field Granularity Granularity of Penalty Grid
-#' @field horizon Desired Forecast Horizon
-#' @field crossval Cross-Validation Procedure
-#' @field alpha penalty for Sparse Group Lasso
+#' @field Granularity Granularity of penalty grid
+#' @field horizon Desired forecast horizon
+#' @field crossval Cross-Validation procedure
+#' @field alpha additional penalty parameter for Sparse Lag Group or Sparse Own/Other methods. Will contain either the heuristic choice of \eqn{1/(k+1)} or the value selected by cross validation if the argument \code{dual} is set to \code{TRUE}
 #' @field VARXI VARX Indicator 
 #' @field Minnesota Minnesota Prior Indicator
 #' @field verbose  verbose indicator
@@ -1772,6 +1815,7 @@ contains="BigVAR"
 #' @docType methods
 #' @method plot
 #' @rdname BigVAR.results-plot-methods
+#' @importFrom graphics abline
 #' @export
 setMethod(f="plot",signature="BigVAR.results",
 definition= function(x,y=NULL,...)
@@ -1804,6 +1848,7 @@ function(object)
             cat("Relaxed VAR \n") ;print(object@Relaxed)}
 
         cat("Forecast Horizon \n") ;print(object@horizon)
+        cat("Minnesota VAR\n") ;print(object@Minnesota)
 
         if(object@VARXI){
             cat("VARX Specs \n") ;print(object@VARX)}
@@ -1813,8 +1858,7 @@ function(object)
 
             cat("Optimal Alpha \n"); print(round(object@alpha,digits=2))
             
-        }
-        
+        }        
         cat("Grid Depth \n") ;print(object@Granularity[1])
         cat("Index of Optimal Lambda \n");print(object@index)
         cat("In-Sample MSFE\n");print(round(min(object@InSampMSFE),digits=3))
@@ -1864,7 +1908,7 @@ function(object,n.ahead,newxreg=NULL,...)
         contemp <- object@VARX$contemp
         s1 <- 0
         if(VARX){
-            if(object@contemp){
+            if(contemp){
                 s1 <- 1
             }
         }else{
@@ -1907,9 +1951,10 @@ function(object,n.ahead,newxreg=NULL,...)
 #'
 #' @param object BigVAR.results object
 #' @return NA, side effect is graph
-#' @details Uses \code{levelplot} from the \code{lattice} package to plot the magnitude of each coefficient
+#' @details Uses \code{levelplot} from the \code{lattice} package to plot the magnitude of each coefficient in the last coefficient estimated by \code{cv.BigVAR}.
 #' @name SparsityPlot.BigVAR.results
 #' @aliases SparsityPlot.BigVAR.results,BigVAR.results-method
+#' @seealso \code{\link{cv.BigVAR}}, \code{\link{BigVAR.results}}
 #' @docType methods
 #' @rdname SparsityPlot.BigVAR.results-methods
 #' @examples
@@ -1921,6 +1966,7 @@ function(object,n.ahead,newxreg=NULL,...)
 #' @importFrom lattice levelplot
 #' @importFrom lattice panel.abline
 #' @importFrom lattice panel.levelplot
+#' @importFrom grDevices colorRampPalette
 
 setGeneric(
     name="SparsityPlot.BigVAR.results",

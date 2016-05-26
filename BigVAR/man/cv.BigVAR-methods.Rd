@@ -18,16 +18,15 @@ An object of class \code{BigVAR.results}.
 Cross Validation for BigVAR
 }
 \details{
-Will perform cross validation to select penalty parameters over a training sample, then evaluate them over a test set.  Compares against sample mean, random walk, AIC, and BIC benchmarks.  Creates an object of class \code{BigVAR.results}
+The main function of the BigVAR package. Performs cross validation to select penalty parameters over a training sample (as the minimizer of in-sample MSFE), then evaluates them over a test set.  Compares against sample mean, random walk, AIC, and BIC benchmarks.  Creates an object of class \code{BigVAR.results}
 }
 \examples{
 data(Y)
-Y=Y[1:100,]
 # Fit a Basic VARX-L with rolling cross validation 
 Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10))
 results=cv.BigVAR(Model1)
 }
 \seealso{
-\code{\link{constructModel}}, \code{\link{BigVAR.results}}
+\code{\link{constructModel}}, \code{\link{BigVAR.results}},\code{\link{BigVAR.est}}
 }
 

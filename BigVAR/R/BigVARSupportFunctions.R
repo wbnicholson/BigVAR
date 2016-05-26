@@ -63,7 +63,7 @@
 }
 
                                         # Constructs the Grid of Lambda Values: VAR
-.LambdaGridE<- function (gran1, gran2, jj = jj, Y, Z, group,p,k,MN,alpha) 
+.LambdaGridE<- function (gran1, gran2, jj = jj, Y, Z, group,p,k,MN,alpha,C) 
 {
 
     if (group == "Lag") {
@@ -171,8 +171,8 @@
     }else{
         beta <- array(0,dim=c(k,k*p+1,1))
     }
-    
-    gamstart <- LGSearch(gamstart,Y,Z,beta,group,k,p,jj,MN,alpha)
+
+    gamstart <- LGSearch(gamstart,Y,Z,beta,group,k,p,jj,MN,alpha,C)
     
     gamm <- exp(seq(from = log(gamstart), to = log(gamstart/gran1), 
                     length = gran2))
@@ -181,13 +181,13 @@
 
 }
                                         # Constructs penalty grid for each value of alpha in case of dual cv
-.LambdaGridEDual <- function(gran1,gran2,jj,Y,Z,group,p,k,MN,alpha){
+.LambdaGridEDual <- function(gran1,gran2,jj,Y,Z,group,p,k,MN,alpha,C){
 
     Lambda <- matrix(0,nrow=gran2,ncol=length(alpha))
     
     for(i in 1:length(alpha)){
 
-        Lambda[,i] <- .LambdaGridE(gran1,gran2,jj,Y,Z,group,p,k,MN,alpha[i])
+        Lambda[,i] <- .LambdaGridE(gran1,gran2,jj,Y,Z,group,p,k,MN,alpha[i],C)
 
     }
     return(Lambda)
@@ -198,7 +198,7 @@
 }
 
                                         # Construct Lambda Grid: VARX
-.LambdaGridX<- function (gran1, gran2, jj = jj, Y, Z, group,p,k1,s,m,k,MN,alpha) 
+.LambdaGridX<- function (gran1, gran2, jj = jj, Y, Z, group,p,k1,s,m,k,MN,alpha,C) 
 {
 
     if (group == "Lag") {
@@ -321,7 +321,7 @@
     
 
     beta <- array(0,dim=c(k1,k1*p+s*m+1,1))
-    gamstart <- LGSearchX(gamstart,Y,Z,beta,group,k1,p,s,m,jj,k,MN,alpha)
+    gamstart <- LGSearchX(gamstart,Y,Z,beta,group,k1,p,s,m,jj,k,MN,alpha,C)
     gamm <- exp(seq(from = log(gamstart), to = log(gamstart/gran1), 
                     length = gran2))
 
@@ -329,12 +329,12 @@
 
 }
 
-.LambdaGridXDual <- function(gran1,gran2,jj,Y,Z,group,p,k1,s,m,k,MN,alpha){
+.LambdaGridXDual <- function(gran1,gran2,jj,Y,Z,group,p,k1,s,m,k,MN,alpha,C){
 
     Lambda <- matrix(0,nrow=gran2,ncol=length(alpha))
     for(i in 1:length(alpha)){
 
-        Lambda[,i] <- .LambdaGridX(gran1,gran2,jj,Y,Z,group,p,k1,s,m,k,MN,alpha[i])
+        Lambda[,i] <- .LambdaGridX(gran1,gran2,jj,Y,Z,group,p,k1,s,m,k,MN,alpha[i],C)
 
     }
     return(Lambda)
@@ -344,7 +344,7 @@
 }
 
                                         # Forecast evaluation: VARX (called in cv.bigvar)
-.BigVAREVALX <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alpha)
+.BigVAREVALX <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alpha,C)
     {
 
         if(contemp){
@@ -432,12 +432,12 @@
 
             if (group == "Basic") {
 
-                beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-6,p,MN,k,k1,s+s1,m)
+                beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-6,p,MN,k,k1,s+s1,m,C)
             }
 
             if (group == "Lag") {
 
-                GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s+s1)
+                GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s+s1,C)
                 
 
                 beta <- GG$beta
@@ -449,7 +449,7 @@
             if (group == "SparseLag") {
 
                 GG <- .SparseGroupLassoVARX(beta, jj, trainY, trainZ, 
-                                            gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
+                                            gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
 
                 beta <- GG$beta
 
@@ -462,7 +462,7 @@
             if (group == "OwnOther") {
 
                 GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
-                                     activeset, 1e-04,p,MN,k,k1,s+s1)
+                                     activeset, 1e-04,p,MN,k,k1,s+s1,C)
 
                 beta <- GG$beta
 
@@ -473,7 +473,7 @@
                 
 
                 GG <- .SparseGroupLassoVAROOX(beta, kk, trainY, trainZ, 
-                                              gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k)
+                                              gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k,FALSE,C)
 
                 beta <- GG$beta
 
@@ -484,7 +484,7 @@
 
             if(group=="EFX"){
                 
-                beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-4,MN,k1,s,m,p)
+                beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-4,MN,k1,s,m,p,C)
             }
             
             betaEVAL <- matrix(beta[,,1],nrow=k1,ncol=(k1*p+(k-k1)*(s+s1)+1))
@@ -512,7 +512,7 @@
 
                 preds[v-T2+h-1,] <-  betaEVAL[,2:ncol(betaEVAL)] %*% eZ
 
-                diag(beta[,2:(k1+1),1]) <- diag(beta[,2:(k1+1),1])-1 # subtract one for warm start purposes 
+                diag(beta[,2:(k1+1),1]) <- diag(beta[,2:(k1+1),1])-C # subtract one for warm start purposes 
                 
             }else{
                 MSFE[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL %*% eZ)^2
@@ -530,11 +530,11 @@
                                         # Parameter estimates using all available data
         if (group == "Basic") {
 
-            betaPred <- .lassoVARFistX(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,k,k1,s+s1,m)            
+            betaPred <- .lassoVARFistX(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,k,k1,s+s1,m,C)            
         }
         if (group == "Lag") {
 
-            GG <- .GroupLassoVAR1(beta,jj,jjcomp,ZFull$Y,ZFull$Z,gamm,activeset,1e-04,p,MN,k,k1,s+s1)
+            GG <- .GroupLassoVAR1(beta,jj,jjcomp,ZFull$Y,ZFull$Z,gamm,activeset,1e-04,p,MN,k,k1,s+s1,C)
 
             betaPred <- GG$beta
 
@@ -543,7 +543,7 @@
         if (group == "SparseLag") {
 
             GG <- .SparseGroupLassoVARX(beta, jj, ZFull$Y, ZFull$Z, 
-                                        gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1)
+                                        gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
 
             betaPred <- GG$beta
 
@@ -552,7 +552,7 @@
         if (group == "OwnOther") {
 
             GG <- .GroupLassoOOX(beta, kk, ZFull$Y, ZFull$Z, gamm, 
-                                 activeset, 1e-04,p,MN,k,k1,s+s1)
+                                 activeset, 1e-04,p,MN,k,k1,s+s1,C)
 
             betaPred <- GG$beta
 
@@ -560,7 +560,7 @@
         if (group == "SparseOO") {
 
             GG <- .SparseGroupLassoVAROOX(beta, kk, ZFull$Y, ZFull$Z, 
-                                          gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k)
+                                          gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k,FALSE,C)
 
             betaPred <- GG$beta
             
@@ -572,7 +572,7 @@
             {
 
 
-                betaPred <- .EFVARX(beta,ZFull$Y,ZFull$Z,gamm,1e-4,MN,k1,s+s1,m,p)
+                betaPred <- .EFVARX(beta,ZFull$Y,ZFull$Z,gamm,1e-4,MN,k1,s+s1,m,p,C)
 
 
             }
@@ -588,7 +588,7 @@
 
 
                                         # Forecast evaluation: VAR (called in cv.bigvar)
-.BigVAREVAL <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2,alpha,recursive)
+.BigVAREVAL <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2,alpha,recursive,C)
     {
         
 
@@ -708,13 +708,13 @@
                 }
                 if (group == "Basic") {
 
-                    beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-05,p,MN)
+                    beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-05,p,MN,C)
 
                 }
 
                 if (group == "Lag") {
 
-                    GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s)
+                    GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s,C)
 
                     beta <- GG$beta
 
@@ -725,7 +725,7 @@
                 if (group == "SparseLag") {
 
                     GG <- .SparseGroupLassoVAR(beta, jj, trainY, trainZ, 
-                                               gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN)
+                                               gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
 
                     beta <- GG$beta
 
@@ -739,7 +739,7 @@
                 if (group == "OwnOther") {
 
                     GG <- .GroupLassoOO(beta, kk, trainY, trainZ, gamm, 
-                                        activeset, 1e-04,p,MN)
+                                        activeset, 1e-04,p,MN,C)
 
                     beta <- GG$beta
 
@@ -750,7 +750,7 @@
                 if (group == "SparseOO") {
                     
                     GG <- .SparseGroupLassoVAROO(beta, kk, trainY, trainZ, 
-                                                 gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN)
+                                                 gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN,FALSE,C)
 
                     beta <- GG$beta
 
@@ -762,27 +762,27 @@
 
                 if (group=="HVARC"){
 
-                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,1e-05,p,MN)
+                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,1e-05,p,MN,C)
                     
                 }
 
 
                 if(group=="HVAROO"){
 
-                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,1e-05,p,MN)
+                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,1e-05,p,MN,C)
 
                 }
 
                 if(group=="HVARELEM"){
 
-                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,1e-05,p,MN) 	
+                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,1e-05,p,MN,C) 	
 
 
                 }
 
                 if(group=="Tapered"){
 
-                    beta <- .lassoVARTL(beta, trainZ, trainY,gamm, 1e-4,p,MN,palpha)
+                    beta <- .lassoVARTL(beta, trainZ, trainY,gamm, 1e-4,p,MN,palpha,C)
                 }
                 
 
@@ -806,21 +806,21 @@
                                         # We don't consider an intercept for the MN lasso
                 if(MN){
 
-                    preds[v-T2+h-1,] <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+                    preds[v-T1+h-1,] <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
 
                     if(h>1 & recursive){
 
                         pred <- matrix(preds[v-T1,],nrow=1)
                         
-                        preds[v-T2+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
+                        preds[v-T1+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
 
                     }else{
+                    
+                    MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1, ] - preds[v-T1-h+1,])^2
+
+                    diag(beta[,2:(k+1),1]) <- diag(beta[,2:(k+1),1])-C # subtract one for warm start purposes 
+
                     }
-
-                    MSFE[v-T2+h-1] <- norm2(ZFull$Y[v+h-1, ] - preds[v-T1-h+1,])^2
-
-                    diag(beta[,2:(k+1),1]) <- diag(beta[,2:(k+1),1])-1 # subtract one for warm start purposes 
-
                     
                 }else{
                     preds[v-T1+h-1,] <- betaEVAL %*% eZ                       
@@ -835,6 +835,7 @@
                     MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1,] - preds[v-T1+h-1,])^2                    
                     
                 }
+
                 if(verbose){
 
 
@@ -845,13 +846,13 @@
 
         if (group == "Basic") {
 
-            betaPred <- .lassoVARFist(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN)
+            betaPred <- .lassoVARFist(beta, ZFull$Z, ZFull$Y,gamm, 1e-05,p,MN,C)
 
         }
 
         if (group == "Lag") {
 
-            GG <- .GroupLassoVAR1(beta,jj,jjcomp,ZFull$Y,ZFull$Z,gamm,activeset,1e-04,p,MN,k,k,s)
+            GG <- .GroupLassoVAR1(beta,jj,jjcomp,ZFull$Y,ZFull$Z,gamm,activeset,1e-04,p,MN,k,k,s,C)
             
 
             betaPred <- GG$beta
@@ -861,7 +862,7 @@
         if (group == "SparseLag") {
 
             GG <- .SparseGroupLassoVAR(beta, jj, ZFull$Y, ZFull$Z, 
-                                       gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN)
+                                       gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
 
             betaPred <- GG$beta
 
@@ -871,7 +872,7 @@
 
 
             GG <- .GroupLassoOO(beta, kk, ZFull$Y, ZFull$Z, gamm, 
-                                activeset, 1e-04,p,MN)
+                                activeset, 1e-04,p,MN,C)
 
             betaPred <- GG$beta
 
@@ -880,7 +881,7 @@
         if (group == "SparseOO") {
 
             GG <- .SparseGroupLassoVAROO(beta, kk, ZFull$Y, ZFull$Z, 
-                                         gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN)
+                                         gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN,FALSE,C)
 
             betaPred <- GG$beta
             
@@ -890,14 +891,14 @@
         if (group=="HVARC")
             {
 
-                betaPred <- .HVARCAlg(beta,ZFull$Y,ZFull$Z,gamm,1e-05,p,MN)
+                betaPred <- .HVARCAlg(beta,ZFull$Y,ZFull$Z,gamm,1e-05,p,MN,C)
 
             }
 
         if(group=="HVAROO")
             {
 
-                betaPred <- .HVAROOAlg(beta,ZFull$Y,ZFull$Z,gamm,1e-05,p,MN)
+                betaPred <- .HVAROOAlg(beta,ZFull$Y,ZFull$Z,gamm,1e-05,p,MN,C)
 
 
             }
@@ -905,13 +906,13 @@
         if(group=="HVARELEM")
             {
 
-                betaPred<-.HVARElemAlg(beta,ZFull$Y,ZFull$Z,gamm,1e-05,p,MN) 	
+                betaPred<-.HVARElemAlg(beta,ZFull$Y,ZFull$Z,gamm,1e-05,p,MN,C) 	
 
             }
 
         if(group=="Tapered")
             {
-                betaPred <- .lassoVARTL(beta,ZFull$Z,ZFull$Y,gamm,1e-4,p,MN,palpha)            
+                betaPred <- .lassoVARTL(beta,ZFull$Z,ZFull$Y,gamm,1e-4,p,MN,palpha,C)            
             }    
         
 
@@ -967,8 +968,8 @@ VarptoVar1MC <- function(B,p,k)
 #' @param A1 Either a \eqn{k \times k} coefficient matrix or a \eqn{kp \times kp} matrix created using \code{\link{VarptoVar1MC}}. 
 #' @param p Maximum Lag Order
 #' @param Sigma Residual Covariance Matrix of dimension \eqn{k\times k}
-#' @param n Number of simulations
-#' @return Returns a \eqn{n \times k} of realizations from a VAR.
+#' @param T Number of simulations
+#' @return Returns a \eqn{T \times k} of realizations from a VAR.
 #' @references Lutkepohl, "A New Introduction to Multiple Time Series Analysis"
 #' @seealso \code{\link{VarptoVar1MC}}
 #' @examples
@@ -982,14 +983,14 @@ VarptoVar1MC <- function(B,p,k)
 #' Y <-MultVarSim(k,A,p,.1*diag(k),100)
 #' @export
 #' @importFrom MASS mvrnorm
-MultVarSim <- function (k, A1, p, Sigma, n) 
+MultVarSim <- function (k, A1, p, Sigma, T) 
 {
 
     if(max(Mod(eigen(A1)$values))>1){stop("Error: Generator Matrix is not stationary")}
     
                                         # add 500 observations for initialization purposes
 
-    Y <- matrix(0, nrow = n+500+p , ncol = k)
+    Y <- matrix(0, nrow = T+500+p , ncol = k)
 
     YY <- as.vector(Y)
 
@@ -1520,7 +1521,7 @@ diaggroupfunVARXcompL <- function(p,k,k1)
 
 
                                         # iterative procedure to find a less coarse bound for lambda starting value via binary search
-LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
+LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha,C)
     {
 
         tk <- 1/max(Mod(eigen(Z%*%t(Z))$values))
@@ -1533,19 +1534,19 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
 
                 lambda <- (lambdah+lambdal)/2
                 if(group=="EFX"){
-                    BOLD <- .EFVARX(BOLD,Y,Z,lambda,1e-4,MN,k1,s,m,p)
+                    BOLD <- .EFVARX(BOLD,Y,Z,lambda,1e-4,MN,k1,s,m,p,C)
                     param <- BOLD[,2:(k1*p+m*s+1),1]
                 }
 
                 if(group=="Basic"){
-                    param <- .lassoVARFistX(BOLD,Z,Y[,1:k1],lambda,1e-04,p,MN,k1+m,k1,s,m)[,2:(k1*p+m*s+1),]
+                    param <- .lassoVARFistX(BOLD,Z,Y[,1:k1],lambda,1e-04,p,MN,k1+m,k1,s,m,C)[,2:(k1*p+m*s+1),]
                 }
 
                 if(group=="Lag"){
 
                     jj <- groupfunVARX(p,k,k1,s)
                     jjcomp <- groupfunVARXcomp(p,k,k1,s)
-                    BB <- .GroupLassoVAR1(BOLD,jj,jjcomp,Y[,1:k1],Z,lambda,activeset,1e-4,p,MN,k,k1,s)
+                    BB <- .GroupLassoVAR1(BOLD,jj,jjcomp,Y[,1:k1],Z,lambda,activeset,1e-4,p,MN,k,k1,s,C)
                     BOLD <- BB$beta
                     param <- BB$beta[,2:(k1*p+m*s+1),]
                     activeset <- BB$active
@@ -1556,7 +1557,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
                     {
 
                         kk <- diaggroupfunVARX(p, k,k1,s)
-                        BB <- .GroupLassoOOX(BOLD, kk, Y, Z, lambda,activeset, 1e-04,p,MN,k,k1,s)
+                        BB <- .GroupLassoOOX(BOLD, kk, Y, Z, lambda,activeset, 1e-04,p,MN,k,k1,s,C)
                         param <- BB$beta[,2:(k1*p+m*s+1),]
                         BOLD <- BB$beta
                         activeset <- BB$active
@@ -1566,7 +1567,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
                     {
 
                         kk <- diaggroupfunVARX(p, k,k1,s)
-                        BB <- .SparseGroupLassoVAROOX(BOLD, kk, Y[,1:k1], Z, lambda,alpha,activeset, 1e-04,p,MN,k1,s,k)
+                        BB <- .SparseGroupLassoVAROOX(BOLD, kk, Y[,1:k1], Z, lambda,alpha,activeset, 1e-04,p,MN,k1,s,k,FALSE,C)
                         param <- BB$beta[,2:(k1*p+m*s+1),]
                         BOLD <- BB$beta
                         activeset <- BB$active
@@ -1586,15 +1587,20 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
 
                     }
                     
-                    BB <- .SparseGroupLassoVARX(BOLD,jj,Y[,1:k1],Z,lambda,alpha,activeset,1e-4,q1a,p,MN,k,s,k1)
+                    BB <- .SparseGroupLassoVARX(BOLD,jj,Y[,1:k1],Z,lambda,alpha,activeset,1e-4,q1a,p,MN,k,s,k1,C)
                     param <- BB$beta[,2:(k1*p+m*s+1),]
                     BOLD <- BB$beta
                     activeset <- BB$active
                 }
 
                 if(MN){
-                    diag(param[1:k1,1:k1]) <- 0
-                    diag(BOLD[1:(k1),2:(k1+1),1]) <- 0
+                    ## diag(param[1:k1,1:k1]) <- 0
+                    ## diag(BOLD[1:(k1),2:(k1+1),1]) <- 0
+
+                    
+                    diag(param[1:k1,1:k1]) <- ifelse(C==0,diag(param[1:k1,1:k1]),diag(param[1:k1,1:k1])-C)
+                    diag(BOLD[,2:(k1*p+1+m*s),]) <- ifelse(C==0,diag(BOLD[,2:(k1*p+1+m*s),]),diag(BOLD[,2:(k1*p+1+m*s),])-C)
+
                 }
 
                 if(max(abs(param))<sqrt(.Machine$double.eps))
@@ -1612,7 +1618,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha)
     }
 
                                         # Same as above, but for the VAR
-LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
+LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C)
     {
 
         tk <- 1/max(Mod(eigen(Z%*%t(Z))$values))
@@ -1636,12 +1642,12 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
 
                 lambda <- (lambdah+lambdal)/2
                 if(group=="Basic"){
-                    param <- .lassoVARFist(BOLD,Z,Y,lambda,1e-04,p,MN)[,2:(k*p+1),]
+                    param <- .lassoVARFist(BOLD,Z,Y,lambda,1e-04,p,MN,C)[,2:(k*p+1),]
                 }
 
                 if(group=="Tapered"){
 
-                    param <- .lassoVARTL(BOLD,Z,Y,lambda,1e-04,p,MN,rev(seq(0,1,length=10)))[,2:(k*p+1),]
+                    param <- .lassoVARTL(BOLD,Z,Y,lambda,1e-04,p,MN,rev(seq(0,1,length=10)),C)[,2:(k*p+1),]
 
                     param <- param[,,1]                    
                 }
@@ -1650,7 +1656,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
 
                     jj <- .groupfuncpp(p, k)
                     jjcomp <- .groupfuncomp(p,k)
-                    BB <- .GroupLassoVAR1(BOLD,jj,jjcomp,Y,Z,lambda,activeset,1e-4,p,MN,k,k,p)
+                    BB <- .GroupLassoVAR1(BOLD,jj,jjcomp,Y,Z,lambda,activeset,1e-4,p,MN,k,k,p,C)
                     BOLD <- BB$beta
                     param <- BB$beta[,2:(k*p+1),]
                     activeset <- BB$active                  
@@ -1664,7 +1670,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
                     for (i in 1:p) {
                         q1a[[i]] <- matrix(runif(k, -1, 1), ncol = 1)
                     }
-                    BB <- .SparseGroupLassoVAR(BOLD,jj,Y,Z,lambda,alpha,activeset,1e-4,q1a,p,MN)
+                    BB <- .SparseGroupLassoVAR(BOLD,jj,Y,Z,lambda,alpha,activeset,1e-4,q1a,p,MN,C)
                     param <- BB$beta[,2:(k*p+1),]
                     BOLD <- BB$beta
                     activeset <- BB$active
@@ -1674,7 +1680,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
                 if(group=="OwnOther")
                     {
                         kk <- .lfunction3cpp(p, k)
-                        BB <- .GroupLassoOO(BOLD, kk, Y, Z, lambda,activeset, 1e-04,p,MN)
+                        BB <- .GroupLassoOO(BOLD, kk, Y, Z, lambda,activeset, 1e-04,p,MN,C)
                         param <- BB$beta[,2:(k*p+1),]
                         BOLD <- BB$beta
                         activeset <- BB$active
@@ -1684,7 +1690,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
 
                 if(group=="SparseOO")
                     {
-                        BB <- .SparseGroupLassoVAROO(BOLD, kk, Y, Z, lambda,alpha,activeset, 1e-04,q1a,p,MN)
+                        BB <- .SparseGroupLassoVAROO(BOLD, kk, Y, Z, lambda,alpha,activeset, 1e-04,q1a,p,MN,FALSE,C)
                         param <- BB$beta[,2:(k*p+1),]
                         BOLD <- BB$beta
                         activeset <- BB$active                  
@@ -1692,26 +1698,26 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
 
                 if(group=="HVARC")
                     {
-                        BOLD <- .HVARCAlg(BOLD,Y,Z,lambda,1e-4,p,MN)                  
+                        BOLD <- .HVARCAlg(BOLD,Y,Z,lambda,1e-4,p,MN,C)                  
                         param <- BOLD[,2:(k*p+1),]
                     }
                 if(group=="HVAROO")
                     {
-                        BOLD <- .HVAROOAlg(BOLD,Y,Z,lambda,1e-4,p,MN)
+                        BOLD <- .HVAROOAlg(BOLD,Y,Z,lambda,1e-4,p,MN,C)
                         param <- BOLD[,2:(k*p+1),]
                     }
 
                 if(group=="HVARELEM")
                     {
-                        BOLD <- .HVARElemAlg(BOLD,Y,Z,lambda,1e-4,p,MN)
+                        BOLD <- .HVARElemAlg(BOLD,Y,Z,lambda,1e-4,p,MN,C)
                         param <- BOLD[,2:(k*p+1),]
                     }
 
 
                 if(MN){
 
-                    diag(param[1:k,1:k]) <- 0
-                    diag(BOLD[,2:(k*p+1),]) <- 0
+                    diag(param[1:k,1:k]) <- ifelse(C==0,diag(param[1:k,1:k]),0)
+                    diag(BOLD[,2:(k*p+1),]) <- ifelse(C==0,diag(BOLD[,2:(k*p+1),]),0)
                     
                 }
                 
@@ -1745,17 +1751,19 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha)
 #' @param h desired forecast horizon
 #' @param iterated indicator as to whether to use iterated or direct multistep forecasts (if applicable, VAR context only)
 #' @return Returns the one-step ahead MSFE over the evaluation period.
-#' @details This function evaluates the one-step ahead forecasts of a VAR or VARX fit by least squares over an evaluation period.  At every point in time, lag orders for the endogenous and exogenous series are selected according to AIC or BIC.  This function is run automatically when \code{\link{cv.BigVAR}} is called unless \code{ic} is set to \code{FALSE} in constructModel.      
+#' @details This function evaluates the one-step ahead forecasts of a VAR or VARX fit by least squares over an evaluation period.  At every point in time, lag orders for the endogenous and exogenous series are selected according to AIC or BIC.  This function is run automatically when \code{\link{cv.BigVAR}} is called unless \code{ic} is set to \code{FALSE} in \code{\link{constructModel}}.      
 #' @references Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes of multivariate autoregressive models." ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
 #' @seealso \code{\link{VARXFit}},\code{\link{constructModel}}, \code{\link{cv.BigVAR}}
 #' @examples
 #' data(Y)
-#' # fit a VAR_3(3)
-#' mod <- VARXFit(Y,3,NULL,NULL)
-#' # fit a VAR_3 with p= 6 and lag selected according to AIC
-#' modAIC <- VARXFit(Y,6,"AIC",NULL)
-#' # Fit a VARX_{2,1} with p=6, s=4 and lags selected by BIC
-#' modXBIC <- VARXFit(Y,6,"BIC",list(k=2,s=4))
+#'
+#' # Evaluate the performance of a VAR with lags selected by BIC.
+#' p <- 4
+#' T1 <- floor(nrow(Y))/3
+#' T2 <- floor(2*nrow(Y))/3
+#' # Matrix of zeros for X
+#' X <- matrix(0,nrow=nrow(Y),ncol=ncol(Y))
+#' BICMSFE <- VARXForecastEval(Y,X,p,0,T1,T2,"BIC",1)
 #' 
 #' @export
 VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
@@ -1791,7 +1799,6 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
             
             }
         if(IC=="BIC"){
-
             popt <- ICX(testY,testX,k,p,s,m,"BIC",h=hd)
         }
         if(IC=="AIC"){
@@ -1811,8 +1818,21 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
 
             C <- max(popt$p,popt$s)
 
+            ## print(C)
+            ## if(C==1){
+
+                ## # possibly memory leak in VARX lag matrix construction in Eigen if maxlag is 1.
+                ## # to be on the safe side, we will perform it in R
+                ## if(popt$s==0){
+                ## eZ <- c(1,Y[i-1,])
+                ## eZ <- matrix(eZ,ncol=1)
+                ## }else{
+                ##     eZ <- c(1,Y[i-1,],X[i-1,])               
+                ##     }
+                ## }else{
             eZ <- VARXCons(as.matrix(Y[(i-C):(i),]),as.matrix(X[(i-C):(i),]),k,popt$p,m,popt$s)
 
+            ## }
             
             pred <- B1%*%eZ
             
@@ -1838,7 +1858,7 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
 #' 
 #' @param Y a \eqn{t \times k} multivariate time series
 #' @param p maximum lag order
-#' @param IC Information criterion indicator, if set to \code{NULL}, it will fit a least squares VAR(X) of orders p and s.  Otherwise, if set to "AIC" or "BIC" it return the model that minimizes the given IC. 
+#' @param IC Information criterion indicator, if set to \code{NULL}, it will fit a least squares VAR(X) of orders p and s.  Otherwise, if set to "AIC" or "BIC" it return the model with lag orders that minimize the given IC. 
 #' @param VARX a list of VARX specifications (as in \code{\link{constructModel}} (or NULL )
 #' @return Returns a list with four entries:
 #' \itemize{
@@ -1857,7 +1877,7 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
 #' # fit a VAR_3 with p= 6 and lag selected according to AIC
 #' modAIC <- VARXFit(Y,6,"AIC",NULL)
 #' # Fit a VARX_{2,1} with p=6, s=4 and lags selected by BIC
-#' modXBIC <- VARXFit(Y,6,"BIC",list(k=2,s=4))
+#' modXBIC <- VARXFit(Y,6,"BIC",list(k=1,s=4))
 #' 
 #' @export
 VARXFit <- function(Y,p,IC,VARX=NULL)
@@ -1873,7 +1893,7 @@ VARXFit <- function(Y,p,IC,VARX=NULL)
                 }
 
         }
-        if(length(VARX)!=0){
+        if(is.list(VARX) & (length(VARX)!=0)){
 
             k1 <- VARX$k
             s <- VARX$s
@@ -1899,7 +1919,7 @@ VARXFit <- function(Y,p,IC,VARX=NULL)
         }
         if(is.null(IC)){
 
-            Res <- ARFitVARX(cbind(t(Z),YT),k1,p,m,s)
+            Res <- ARFitVARXR(cbind(t(Z),YT),k1,p,m,s)
 
             shat <- s
             phat <- p
@@ -1930,7 +1950,14 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
 
                                         # Augment Y with predictions, create lag matrix (no intercept if MN)
     Y <- rbind(Y,pred)
-    Z <- ZmatF(Y,p,ncol(Y),oos=TRUE,intercept=!MN)
+
+    # Can't call this function directly from R due to assert errors
+    ## Z <- ZmatF(Y,p,ncol(Y),oos=TRUE,intercept=!MN)
+
+    Z <- VARXCons(Y,matrix(0,nrow=nrow(Y),ncol=1),ncol(Y),p,0,0,oos=TRUE)
+    if(MN){
+        Z <- Z[2:nrow(Z),]
+        }
     Z <- Z[,ncol(Z)]
 
     pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)

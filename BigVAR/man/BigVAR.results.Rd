@@ -18,49 +18,49 @@ It inherits the class BigVAR, but contains substantially more information.
 
 \item{\code{index}}{Rank of optimal lambda value}
 
-\item{\code{OptimalLambda}}{Value of lambda which minimizes MSFE}
+\item{\code{OptimalLambda}}{Value of lambda that minimizes MSFE}
 
-\item{\code{OOSMSFE}}{Average Out of sample MSFE of BigVAR model with Optimal Lambda}
+\item{\code{OOSMSFE}}{Average Out of sample MSFE of BigVAR model with optimal lambda}
 
-\item{\code{seoosfmsfe}}{Standard Error of Out of sample MSFE of BigVAR model with Optimal Lambda}
+\item{\code{seoosfmsfe}}{Standard error of out of sample MSFE of BigVAR model with optimal lambda}
 
-\item{\code{MeanMSFE}}{Average Out of sample MSFE of Unconditional Mean Forecast}
+\item{\code{MeanMSFE}}{Average out of sample MSFE of unconditional mean forecast}
 
-\item{\code{MeanSD}}{Standard Error of out of sample MSFE of Unconditional Mean Forecast}
+\item{\code{MeanSD}}{Standard error of out of sample MSFE of unconditional mean forecast}
 
-\item{\code{RWMSFE}}{Average Out of sample MSFE of Random Walk Forecast}
+\item{\code{RWMSFE}}{Average out of sample MSFE of random walk forecast}
 
-\item{\code{RWSD}}{Standard Error of out of sample MSFE of Random Walk Forecast}
+\item{\code{RWSD}}{Standard error of out of sample MSFE of random walk forecast}
 
-\item{\code{AICMSFE}}{Average Out of sample MSFE of AIC Forecast}
+\item{\code{AICMSFE}}{Average out of sample MSFE of AIC forecast}
 
-\item{\code{AICSD}}{Standard Error of out of sample MSFE of AIC Forecast}
+\item{\code{AICSD}}{Standard error of out of sample MSFE of AIC forecast}
 
-\item{\code{BICMSFE}}{Average Out of sample MSFE of BIC Forecast}
+\item{\code{BICMSFE}}{Average out of sample MSFE of BIC forecast}
 
-\item{\code{BICSD}}{Standard Error of out of sample MSFE of BIC Forecast}
+\item{\code{BICSD}}{Standard error of out of sample MSFE of BIC forecast}
 
-\item{\code{betaPred}}{The final out of sample coefficient matrix of \code{B}, to be used for prediction}
+\item{\code{betaPred}}{The final estimated \eqn{k\times kp+ms+1} coefficient matrix, to be used for prediction}
 
 \item{\code{Zvals}}{The final lagged values of \code{Y}, to be used for prediction}
 
 \item{\code{resids}}{residuals obtained from betaPred}
 
-\item{\code{Data}}{a \eqn{T x k} multivariate time Series}
+\item{\code{Data}}{a \eqn{T \times k} or \eqn{T\times k + m} multivariate time Series}
 
 \item{\code{lagmax}}{Maximal lag order}
 
-\item{\code{Structure}}{Penalty Structure}
+\item{\code{Structure}}{Penalty structure}
 
 \item{\code{Relaxed}}{Indicator for relaxed VAR}
 
-\item{\code{Granularity}}{Granularity of Penalty Grid}
+\item{\code{Granularity}}{Granularity of penalty grid}
 
-\item{\code{horizon}}{Desired Forecast Horizon}
+\item{\code{horizon}}{Desired forecast horizon}
 
-\item{\code{crossval}}{Cross-Validation Procedure}
+\item{\code{crossval}}{Cross-Validation procedure}
 
-\item{\code{alpha}}{penalty for Sparse Group Lasso}
+\item{\code{alpha}}{additional penalty parameter for Sparse Lag Group or Sparse Own/Other methods. Will contain either the heuristic choice of \eqn{1/(k+1)} or the value selected by cross validation if the argument \code{dual} is set to \code{TRUE}}
 
 \item{\code{VARXI}}{VARX Indicator}
 

@@ -8,111 +8,54 @@
 
 using namespace Rcpp;
 
-// backsolve
-MatrixXd backsolve(const MatrixXd R2, const MatrixXd R);
-RcppExport SEXP BigVAR_backsolve(SEXP R2SEXP, SEXP RSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const MatrixXd >::type R2(R2SEXP);
-    Rcpp::traits::input_parameter< const MatrixXd >::type R(RSEXP);
-    __result = Rcpp::wrap(backsolve(R2, R));
-    return __result;
-END_RCPP
-}
-// ZmatF
-MatrixXd ZmatF(MatrixXd Y, int p, const int k, bool intercept, bool oos, bool contemp);
-RcppExport SEXP BigVAR_ZmatF(SEXP YSEXP, SEXP pSEXP, SEXP kSEXP, SEXP interceptSEXP, SEXP oosSEXP, SEXP contempSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< MatrixXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< bool >::type intercept(interceptSEXP);
-    Rcpp::traits::input_parameter< bool >::type oos(oosSEXP);
-    Rcpp::traits::input_parameter< bool >::type contemp(contempSEXP);
-    __result = Rcpp::wrap(ZmatF(Y, p, k, intercept, oos, contemp));
-    return __result;
-END_RCPP
-}
 // VARXCons
-MatrixXd VARXCons(MatrixXd Y, MatrixXd X, const int k, const int p, const int m, int s, bool oos, bool contemp);
-RcppExport SEXP BigVAR_VARXCons(SEXP YSEXP, SEXP XSEXP, SEXP kSEXP, SEXP pSEXP, SEXP mSEXP, SEXP sSEXP, SEXP oosSEXP, SEXP contempSEXP) {
+MatrixXd VARXCons(NumericMatrix Y1, NumericMatrix X1, const int k, const int p, const int m, int s, bool oos, bool contemp);
+RcppExport SEXP BigVAR_VARXCons(SEXP Y1SEXP, SEXP X1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP mSEXP, SEXP sSEXP, SEXP oosSEXP, SEXP contempSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< MatrixXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< MatrixXd >::type X(XSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Y1(Y1SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type X1(X1SEXP);
     Rcpp::traits::input_parameter< const int >::type k(kSEXP);
     Rcpp::traits::input_parameter< const int >::type p(pSEXP);
     Rcpp::traits::input_parameter< const int >::type m(mSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
     Rcpp::traits::input_parameter< bool >::type oos(oosSEXP);
     Rcpp::traits::input_parameter< bool >::type contemp(contempSEXP);
-    __result = Rcpp::wrap(VARXCons(Y, X, k, p, m, s, oos, contemp));
+    __result = Rcpp::wrap(VARXCons(Y1, X1, k, p, m, s, oos, contemp));
     return __result;
 END_RCPP
 }
-// ARFitVARX
-List ARFitVARX(const MatrixXd K2, const int k, const int p, int m, int s);
-RcppExport SEXP BigVAR_ARFitVARX(SEXP K2SEXP, SEXP kSEXP, SEXP pSEXP, SEXP mSEXP, SEXP sSEXP) {
+// ARFitVARXR
+List ARFitVARXR(NumericMatrix K21, const int k, const int p, int m, int s);
+RcppExport SEXP BigVAR_ARFitVARXR(SEXP K21SEXP, SEXP kSEXP, SEXP pSEXP, SEXP mSEXP, SEXP sSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const MatrixXd >::type K2(K2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type K21(K21SEXP);
     Rcpp::traits::input_parameter< const int >::type k(kSEXP);
     Rcpp::traits::input_parameter< const int >::type p(pSEXP);
     Rcpp::traits::input_parameter< int >::type m(mSEXP);
     Rcpp::traits::input_parameter< int >::type s(sSEXP);
-    __result = Rcpp::wrap(ARFitVARX(K2, k, p, m, s));
+    __result = Rcpp::wrap(ARFitVARXR(K21, k, p, m, s));
     return __result;
 END_RCPP
 }
 // ICX
-List ICX(MatrixXd Y, MatrixXd X, double k, int pmax, int smax, double m, std::string pen, int h);
-RcppExport SEXP BigVAR_ICX(SEXP YSEXP, SEXP XSEXP, SEXP kSEXP, SEXP pmaxSEXP, SEXP smaxSEXP, SEXP mSEXP, SEXP penSEXP, SEXP hSEXP) {
+List ICX(NumericMatrix Y1, NumericMatrix X1, double k, int pmax, int smax, double m, std::string pen, int h);
+RcppExport SEXP BigVAR_ICX(SEXP Y1SEXP, SEXP X1SEXP, SEXP kSEXP, SEXP pmaxSEXP, SEXP smaxSEXP, SEXP mSEXP, SEXP penSEXP, SEXP hSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< MatrixXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< MatrixXd >::type X(XSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Y1(Y1SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type X1(X1SEXP);
     Rcpp::traits::input_parameter< double >::type k(kSEXP);
     Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP);
     Rcpp::traits::input_parameter< int >::type smax(smaxSEXP);
     Rcpp::traits::input_parameter< double >::type m(mSEXP);
     Rcpp::traits::input_parameter< std::string >::type pen(penSEXP);
     Rcpp::traits::input_parameter< int >::type h(hSEXP);
-    __result = Rcpp::wrap(ICX(Y, X, k, pmax, smax, m, pen, h));
-    return __result;
-END_RCPP
-}
-// ARFitVARXDD
-List ARFitVARXDD(MatrixXd R, int T, int k, int p, int pmax);
-RcppExport SEXP BigVAR_ARFitVARXDD(SEXP RSEXP, SEXP TSEXP, SEXP kSEXP, SEXP pSEXP, SEXP pmaxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< MatrixXd >::type R(RSEXP);
-    Rcpp::traits::input_parameter< int >::type T(TSEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP);
-    __result = Rcpp::wrap(ARFitVARXDD(R, T, k, p, pmax));
-    return __result;
-END_RCPP
-}
-// ICDD
-List ICDD(MatrixXd Y, double k, int pmax, std::string pen);
-RcppExport SEXP BigVAR_ICDD(SEXP YSEXP, SEXP kSEXP, SEXP pmaxSEXP, SEXP penSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< MatrixXd >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< double >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type pmax(pmaxSEXP);
-    Rcpp::traits::input_parameter< std::string >::type pen(penSEXP);
-    __result = Rcpp::wrap(ICDD(Y, k, pmax, pen));
+    __result = Rcpp::wrap(ICX(Y1, X1, k, pmax, smax, m, pen, h));
     return __result;
 END_RCPP
 }

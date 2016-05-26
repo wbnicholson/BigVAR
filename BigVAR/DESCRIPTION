@@ -1,7 +1,7 @@
 Package: BigVAR
 Type: Package
 Title: Dimension Reduction Methods for Multivariate Time Series
-Version: 1.0
+Version: 1.0.1
 Authors@R: c(
     person("Will", "Nicholson", email = "wbn8@cornell.edu", role = c("cre","aut")),
     person("David", "Matteson", email = "matteson@cornell.edu", role = "aut"),
@@ -16,6 +16,10 @@ Imports:
     zoo,
     lattice,
     Rcpp,
+    stats,
+	utils,
+	grDevices,
+	graphics
 License: GPL (>=2)
 LazyLoad: yes
 SystemRequirements: C++11

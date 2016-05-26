@@ -7,16 +7,17 @@
 constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
   MN = FALSE, verbose = TRUE, IC = TRUE, VARX = list(),
   T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3), ONESE = FALSE,
-  ownlambdas = FALSE, alpha = as.double(NULL), recursive = FALSE)
+  ownlambdas = FALSE, alpha = as.double(NULL), recursive = FALSE,
+  C = as.double(NULL), dates = as.character(NULL))
 }
 \arguments{
-\item{Y}{\eqn{T x k} multivariate time series or Y \eqn{T x (k+m)} endogenous and exogenous series, respectively}
+\item{Y}{\eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively}
 
 \item{p}{Predetermined maximal lag order (for modeled series)}
 
 \item{struct}{The choice of penalty structure (see details).}
 
-\item{gran}{vector containing how deep to construct the penalty grid (parameter 1) and how many gridpoints to use (parameter 2)  If ownlambas is set to TRUE, gran denotes the user-supplied penalty parameters.}
+\item{gran}{vector of penalty parameter specifications.}
 
 \item{RVAR}{True or False: whether to refit based upon the support selected using the Relaxed-VAR procedure}
 
@@ -43,12 +44,13 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
 \item{alpha}{grid of candidate parameters for the alpha in the Sparse Lag and Sparse Own/Other VARX-L}
 
 \item{recursive}{True or False: Indicator as to whether iterative multi-step predictions are desired in the VAR context if the forecast horizon is greater than 1}
-}
-\description{
-Construct an object of class BigVAR
-}
-\details{
-The choices for "struct" are as follows
+
+\item{C}{vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE})}
+
+\item{dates}{optional vector of dates corresponding to \eqn{Y}
+
+
+ @details The choices for "struct" are as follows
 \itemize{
 \item{  "Basic" (Basic VARX-L)}
 \item{  "Lag" (Lag Group VARX-L)} 
@@ -62,15 +64,19 @@ The choices for "struct" are as follows
 \item{  "Tapered" (Lag weighted Lasso VAR)}
 }
 
+The first number in the vector "gran" specifies how deep to construct the penalty grid and the second specifies how many penalty parameters to use  If ownlambas is set to TRUE, gran should contain the user-supplied penalty parameters.
+
 VARX specifications consist of a list with entry k denoting the series that are to be modeled and entry s to denote the maximal lag order for exogenous series.
 
-The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.
+The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.}
+}
+\description{
+Construct an object of class BigVAR
 }
 \note{
 The specifications "Basic", "Lag," "SparseLag," "SparseOO," and "OwnOther" can accommodate both VAR and VARX models.  EFX only applies to VARX models.  "HVARC," "HVAROO," "HVARELEM," and "Tapered" can only be used with VAR models.
 }
 \examples{
-library(BigVAR)
 # VARX Example
 # Create a Basic VARX-L with k=2, m=1, s=2, p=4
 VARX=list()
@@ -82,10 +88,9 @@ T2=floor(2*nrow(Y)/3)
 Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 }
 \references{
-William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint 1412.5250, 2016.
-
-William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector
-autoregressions with exogenous variables," \url{http://www.wbnicholson.com/Nicholsonetal2015.pdf}.
+William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
+William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector autoregressions with exogenous variables," arXiv preprint arXiv:1508.07497, 2016.
+William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimension Reduction Reduction Methods for Multivariate Time Series," \url{http://www.wbnicholson.com/BigVAR.pdf}.
 }
 \seealso{
 \code{\link{cv.BigVAR}},\code{\link{BigVAR.est}}
