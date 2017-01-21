@@ -1,5 +1,7 @@
 #include <RcppArmadillo.h>
 #include <RcppEigen.h>
 
-using namespace arma;
-using namespace Eigen;
+using Eigen::MatrixXd;
+using arma::mat;
+using arma::cube;
+using arma::colvec;
