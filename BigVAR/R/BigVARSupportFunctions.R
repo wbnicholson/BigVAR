@@ -6,7 +6,7 @@
 .evalMean <- function(Y,T1,T2,h=1)
 {
 
-    if(class(Y)!="matrix"){
+    if(is.vector(Y)){
         Y <- matrix(Y,ncol=1)
     }
 
@@ -40,7 +40,7 @@
 .evalRW <- function(Y,T1,T2,h=1)
 {
 
-    if(class(Y)!="matrix"){
+    if(is.vector(Y)){
         Y <- matrix(Y,ncol=1)
     }
     

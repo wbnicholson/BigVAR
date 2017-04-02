@@ -202,7 +202,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 
     
     
-    if(class(Y)!="matrix")
+    if(is.vector(Y))
         {
             Y <- matrix(Y,ncol=1)
         }
@@ -325,7 +325,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 .GroupLassoOO <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,C1) 
 {
 
-    if(class(Y)!="matrix")
+    if(is.vector(Y))
         {
             Y <- matrix(Y,ncol=1)
         }
@@ -438,7 +438,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 .lassoVARFistX <- function (B, Z, Y, gamm, eps,p,MN,k,k1,s,m,C1) 
 {
 
-    if(class(Y)!="matrix")
+    if(is.vector(Y))
    {
        Y <- matrix(Y,ncol=1)
    }
@@ -483,7 +483,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 .lassoVARFist <- function (B, Z, Y, gamm, eps,p,MN,C1) 
 {
 
-    if(class(Y)!="matrix")
+    if(is.vector(Y))
         {
             Y <- matrix(Y,ncol=1)
         }
@@ -524,7 +524,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 # Componentwise HVAR
 .HVARCAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1)
     {
-    if(class(Y)!="matrix")
+    if(is.vector(Y)="matrix")
         {
             Y <- matrix(Y,ncol=1)
         }
@@ -1003,7 +1003,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 .lassoVARTL <- function (B, Z, Y, gamm, eps,p,MN,alpha,C1) 
 {
 
-    if(class(Y)!="matrix")
+    if(is.vector(Y))
     {
         Y <- matrix(Y,ncol=1)
     }
