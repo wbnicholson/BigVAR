@@ -6,7 +6,7 @@
 .evalMean <- function(Y,T1,T2,h=1)
 {
 
-    if(is.vector(Y)){
+    if(!"matrix"%in%class(Y)){
         Y <- matrix(Y,ncol=1)
     }
 
@@ -40,12 +40,12 @@
 .evalRW <- function(Y,T1,T2,h=1)
 {
 
-    if(is.vector(Y)){
+    if(!"matrix"%in%class(Y)){
         Y <- matrix(Y,ncol=1)
     }
     
     MSFE <- c()
-    
+   
     k <- ncol(Y)
     
     for (u in (T1-h+2):T2) {

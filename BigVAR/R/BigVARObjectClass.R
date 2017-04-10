@@ -495,7 +495,7 @@ setMethod(
         h <- object@horizon
         jj <- 0
 
-        if(is.vector(Y)){Y=matrix(Y,ncol=1)}
+        if(!"matrix"%in%class(Y)){Y=matrix(Y,ncol=1)}
 
         if(object@crossval=="Rolling"){
             T1 <- object@T1
@@ -1369,7 +1369,7 @@ setMethod(
         group <- object@Structure
         MN <- object@Minnesota
         jj <- 0
-        if(is.vector(Y)){Y=matrix(Y,ncol=1)}
+        if(!"matrix"%in%class(Y)){Y=matrix(Y,ncol=1)}
         s <- ifelse(length(object@VARX)!=0,object@VARX$s,0)
         T <- nrow(Y)-max(p,s)
         VARX <- object@VARX
