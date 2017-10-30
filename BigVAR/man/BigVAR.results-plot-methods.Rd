@@ -21,4 +21,3 @@ Plot an object of class BigVAR.results
 \details{
 Plots the in sample MSFE of all values of lambda with the optimal value highlighted.
 }
-

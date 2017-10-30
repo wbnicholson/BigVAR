@@ -114,6 +114,7 @@ check.BigVAR <- function(object){
 #' 
 #' @slot Data a \eqn{T \times k} multivariate time Series
 #' @slot lagmax Maximal lag order for modeled series
+#' @slot intercept Indicator as to whether an intercept should be included 
 #' @slot Structure Penalty Structure
 #' @slot Relaxed Indicator for relaxed VAR
 #' @slot Granularity Granularity of Penalty Grid
@@ -132,6 +133,7 @@ check.BigVAR <- function(object){
 #' @slot alpha Grid of candidate alpha values (applies only to Sparse VARX-L models)
 #' @slot recursive Indicator as to whether recursive multi-step forecasts are used (applies only to multiple horizon VAR models)
 #' @slot constvec vector indicating variables to shrink toward a random walk instead of toward zero (valid only if Minnesota is \code{TRUE})
+#' @slot tol optimization tolerance
 #' @details To construct an object of class BigVAR, use the function \code{\link{constructModel}}
 #' @seealso \code{\link{constructModel}}
 #' @export
@@ -143,6 +145,7 @@ setClass(
         Structure="character",
         Relaxed="logical",
         Granularity="numeric",
+        intercept="logical",
         Minnesota="logical",  
         horizon="numeric",
         verbose="logical",  
@@ -157,7 +160,8 @@ setClass(
         alpha="numeric",
         recursive="logical",
         dates="character",
-        constvec="numeric"
+        constvec="numeric",
+        tol="numeric"
         ),validity=check.BigVAR
     )
 
@@ -166,8 +170,9 @@ setClass(
 #' @param Y \eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively 
 #' @param p Predetermined maximal lag order (for modeled series)
 #' @param struct The choice of penalty structure (see details).
-#' @param gran vector of penalty parameter specifications.  
-#' @param RVAR True or False: whether to refit based upon the support selected using the Relaxed-VAR procedure
+#' @param gran vector of penalty parameter specifications.
+#' @param intercept True or False: option to fit an intercept
+#' @param RVAR True or False: option to refit based upon the support selected using the Relaxed-VAR procedure
 #' @param h Desired forecast horizon
 #' @param cv Cross-validation approach, either "Rolling" for rolling cross-validation or "LOO" for leave-one-out cross-validation.
 #' @param MN Minnesota Prior Indicator
@@ -181,6 +186,7 @@ setClass(
 #' @param alpha grid of candidate parameters for the alpha in the Sparse Lag and Sparse Own/Other VARX-L 
 #' @param recursive True or False: Indicator as to whether iterative multi-step predictions are desired in the VAR context if the forecast horizon is greater than 1
 #' @param C vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE})
+#' @param tol optimization tolerance (default 1e-4)
 #' @param dates optional vector of dates corresponding to \eqn{Y}
 #'
 #' 
@@ -222,7 +228,7 @@ setClass(
 #' T2=floor(2*nrow(Y)/3)
 #' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 #' @export
-constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE,C=as.double(NULL),dates=as.character(NULL))
+constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE,C=as.double(NULL),dates=as.character(NULL),intercept=TRUE,tol=1e-4)
 {
     if(any(is.na(Y))){stop("Remove NA values before running constructModel")}      
     if(dim(Y)[2]>dim(Y)[1] & length(VARX)==0){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
@@ -237,7 +243,7 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
     if(cv!="Rolling" & cv!="LOO"){stop("Cross-Validation type must be one of Rolling or LOO")}
     if(length(gran)!=2&ownlambdas==FALSE){stop("Granularity must have two parameters")}
     if(any(gran<=0)){stop("Granularity parameters must be positive")}
-
+    if(tol<0 | tol>1e-1){stop("Tolerance must be positive")}
     structure2 <- c("Basic","Lag","HVARC")
     cond2=struct %in% structure2
     ## k <- ncol(Y)
@@ -316,7 +322,9 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
         alpha=alpha,
         recursive=recursive,
         dates=ind,
-        constvec=C
+        constvec=C,
+        intercept=intercept,
+        tol=tol
         ))
 
     return(BV1)
@@ -464,9 +472,10 @@ setMethod(
         RVAR <- object@Relaxed
         group <- object@Structure
         cvtype <- object@crossval
-
+        intercept=object@intercept
         recursive <- object@recursive
         VARX <- object@VARX
+        tol=object@tol
 
         if(length(alpha)==0){
 
@@ -561,7 +570,7 @@ setMethod(
                 trainZ <- VARXCons(matrix(0,ncol=1,nrow=nrow(X)),matrix(X,ncol=m),k=0,p=0,m=m,s=s,contemp=contemp,oos=FALSE)
 
             }
-
+            
             trainZ <- trainZ[2:nrow(trainZ),]
 
             trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
@@ -586,12 +595,12 @@ setMethod(
             if(object@ownlambdas==FALSE){
                 if(dual){
                                         # Constructs penalty grid if both alpha and lambda are selected
-                    gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha,C)
+                    gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha,C,intercept,tol)
 
                 }else{
 
                                         # Penalty parameter grid for just lambda
-                    gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN,alpha,C)
+                    gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN,alpha,C,intercept,tol)
                 }
             }
 
@@ -669,11 +678,11 @@ setMethod(
 
                 if(dual){
 
-                    gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C)
+                    gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C,intercept,tol)
 
                 }else{
 
-                    gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C)
+                    gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C,intercept,tol)
                 }
                 
             }
@@ -824,18 +833,18 @@ setMethod(
 
                 if(VARX){
 
-                    beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s+s1,m,C)
+                    beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, tol,p,MN,k,k1,s+s1,m,C,intercept)
 
                 }else{
 
-                    beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-04,p,MN,C)
+                    beta <- .lassoVARFist(beta, trainZ, trainY,gamm, tol,p,MN,C,intercept)
                 }
 
             }
 
             if (group == "Lag") {
 
-                GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s+s1,C)
+                GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,tol,p,MN,k,k1,s+s1,C,intercept)
 
                 beta <- GG$beta
 
@@ -850,23 +859,23 @@ setMethod(
                     if(!dual){
 
                         GG <- .SparseGroupLassoVARX(beta, jj, trainY, trainZ, 
-                                                    gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
+                                                    gamm, alpha, INIactive = activeset, tol, q1a,p,MN,k,s+s1,k1,C,intercept)
 
                     }else{
 
                         GG <- .SparseGroupLassoVARXDual(beta, jj, trainY, trainZ, 
-                                                        gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
+                                                        gamm, alpha, INIactive = activeset, tol, q1a,p,MN,k,s+s1,k1,C,intercept)
 
                     }
                 }else{
 
                     if(!dual){
                         GG <- .SparseGroupLassoVAR(beta, jj, trainY, trainZ, 
-                                                   gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
+                                                   gamm, alpha, INIactive = activeset, tol, q1a,p,MN,C,intercept)
 
                     }else{
                         GG <- .SparseGroupLassoVARDual(beta, jj, trainY, trainZ, 
-                                                       gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
+                                                       gamm, alpha, INIactive = activeset, tol, q1a,p,MN,C,intercept)
 
 
                     }
@@ -885,12 +894,13 @@ setMethod(
                 if(VARX){
 
                     GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
-                                         activeset, 1e-04,p,MN,k,k1,s+s1,C)
+                                         activeset, tol,p,MN,k,k1,s+s1,C,intercept)
 
                 }else{
 
+                    
                     GG <- .GroupLassoOO(beta, kk, trainY, trainZ, gamm, 
-                                        activeset, 1e-04,p,MN,C)
+                                        activeset, tol,p,MN,C,intercept)
                 }
 
                 beta <- GG$beta
@@ -904,12 +914,12 @@ setMethod(
 
 
                     GG <- .SparseGroupLassoVAROOX(beta, kk, trainY, trainZ, 
-                                                  gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k,dual,C)
+                                                  gamm, alpha, INIactive = activeset, tol,p,MN,k1,s+s1,k,dual,C,intercept)
 
                 }else{
 
                     GG <- .SparseGroupLassoVAROO(beta, kk, trainY, trainZ, 
-                                                 gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN,dual,C)
+                                                 gamm, alpha, INIactive = activeset, tol,q1a,p,MN,dual,C,intercept)
 
                     q1a <- GG$q1
 
@@ -924,31 +934,31 @@ setMethod(
             if(group=="Tapered")
                 {
 
-                    beta <- .lassoVARTL(beta,trainZ,trainY,gamm,1e-4,p,MN,palpha,C)    
+                    beta <- .lassoVARTL(beta,trainZ,trainY,gamm,tol,p,MN,palpha,C,intercept)    
                 }
 
             if(group=="EFX")
                 {
 
-                    beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-5,MN,k1,s,m,p,C)
+                    beta <- .EFVARX(beta,trainY,trainZ,gamm,tol,MN,k1,s,m,p,C,intercept)
                     
                 }
 
             if(group=="HVARC")
                 {
-                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
+                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
 
                 }
 
             if(group=="HVAROO")
                 {
-                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
+                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
                 }
 
             if(group=="HVARELEM")
                 {
 
-                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
+                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
 
                 }
             
@@ -1170,11 +1180,11 @@ setMethod(
         if(VARX){
 
                                         # Out of sample forecast evaluation: VARX
-            OOSEval <- .BigVAREVALX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alphaopt,C)
+            OOSEval <- .BigVAREVALX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alphaopt,C,intercept,tol)
 
         }else{
                                         # Out of sample evaluation for VAR    
-            OOSEval <- .BigVAREVAL(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alphaopt,recursive,C)
+            OOSEval <- .BigVAREVAL(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alphaopt,recursive,C,intercept,tol)
         }
         MSFEOOSAgg <- na.omit(OOSEval$MSFE)
         betaPred <- OOSEval$betaPred
@@ -1288,7 +1298,7 @@ setMethod(
                 VARXL <- list()
                 }
                                         # Create a new BigVAR.Results Object
-        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,RWMSFE=RWbench$Mean,MeanSD=meanbench$SD,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C)
+        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,RWMSFE=RWbench$Mean,MeanSD=meanbench$SD,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol)
         
         return(results)
     }
@@ -1327,7 +1337,7 @@ setMethod(
     signature="BigVAR",
     definition=function(object){
         p=object@lagmax
-
+        tol=object@tol
         if(object@ownlambdas==TRUE){
             gamm=object@Granularity
             gran2 <- length(gamm)
@@ -1339,6 +1349,7 @@ setMethod(
         Y <- object@Data
         k <- ncol(Y)
         VARX <- object@VARX
+        intercept <- object@intercept
         if(length(object@alpha)==0){
 
             if(length(VARX)>0){    
@@ -1440,12 +1451,12 @@ setMethod(
             
             if(dual){
                                         # Constructs penalty grid if both alpha and lambda are selected
-                gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha,C)
+                gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha,C,intercept,tol)
 
             }else{
 
                                         # Penalty parameter grid for just lambda
-                gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY), trainZ,group,p,k1,s+s1,m,k,MN,alpha,C)
+                gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY), trainZ,group,p,k1,s+s1,m,k,MN,alpha,C,intercept,tol)
             }
         }else{
 
@@ -1539,11 +1550,11 @@ setMethod(
 
             if(dual){
  
-            gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C)
+            gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C,intercept,tol)
             
 
         }else{
-            gamm <- .LambdaGridE(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,C)
+            gamm <- .LambdaGridE(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C,intercept,tol)
             }
         }else{
 
@@ -1627,15 +1638,15 @@ setMethod(
     if (group == "Basic") {
 
         if(VARX){
-            beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, 1e-04,p,MN,k,k1,s,m,C)}
+            beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, tol,p,MN,k,k1,s,m,C,intercept)}
         else{
-            beta <- .lassoVARFist(beta, trainZ, trainY,gamm, 1e-04,p,MN,C)
+            beta <- .lassoVARFist(beta, trainZ, trainY,gamm, tol,p,MN,C,intercept)
         }
     }
 
     if (group == "Lag") {
 
-        GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,1e-04,p,MN,k,k1,s,C)
+        GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,tol,p,MN,k,k1,s,C,intercept)
         beta <- GG$beta
         activeset <- GG$active
     }
@@ -1647,23 +1658,23 @@ setMethod(
             if(!dual){
 
                 GG <- .SparseGroupLassoVARX(beta, jj, trainY, trainZ, 
-                                            gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
+                                            gamm, alpha, INIactive = activeset, tol, q1a,p,MN,k,s+s1,k1,C,intercept)
 
             }else{
 
                 GG <- .SparseGroupLassoVARXDual(beta, jj, trainY, trainZ, 
-                                                gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,k,s+s1,k1,C)
+                                                gamm, alpha, INIactive = activeset, tol, q1a,p,MN,k,s+s1,k1,C,intercept)
 
             }
         }else{
 
             if(!dual){
                 GG <- .SparseGroupLassoVAR(beta, jj, trainY, trainZ, 
-                                           gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
+                                           gamm, alpha, INIactive = activeset, tol, q1a,p,MN,C,intercept)
 
             }else{
                 GG <- .SparseGroupLassoVARDual(beta, jj, trainY, trainZ, 
-                                               gamm, alpha, INIactive = activeset, 1e-04, q1a,p,MN,C)
+                                               gamm, alpha, INIactive = activeset, tol, q1a,p,MN,C,intercept)
 
 
             }
@@ -1680,10 +1691,12 @@ setMethod(
     if (group == "OwnOther") {
         if(VARX){
             GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
-                                 activeset, 1e-04,p,MN,k,k1,s,C)
+                                 activeset, tol,p,MN,k,k1,s,C,intercept)
         }else{
+            ## browser()
+
             GG <- .GroupLassoOO(beta, kk, trainY, trainZ, gamm, 
-                                activeset, 1e-04,p,MN,C)
+                                activeset, tol,p,MN,C,intercept)
         }
         beta <- GG$beta
         activeset <- GG$active
@@ -1694,12 +1707,12 @@ setMethod(
 
 
             GG <- .SparseGroupLassoVAROOX(beta, kk, trainY, trainZ, 
-                                          gamm, alpha, INIactive = activeset, 1e-04,p,MN,k1,s+s1,k,dual,C)
+                                          gamm, alpha, INIactive = activeset, tol,p,MN,k1,s+s1,k,dual,C,intercept)
 
         }else{
 
             GG <- .SparseGroupLassoVAROO(beta, kk, trainY, trainZ, 
-                                         gamm, alpha, INIactive = activeset, 1e-04,q1a,p,MN,dual,C)
+                                         gamm, alpha, INIactive = activeset, tol,q1a,p,MN,dual,C,intercept)
 
             q1a <- GG$q1
 
@@ -1714,34 +1727,34 @@ setMethod(
     if(group=="Tapered")
     {
 
-        beta <- .lassoVARTL(beta,trainZ,trainY,gamm,1e-4,p,MN,palpha,C)
+        beta <- .lassoVARTL(beta,trainZ,trainY,gamm,tol,p,MN,palpha,C,intercept)
         
     }
 
     if(group=="EFX")
     {
 
-        beta <- .EFVARX(beta,trainY,trainZ,gamm,1e-5,MN,k1,s,m,p,C)
+        beta <- .EFVARX(beta,trainY,trainZ,gamm,tol,MN,k1,s,m,p,C,intercept)
 
     }
 
     if(group=="HVARC")
     {
 
-        beta <- .HVARCAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
+        beta <- .HVARCAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
 
     }
     if(group=="HVAROO")
     {
 
-        beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
+        beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
 
     }
 
     if(group=="HVARELEM")
     {
 
-        beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,1e-5,p,MN,C)
+        beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
     }      
     
     return(list(B=beta,lambdas=gamm))

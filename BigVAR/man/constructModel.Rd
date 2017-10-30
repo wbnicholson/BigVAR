@@ -8,7 +8,8 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
   MN = FALSE, verbose = TRUE, IC = TRUE, VARX = list(),
   T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3), ONESE = FALSE,
   ownlambdas = FALSE, alpha = as.double(NULL), recursive = FALSE,
-  C = as.double(NULL), dates = as.character(NULL))
+  C = as.double(NULL), dates = as.character(NULL), intercept = TRUE,
+  tol = 1e-04)
 }
 \arguments{
 \item{Y}{\eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively}
@@ -19,7 +20,7 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
 
 \item{gran}{vector of penalty parameter specifications.}
 
-\item{RVAR}{True or False: whether to refit based upon the support selected using the Relaxed-VAR procedure}
+\item{RVAR}{True or False: option to refit based upon the support selected using the Relaxed-VAR procedure}
 
 \item{h}{Desired forecast horizon}
 
@@ -69,6 +70,10 @@ The first number in the vector "gran" specifies how deep to construct the penalt
 VARX specifications consist of a list with entry k denoting the series that are to be modeled and entry s to denote the maximal lag order for exogenous series.
 
 The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.}
+
+\item{intercept}{True or False: option to fit an intercept}
+
+\item{tol}{optimization tolerance (default 1e-4)}
 }
 \description{
 Construct an object of class BigVAR
@@ -95,4 +100,3 @@ William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimensio
 \seealso{
 \code{\link{cv.BigVAR}},\code{\link{BigVAR.est}}
 }
-

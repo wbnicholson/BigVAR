@@ -72,10 +72,10 @@ It inherits the class BigVAR, but contains substantially more information.
 
 \item{\code{contemp}}{indicator if contemporaneous exogenous predictors are used}
 }}
+
 \note{
 One can also access any object of class BigVAR from BigVAR.results
 }
 \author{
 Will Nicholson
 }
-

@@ -2,8 +2,8 @@
 % Please edit documentation in R/BigVARObjectClass.R
 \docType{methods}
 \name{plot.BigVAR}
-\alias{plot,BigVAR-method}
 \alias{plot.BigVAR}
+\alias{plot,BigVAR-method}
 \title{Plot a BigVAR object}
 \usage{
 \S4method{plot}{BigVAR}(x, y = NULL, ...)
@@ -27,4 +27,3 @@ Uses plot.zoo to plot each individual series of \code{Y} on a single plot
 \seealso{
 \code{\link{constructModel}}
 }
-

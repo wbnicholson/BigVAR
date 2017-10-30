@@ -20,4 +20,3 @@ prints forecast results and additional diagnostic information as well as compari
 \seealso{
 \code{\link{cv.BigVAR}},\code{\link{BigVAR.results}}
 }
-

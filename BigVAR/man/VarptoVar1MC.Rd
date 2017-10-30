@@ -34,4 +34,3 @@ See page 15 of Lutkepohl, "A New Introduction to Multiple Time Series Analysis"
 \seealso{
 \code{\link{MultVarSim}}
 }
-

@@ -1,10 +1,12 @@
+#include <numeric>      // std::iota
+
 #include <RcppArmadillo.h>
 #include <vector>
 #include <limits>
 #include <algorithm>
-#include <numeric>      // std::iota
 
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::plugins(cpp11)]]
 
 using namespace Rcpp;
 using namespace arma;

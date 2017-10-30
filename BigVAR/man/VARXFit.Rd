@@ -46,4 +46,3 @@ Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes 
 \seealso{
 \code{\link{constructModel}}, \code{\link{cv.BigVAR}}
 }
-

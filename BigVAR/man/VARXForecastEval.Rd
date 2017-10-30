@@ -52,4 +52,3 @@ Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes 
 \seealso{
 \code{\link{VARXFit}},\code{\link{constructModel}}, \code{\link{cv.BigVAR}}
 }
-

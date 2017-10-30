@@ -30,4 +30,3 @@ BigVAR.est(Model1)
 \seealso{
 \code{\link{constructModel}}, \code{\link{BigVAR.results}},\code{\link{cv.BigVAR}}
 }
-

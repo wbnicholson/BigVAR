@@ -22,9 +22,6 @@ results=cv.BigVAR(m1)
 plot(results)
 predict(results,n.ahead=1)
 }
-\author{
-Will Nicholson \email{wbn8@cornell.edu},
-}
 \references{
 Lutkepohl "New Introduction to Multivariate Time Series",
 William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
@@ -35,4 +32,6 @@ William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimensio
 \seealso{
 \code{\link{constructModel}}, \code{\link{cv.BigVAR}}, \code{\link{BigVAR.results}}, \code{\link{plot}}, \code{\link{predict}}
 }
-
+\author{
+Will Nicholson \email{wbn8@cornell.edu},
+}

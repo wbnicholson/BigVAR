@@ -29,4 +29,3 @@ SparsityPlot.BigVAR.results(cv.BigVAR(Model1))
 \seealso{
 \code{\link{cv.BigVAR}}, \code{\link{BigVAR.results}}
 }
-

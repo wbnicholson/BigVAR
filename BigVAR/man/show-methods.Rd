@@ -2,8 +2,8 @@
 % Please edit documentation in R/BigVARObjectClass.R
 \docType{methods}
 \name{show.BigVAR}
-\alias{show,BigVAR-method}
 \alias{show.BigVAR}
+\alias{show,BigVAR-method}
 \title{Default show method for an object of class BigVAR}
 \usage{
 \S4method{show}{BigVAR}(object)
@@ -28,4 +28,3 @@ Default show method for an object of class BigVAR
 \seealso{
 \code{\link{constructModel}}
 }
-

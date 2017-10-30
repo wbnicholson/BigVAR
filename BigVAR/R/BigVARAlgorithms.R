@@ -2,7 +2,7 @@
 # Most of the computationally expensive portions of the code have been exported to C++
 
 # Sparse Own/Other (VAR)
-.SparseGroupLassoVAROO<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,dual=FALSE,C1) 
+.SparseGroupLassoVAROO<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,dual=FALSE,C1,intercept) 
 {
 ## browser()
 
@@ -22,10 +22,15 @@
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
     ZMean <- c(apply(Z, 1, mean))    
     Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
     ZZ <- kronecker(t(Z),diag(k))  
     M1f <- list()
     M2f <- list()
@@ -74,7 +79,7 @@
 
 
 # Sparse Lag (VAR)
-.SparseGroupLassoVAR<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,C1) 
+.SparseGroupLassoVAR<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,C1,intercept) 
 {
     k <- ncol(Y)
 
@@ -91,10 +96,15 @@
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
-    ZMean <- c(apply(Z, 1, mean))
+    ZMean <- c(apply(Z, 1, mean))    
     Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Y))
+        }
     M1f <- list()
     M2f <- list()
     eigs <- c()
@@ -136,7 +146,7 @@
 }
 
 # Sparse Lag (VAR) Dual Search
-.SparseGroupLassoVARDual<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,C1) 
+.SparseGroupLassoVARDual<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,C1,intercept) 
 {
 k <- ncol(Y)
     if (MN)
@@ -153,10 +163,15 @@ k <- ncol(Y)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
-    ZMean <- c(apply(Z, 1, mean))
+    ZMean <- c(apply(Z, 1, mean))    
     Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
     M1f <- list()
     M2f <- list()
     eigs <- c()
@@ -197,7 +212,7 @@ k <- ncol(Y)
 
 # Lag Group (VAR/VARX-L)
 .GroupLassoVAR1 <- 
-function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1) 
+function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,intercept) 
 {
 
     
@@ -222,8 +237,15 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
-    ZMean <- c(apply(Z, 1, mean))
+    ZMean <- c(apply(Z, 1, mean))    
+    Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
+    Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
 
     if(k>1){    
 
@@ -258,7 +280,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 
 
 # Group Lasso Own/Other (VARXL)
-.GroupLassoOOX <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1) 
+.GroupLassoOOX <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,intercept) 
 {
     m <- k-k1
 
@@ -277,6 +299,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
     YOLD <- Y
     ZOLD <- Z
 
+    if(intercept){
     if(k1>1){
 
         YMEAN <- apply(Y, 1, mean)
@@ -286,13 +309,19 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
     }         
 
     ZMEAN <- apply(Z,1,mean)
+    }else{
 
+        YMEAN <- rep(0,nrow(Y))
+        ZMEAN <- rep(0,nrow(Z))
+        
+        }
+    if(intercept){
     if(k>1){    
         Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
     }else{Y <- Y-mean(Y)}    
 
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
-
+    }
     kk=diaggroupfunVARX(p,k,k1,s)
     kkcomp <- diaggroupfunVARXcomp(p,k,k1,s)
 
@@ -322,7 +351,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 
 
 # Own/Other Group VAR-L
-.GroupLassoOO <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,C1) 
+.GroupLassoOO <- function (beta, groups, Y, Z, gamm, INIactive, eps,p,MN,C1,intercept) 
 {
 
     if(!"matrix"%in%class(Y))
@@ -347,20 +376,29 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
     YOLD <- Y
     ZOLD <- Z
 
-    if(k>1){
-        YMEAN <- apply(Y, 1, mean)}
-    else{
+    if(intercept){
+    if(k1>1){
+
+        YMEAN <- apply(Y, 1, mean)
+
+    }else{
         YMEAN <- mean(Y)
     }         
 
     ZMEAN <- apply(Z,1,mean)
+    }else{
 
-    if(k>1){    
-    Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
-}else{
-        Y <- Y-mean(Y)
+        YMEAN <- rep(0,nrow(Y))
+        ZMEAN <- rep(0,nrow(Z))
+        
         }
+    if(intercept){
+    if(k>1){    
+        Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
+    }else{Y <- Y-mean(Y)}    
+
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }
     kk <- groups
     kkfull <- groups
     kkcomp <- .lfunctioncomp(p, k)
@@ -392,7 +430,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 
 
 # Elementwise HVAR
-.HVARElemAlg <- function (beta, Y, Z, lambda, eps,p,MN,C1) 
+.HVARElemAlg <- function (beta, Y, Z, lambda, eps,p,MN,C1,intercept) 
 {
 
     k <- ncol(Y)
@@ -410,13 +448,18 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
     betafin <- beta
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 2, mean))
     ZMean <- c(apply(Z, 1, mean))
 
     Y <- Y - matrix(c(rep(1, nrow(Y))), ncol = 1) %*% matrix(c(apply(Y, 
         2, mean)), nrow = 1)
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
-
+    }else{
+        YMean <- rep(0,ncol(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
+    
     tk <- 1/max(Mod(eigen(Z %*% t(Z))$values))
 
     betaini <- array(beta[, 2:ncol(beta[, , 1]), ],dim=c(k,k*p,length(lambda)))
@@ -435,7 +478,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 }
 
 # Basic-VARX-L Fista Implementation
-.lassoVARFistX <- function (B, Z, Y, gamm, eps,p,MN,k,k1,s,m,C1) 
+.lassoVARFistX <- function (B, Z, Y, gamm, eps,p,MN,k,k1,s,m,C1,intercept) 
 {
 
     if(!"matrix"%in%class(Y))
@@ -454,10 +497,15 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
         }
     
     Y <- t(Y)
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
     ZMean <- c(apply(Z, 1, mean))
     Y <- Y - YMean %*% t(c(rep(1, ncol(Y))))
     Z <- Z - ZMean %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
     Y <- t(Y)
 
     tk <- 1/max(Mod(eigen(Z%*%t(Z),only.values=TRUE)$values))
@@ -480,7 +528,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 
 
 #Basic VAR Fista Implementation
-.lassoVARFist <- function (B, Z, Y, gamm, eps,p,MN,C1) 
+.lassoVARFist <- function (B, Z, Y, gamm, eps,p,MN,C1,intercept) 
 {
 
     if(!"matrix"%in%class(Y))
@@ -500,11 +548,17 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
         }
     
     Y <- t(Y)
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
     ZMean <- c(apply(Z, 1, mean))
     Y <- Y - YMean %*% t(c(rep(1, ncol(Y))))
     Z <- Z - ZMean %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
     Y <- t(Y)
+    
     tk <- 1/max(Mod(eigen(Z%*%t(Z),only.values=TRUE)$values))
 
     BFOO1 <- matrix(B[, 2:dim(B)[2], 1],nrow=k,ncol=k*p)
@@ -522,7 +576,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 }
 
 # Componentwise HVAR
-.HVARCAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1)
+.HVARCAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1,intercept)
     {
     if(!"matrix"%in%class(Y))
         {
@@ -545,9 +599,14 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
     betafin <- beta
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 2, mean))
     ZMean <- c(apply(Z, 1, mean))
-   
+    }else{
+        YMean <- rep(0,ncol(Y))
+        ZMean <- rep(0,nrow(Z))
+    }
+    if(intercept){
     if(k>1){
         Y <- Y -  matrix(c(rep(1, nrow(Y))),ncol=1)%*%matrix(c(apply(Y, 2, mean)),nrow=1)
     }else{
@@ -555,6 +614,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
     }
 
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }
     tk <- 1/max(Mod(eigen(Z%*%t(Z))$values))
 
     betaini <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k,k*p,length(lambda)))
@@ -571,7 +631,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
 }
 
 # Endogenous First VARX-L
-.EFVARX <- function(beta,Y,Z,lambda,eps,MN,k1,s,m,p,C1)
+.EFVARX <- function(beta,Y,Z,lambda,eps,MN,k1,s,m,p,C1,intercept)
     {        
 
         
@@ -592,10 +652,15 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){  
     YMEAN <- apply(Y, 1, mean)
     ZMEAN <- apply(Z, 1, mean)
     Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMEAN <- rep(0,nrow(Y))
+        ZMEAN <- rep(0,nrow(Z))
+    }
     Y <- t(Y)
     tk <- 1/max(Mod(eigen(Z%*%t(Z))$values))
 
@@ -647,7 +712,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
         }
 
 # HVAR Own/Other
-.HVAROOAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1)
+.HVAROOAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1,intercept)
     {
 
         k <- ncol(Y)
@@ -666,11 +731,15 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1)
         }
 
         weights <- sqrt(c(rep(c(1,k-1),length=2*p)))
+        if(intercept){
         YMEAN <- c(apply(Y, 2, mean))
         ZMEAN <- c(apply(Z, 1, mean))
         Y <- Y -  matrix(c(rep(1, nrow(Y))),ncol=1)%*%matrix(c(apply(Y, 2, mean)),nrow=1)
         Z <- Z -  c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
-  
+        }else{
+            YMEAN <- rep(0,ncol(Y))
+            ZMEAN <- rep(0,nrow(Z))
+            }
         groups <- list()
         for(i in 1:k)
         {
@@ -771,7 +840,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 }
 
 # Sparse Lag VARX-L
-.SparseGroupLassoVARX<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,k,s,k1,C1) 
+.SparseGroupLassoVARX<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,k,s,k1,C1,intercept) 
 {
 
     m <- k-k1
@@ -788,10 +857,15 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
     ZMean <- c(apply(Z, 1, mean))
     Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
     M1f <- list()
     M2f <- list()
     eigs <- c()
@@ -844,7 +918,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 
 
 
-.SparseGroupLassoVARXDual<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,k,s,k1,C1) 
+.SparseGroupLassoVARXDual<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,k,s,k1,C1,intercept) 
 {
 
     m <- k-k1
@@ -862,10 +936,15 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
     ZMean <- c(apply(Z, 1, mean))
     Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
     M1f <- list()
     M2f <- list()
     eigs <- c()
@@ -920,7 +999,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 
 
 # Sparse Own/Other (VARX)
-.SparseGroupLassoVAROOX<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,p,MN,k1,s,k,dual=FALSE,C1) 
+.SparseGroupLassoVAROOX<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,p,MN,k1,s,k,dual=FALSE,C1,intercept) 
 {
 
     m <- k-k1
@@ -937,10 +1016,15 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
     Y <- t(Y)
     YOLD <- Y
     ZOLD <- Z
+    if(intercept){
     YMean <- c(apply(Y, 1, mean))
     ZMean <- c(apply(Z, 1, mean))
     Y <- Y - c(apply(Y, 1, mean)) %*% t(c(rep(1, ncol(Y))))
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
+    }else{
+        YMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
+        }
     M1f <- list()
     M2f <- list()
     eigs <- c()
@@ -1000,7 +1084,7 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
 
 # Lag weighted lasso: VAR only
 
-.lassoVARTL <- function (B, Z, Y, gamm, eps,p,MN,alpha,C1) 
+.lassoVARTL <- function (B, Z, Y, gamm, eps,p,MN,alpha,C1,intercept) 
 {
 
     if(!"matrix"%in%class(Y))
@@ -1019,12 +1103,17 @@ fistaX <- function(Y,Z,beta,p,k1,lambda,eps,tk,m,s)
        Y <- t(Y)
 
    }
-
+    
     Y <- t(Y)
+if(intercept){
     YMean <- c(apply(Y, 1, mean))
     ZMean <- c(apply(Z, 1, mean))
     Y <- Y - YMean %*% t(c(rep(1, ncol(Y))))
     Z <- Z - ZMean %*% t(c(rep(1, ncol(Z))))
+}else{
+    YMean <- rep(0,nrow(Y))
+    ZMean <- rep(0,nrow(Z))
+    }
     Y <- t(Y)
     tk <- 1/max(Mod(eigen(Z%*%t(Z),only.values=TRUE)$values))
     BFOO1 <- as.matrix(B[, 2:ncol(B[, , 1]), 1])

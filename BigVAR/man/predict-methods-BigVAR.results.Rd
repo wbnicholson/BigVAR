@@ -29,4 +29,3 @@ predict(results,n.ahead=1)
 \seealso{
 \code{\link{cv.BigVAR}}
 }
-

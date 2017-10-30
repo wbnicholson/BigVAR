@@ -13,4 +13,3 @@ Realization of a simulated multivariate time series
 \author{
 Will Nicholson
 }
-

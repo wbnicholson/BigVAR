@@ -29,4 +29,3 @@ results=cv.BigVAR(Model1)
 \seealso{
 \code{\link{constructModel}}, \code{\link{BigVAR.results}},\code{\link{BigVAR.est}}
 }
-
