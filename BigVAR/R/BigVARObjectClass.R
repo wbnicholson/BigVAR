@@ -1694,7 +1694,6 @@ setMethod(
             GG <- .GroupLassoOOX(beta, kk, trainY, trainZ, gamm, 
                                  activeset, tol,p,MN,k,k1,s,C,intercept)
         }else{
-            ## browser()
 
             GG <- .GroupLassoOO(beta, kk, trainY, trainZ, gamm, 
                                 activeset, tol,p,MN,C,intercept)
