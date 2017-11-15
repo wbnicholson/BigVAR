@@ -1975,7 +1975,9 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
 predictMSX <- function(pred,Y,n.ahead,B,p,newxreg,X,m,s,cumulative,MN){
 
     Y <- rbind(Y,pred)
-    X <- rbind(X,matrix(newxreg[1:cumulative,],ncol=m))
+    X <- rbind(X,matrix(newxreg[cumulative,],ncol=m))
+    
+    if(nrow(Y)!=nrow(X)){stop("error, dimension issue")}
     Z <- VARXCons(as.matrix(Y),X,ncol(Y),p,m,s,TRUE)
     Z <- Z[,ncol(Z)]
     if(MN){

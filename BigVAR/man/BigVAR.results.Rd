@@ -44,6 +44,8 @@ It inherits the class BigVAR, but contains substantially more information.
 
 \item{\code{Zvals}}{The final lagged values of \code{Y}, to be used for prediction}
 
+\item{\code{fitted}}{fitted values obtained from betaPred}
+
 \item{\code{resids}}{residuals obtained from betaPred}
 
 \item{\code{Data}}{a \eqn{T \times k} or \eqn{T\times k + m} multivariate time Series}
