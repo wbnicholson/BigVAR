@@ -1,8 +1,7 @@
 BigVAR
 ======
 
-Dimension Reduction Methods for Multivariate Time Series
-
+Tools for modeling sparse high-dimensional multivariate time series
 
 For a demonstration of the package's capabilities, see the user guide available [on Arxiv](https://arxiv.org/abs/1702.07094).  The shiny app has been taken offline, but the source code is available upon request.
 
