@@ -11,6 +11,9 @@
 using namespace Rcpp;
 using namespace arma;
 
+// omp_set_num_threads(4);
+
+
 // Soft thresholding
 double ST1a(double z,double gam){
 

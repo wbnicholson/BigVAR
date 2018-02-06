@@ -2,11 +2,12 @@ Package: BigVAR
 Type: Package
 Title: Dimension Reduction Methods for Multivariate Time Series
 Version: 1.0.1
-Authors@R: c(
+Author: c(
     person("Will", "Nicholson", email = "wbn8@cornell.edu", role = c("cre","aut")),
     person("David", "Matteson", email = "matteson@cornell.edu", role = "aut"),
     person("Jacob", "Bien", email = "bien@cornell.edu", role = "aut"))
-Date: 2016-05-13
+Maintainer: Will Nicholson <wbn8@cornell.edu>
+Date: 2018-02-05
 Description: Estimates VAR and VARX models with structured Lasso Penalties.
 Depends:
     R (>= 3.1.0),

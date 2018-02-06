@@ -377,7 +377,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
     ZOLD <- Z
 
     if(intercept){
-    if(k1>1){
+    if(k>1){
 
         YMEAN <- apply(Y, 1, mean)
 
