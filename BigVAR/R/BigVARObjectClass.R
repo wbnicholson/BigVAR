@@ -1132,6 +1132,7 @@ setMethod(
                         }
 
                 palpha<-alphaopt
+                optind <- indopt
             }
 
 

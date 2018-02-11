@@ -1720,8 +1720,9 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C,intercept,tol)
                 if(MN){
 
                     diag(param[1:k,1:k]) <- ifelse(C==0,diag(param[1:k,1:k]),0)
+                    if(group!="Tapered"){
                     diag(BOLD[,2:(k*p+1),]) <- ifelse(C==0,diag(BOLD[,2:(k*p+1),]),0)
-                    
+                    }
                 }
                 
                 if(max(abs(param))==0)
