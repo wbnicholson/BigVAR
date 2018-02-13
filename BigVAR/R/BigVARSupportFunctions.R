@@ -6,6 +6,7 @@
 .evalMean <- function(Y,T1,T2,h=1)
 {
 
+    ypredF <- NULL
     if(!"matrix"%in%class(Y)){
         Y <- matrix(Y,ncol=1)
     }
@@ -23,8 +24,10 @@
         if(k>1){
 
             ypred <- colMeans(trainY1)
+            ypredF <- rbind(ypredF,ypred)
         }else{
             ypred <- mean(trainY1)
+            ypredF <- c(ypredF,ypred)
         }
 
         uhat <- matrix(Y[u+h-1, ] - ypred, 
@@ -33,7 +36,7 @@
         MSFE <- c(MSFE,norm2(uhat)^2)
 
     }
-    return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MSFE)))))
+    return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MSFE))),preds=as.matrix(ypredF)))
 }
 
                                         # random walk benchmark
@@ -43,7 +46,7 @@
     if(!"matrix"%in%class(Y)){
         Y <- matrix(Y,ncol=1)
     }
-    
+    ypredF <- NULL
     MSFE <- c()
    
     k <- ncol(Y)
@@ -53,13 +56,13 @@
         if(h+u-1>T2){break}
         
         trainY1 <- Y[u-1, ]
-        
+        ypredF <- rbind(ypredF,trainY1)
         uhat <- matrix(Y[u+h-1, ] - trainY1, 
                        ncol = k)
         
         MSFE <- c(MSFE,norm2(uhat)^2)
     }
-    return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MSFE)))))
+    return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MSFE))),preds=as.matrix(ypredF)))
 }
 
                                         # Constructs the Grid of Lambda Values: VAR
@@ -435,6 +438,13 @@
                 beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, tol,p,MN,k,k1,s+s1,m,C,intercept)
             }
 
+                             if(group=="BGR"){
+                                    trainZ <- rbind(1,trainZ)
+                                    beta <- BGRGridSearch(trainY,trainZ,p,gamm,as.numeric(MN))
+ 
+                     }
+
+
             if (group == "Lag") {
 
                 GG <- .GroupLassoVAR1(beta,jj,jjcomp,trainY,trainZ,gamm,activeset,tol,p,MN,k,k1,s+s1,C,intercept)
@@ -785,9 +795,17 @@
                     beta <- .lassoVARTL(beta, trainZ, trainY,gamm, tol,p,MN,palpha,C,intercept)
                 }
                 
+                             if(group=="BGR"){
+                                    trainZ <- rbind(1,trainZ)
+                                    beta <- BGRGridSearch(trainY,trainZ,p,gamm,as.numeric(MN))
+ 
+                     }
 
+                
+                ## betaEVAL <- matrix(beta[,,1],nrow=k,ncol=(k*p+1))
+                ## if(group!="BGR"){
                 betaEVAL <- matrix(beta[,,1],nrow=k,ncol=(k*p+1))
-
+                
                 if (RVAR) {
 
                     betaEVAL <- RelaxedLS(cbind(t(trainZ),trainY),betaEVAL,k,p,k1,s)      
@@ -803,6 +821,7 @@
 
 
                 }
+
                                         # We don't consider an intercept for the MN lasso
                 if(MN){
 
@@ -835,7 +854,12 @@
                     MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1,] - preds[v-T1+h-1,])^2                    
                     
                 }
+                ## }else{
+                    
+                ##     ## browser()
+                ##     MSFE[v - (T1 - h)] <- norm2(Y[v+h-1,1:k1] - beta[,,1])^2
 
+                ##     }
                 if(verbose){
 
 
@@ -866,7 +890,14 @@
             betaPred <- GG$beta
 
         }
+                             if(group=="BGR"){
+                                    ZF <- rbind(1,ZFull$Z)
+                                    betaPred <- BGRGridSearch(ZFull$Y,ZF,p,gamm,as.numeric(MN))
+ 
+                     }
 
+
+        
         if (group == "OwnOther") {
 
             ## beta <- array(0,dim=c(k,p*k+1,1))
@@ -918,10 +949,21 @@
                 betaPred <- .lassoVARTL(beta,ZFull$Z,ZFull$Y,gamm,tol,p,MN,palpha,C,intercept)            
             }    
         
-
+                ## if(group!="BGR"){
         betaPred <- as.matrix(betaPred[,,1])
-
+        ## browser()
+        
         betaPred <- matrix(betaPred,nrow=k)
+        ## if(group=="BGR"){
+        ##     betaPred <- t(betaPred)
+        ##     }
+        ## }else{
+        ##     betaPred <- matrix(0,nrow=1,ncol=1)
+        ##     }
+
+        ## betaPred <- as.matrix(betaPred[,,1])
+
+        ## betaPred <- matrix(betaPred,nrow=k)
 
         
 
@@ -1754,7 +1796,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C,intercept,tol)
 #' @param IC specifies whether to select lag order according to "AIC" or "BIC"
 #' @param h desired forecast horizon
 #' @param iterated indicator as to whether to use iterated or direct multistep forecasts (if applicable, VAR context only)
-#' @return Returns the one-step ahead MSFE over the evaluation period.
+#' @return Returns the one-step ahead MSFE as well as the forecasts over the evaluation period .
 #' @details This function evaluates the one-step ahead forecasts of a VAR or VARX fit by least squares over an evaluation period.  At every point in time, lag orders for the endogenous and exogenous series are selected according to AIC or BIC.  This function is run automatically when \code{\link{cv.BigVAR}} is called unless \code{ic} is set to \code{FALSE} in \code{\link{constructModel}}.      
 #' @references Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes of multivariate autoregressive models." ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
 #' @seealso \code{\link{VARXFit}},\code{\link{constructModel}}, \code{\link{cv.BigVAR}}
@@ -1784,7 +1826,7 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
         }
 
     MSFE <- c()
-
+    predF <- NULL
     k <- ncol(Y)
     m <- ifelse(s!=0,ncol(X),0)
     for(i in (T1-h+2):T2){
@@ -1816,7 +1858,7 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
             eZ <- matrix(rep(1,1),ncol=1)
 
             pred <- B1%*%eZ
-
+            
         }else{
 
 
@@ -1848,12 +1890,13 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
             }
 
         }
-
+        ## browser()
+        predF <- rbind(predF,t(pred))
         MSFEi <- norm2(Y[i+h-1,]-pred)^2
         MSFE <- c(MSFE,MSFEi)
     }
 
-    return(MSFE)
+    return(list(MSFE=MSFE,pred=as.matrix(predF)))
 
 
 }
@@ -2013,3 +2056,95 @@ findind <- function(opt,lambda1,lambda2)
     return(c(lambda1ind,jind))
 }
 
+
+
+
+BVARLitterman <- function(Y,Z,p,tau,mu,H,iRW)
+    {
+T <- nrow(Y); k <- ncol(Y)
+# prior covariance based on univariate AR models
+sigmas <- c()
+for(i in 1:k){
+Z1 <- VARXCons(matrix(Y[,i],ncol=1),matrix(0,nrow=nrow(Y),ncol=1),1,p,0,0)
+## Y1 <- matrix(Y[(p+1):nrow(Y),i],ncol=1)
+# get the prior cov
+K <- cbind(t(Z1),Y[(p+1):nrow(Y),i])
+sigmas[i] <- sqrt(ARFitV2(K,1,p)$SigmaU)    
+## print(sigmas[i])
+}
+## browser()
+MMO <- colMeans(Y)
+
+
+
+## Z <- VARX(Y,matrix(0,nrow=Y,ncol=1),k,p,0,0)
+ 
+## Y1 <- matrix(Y[(p+1):nrow(Y),],ncol=k)
+
+# create prior random walk dummy
+Yrw1 <- diag(sigmas*iRW)
+Yrw2 <- matrix(0,nrow=k*(p-1),ncol=k)
+Yrw<- tau*(rbind(Yrw1,Yrw2))
+Zrw <- tau*cbind(kronecker(diag(1:p),diag(sigmas)),matrix(0,nrow=k*p,ncol=1))
+
+
+# create dummy for intercept
+epsilon=1e-5
+Ycs <- 1e-5*matrix(0,nrow=1,ncol=k)
+Zcs <- epsilon*cbind(matrix(0,ncol=k*p,nrow=1),1)
+
+# dummy on the sums of coefficients
+Ylr <- mu*diag(MMO*iRW)
+Zlr1 <- kronecker(matrix(1,nrow=1,ncol=p),diag(MMO)*iRW)
+ Zlr <- mu*(cbind(Zlr1,matrix(0,nrow=k,ncol=1)))
+
+
+# Dummy for residual covariance matrix
+Ycv <- diag(sigmas)
+Zcv <- matrix(0,nrow=k,ncol=k*p+1)
+
+Yprior <- rbind(Yrw,Ylr,Ycv,Ycs)
+Zprior <- rbind(Zrw,Zlr,Zcv,Zcs)
+
+## Zp2 <- rev(Zprior[(nrow(Zprior)),])
+## Zp3 <- Zprior[1:(nrow(Zprior)-1),]
+## Zp3 <- rbind(Zp2,Zp3)
+## ZZI2 <- solve(t(Zp3)%*%Zp3+t(Z)%*%Z)
+## dim(ZZI2)
+Tstar <- nrow(Yprior)
+## dim(Zprior)
+## # posterior
+## dim(Z)
+## browser()
+Z <- t(Z)
+Z <- cbind(Z[,2:ncol(Z)],1)
+## dim(Yprior)
+## browser()        
+
+## kappa(crossprod(Z))
+ZZinv <- solve(t(Zprior)%*%Zprior+t(Z)%*%Z)
+ZY <- t(Zprior)%*%Yprior+t(Z)%*%Y
+beta <- ZZinv%*%ZY
+## browser()
+## preds <- Z[nrow(Z),]%*%beta
+
+return(t(beta))
+
+        }
+
+
+BGRGridSearch <- function(Y,Z,p,grid,RWIND)
+{
+    preds <- list()
+for(i in 1:length(grid))
+    {
+        pi <- grid[i]
+        mu=pi*.1 # used in BGR paper
+        preds[[i]] <- BVARLitterman(Y,Z,p,pi,mu,-1,RWIND)
+
+     }
+preds <- array(unlist(preds), dim = c(nrow(preds[[1]]), ncol(preds[[1]]), length(preds)))
+
+return(preds)
+
+}

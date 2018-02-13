@@ -18,7 +18,7 @@ check.BigVAR <- function(object){
         msg <- c("Only Basic VARX-L supports a transfer function")
         errors <- c(errors,msg)
     }
-    structures=c("Basic","Lag","SparseLag","OwnOther","SparseOO","HVARC","HVAROO","HVARELEM","Tapered","EFX")
+    structures=c("Basic","Lag","SparseLag","OwnOther","SparseOO","HVARC","HVAROO","HVARELEM","Tapered","EFX","BGR")
     cond1=object@Structure%in% structures
     if(cond1==FALSE){
         msg <- paste("struct must be one of",structures)
@@ -202,6 +202,7 @@ setClass(
 #' \item{  "HVAROO" (Own/Other HVAR) }
 #' \item{  "HVARELEM" (Elementwise HVAR)}
 #' \item{  "Tapered" (Lag weighted Lasso VAR)}
+#' \item{  "BGR" (Bayesian Ridge Regression (cf. Banbura et al))}
 #' }
 #'
 #' The first number in the vector "gran" specifies how deep to construct the penalty grid and the second specifies how many penalty parameters to use  If ownlambas is set to TRUE, gran should contain the user-supplied penalty parameters.
@@ -217,6 +218,8 @@ setClass(
 #' @references  William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
 #' William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector autoregressions with exogenous variables," arXiv preprint arXiv:1508.07497, 2016.
 #' William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimension Reduction Reduction Methods for Multivariate Time Series," \url{http://www.wbnicholson.com/BigVAR.pdf}.
+#'
+#' Bańbura, Marta, Domenico Giannone, and Lucrezia Reichlin. "Large Bayesian vector auto regressions." Journal of Applied Econometrics 25.1 (2010): 71-92.
 #' @examples
 #' # VARX Example
 #' # Create a Basic VARX-L with k=2, m=1, s=2, p=4
@@ -236,7 +239,7 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
     if(p==0& struct!="Basic"){stop("Only Basic VARX-L supports a transfer function")}
     oldnames <- c("None","Diag","SparseDiag")
     if(struct%in%oldnames) stop("Naming Convention for these structures has changed. Use Basic, OwnOther, and SparseOO.")
-    structures=c("Basic","Lag","SparseLag","OwnOther","SparseOO","HVARC","HVAROO","HVARELEM","Tapered","EFX")
+    structures=c("Basic","Lag","SparseLag","OwnOther","SparseOO","HVARC","HVAROO","HVARELEM","Tapered","EFX","BGR")
     cond1=struct %in% structures
     if(!cond1){stop(cat("struct must be one of",structures))}
     if(h<1){stop("Forecast Horizon must be at least 1")}
@@ -678,11 +681,20 @@ setMethod(
 
                 if(dual){
 
-                    gamm <- .LambdaGridEDual(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C,intercept,tol)
+                    gamm <- .LambdaGridEDual(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C,intercept,tol)
 
                 }else{
 
-                    gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C,intercept,tol)
+                    ## gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C,intercept,tol)
+                                         if(group!="BGR"){
+                        gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C,intercept,tol)
+ 
+                     }else{
+                        gamm <- seq(1,5,by=.025)
+                         gamm <- gamm*sqrt(k*p)
+ 
+                         }
+
                 }
                 
             }
@@ -965,7 +977,7 @@ setMethod(
             eZ <- c(1,ZFull$Z[,v])
 
 
-
+           if(group!="BGR"){
             if(!dual)
                 {
 
@@ -1083,6 +1095,11 @@ setMethod(
                     }
                 }
 
+                }else{
+                for (ii in 1:ncol(MSFE)) {
+                MSFE[v - (T1 - h), ii] <- norm2(Y[v+h-1,1:k1] - beta[,,ii])^2
+                }
+                }
 
 
             if(verbose){
@@ -1212,6 +1229,7 @@ setMethod(
         Zvals <- matrix(Zvals[,ncol(Zvals)],ncol=1)
         if(ncol(Y)==1| k1==1){betaPred <- matrix(betaPred,nrow=1)}
         lagmatrix <- rbind(rep(1,ncol(ZFull$Z)),ZFull$Z)
+        
         fitted <- t(betaPred%*%lagmatrix)
                                         #Residuals
         resids <- ((ZFull$Y)-fitted)
@@ -1235,9 +1253,12 @@ setMethod(
             AICbench <- list()
             AICbench$Mean <- as.double(NA)
             AICbench$SD <- as.double(NA)
+            AICbench$preds <- as.matrix(NA)
+
             BICbench <- list()
             BICbench$Mean <- as.double(NA)
             BICbench$SD <- as.double(NA)                          
+            BICbench$preds <- as.matrix(NA)                          
 
 
                                         # Information Criterion Benchmarks    
@@ -1252,17 +1273,19 @@ setMethod(
 
                 AICbench <- list()
 
-                AICbench$Mean <- mean(AICbench1)
+                AICbench$Mean <- mean(AICbench1$MSFE)
 
-                AICbench$SD <- sd(AICbench1)/sqrt(length(AICbench1))
+                AICbench$SD <- sd(AICbench1$MSFE)/sqrt(length(AICbench1$MSFE))
+                AICbench$preds <- AICbench1$pred
 
                 BICbench1 <- VARXForecastEval(matrix(ZFull$Y,ncol=k),X,p,0,T2,T,"BIC",h)
                 
                 BICbench <- list()
 
-                BICbench$Mean <- mean(BICbench1)
+                BICbench$Mean <- mean(BICbench1$MSFE)
 
-                BICbench$SD <- sd(BICbench1)/sqrt(length(BICbench1))
+                BICbench$SD <- sd(BICbench1$MSFE)/sqrt(length(BICbench1$MSFE))
+                BICbench$preds <- BICbench1$pred
 
             }else{
 
@@ -1274,17 +1297,19 @@ setMethod(
 
                 AICbench <- list()
 
-                AICbench$Mean <- mean(AICbench1)
+                AICbench$Mean <- mean(AICbench1$MSFE)
 
-                AICbench$SD <- sd(AICbench1)/sqrt(length(AICbench1))
+                AICbench$SD <- sd(AICbench1$MSFE)/sqrt(length(AICbench1$MSFE))
+                AICbench$preds <- AICbench1$pred
 
                 BICbench1 <- VARXForecastEval(matrix(ZFull$Y[,1:k1],ncol=k1),X,p,s,T2,T,"BIC",h=h)
 
                 BICbench <- list()
 
-                BICbench$Mean <- mean(BICbench1)
+                BICbench$Mean <- mean(BICbench1$MSFE)
 
-                BICbench$SD <- sd(BICbench1)/sqrt(length(BICbench1))  
+                BICbench$SD <- sd(BICbench1$MSFE)/sqrt(length(BICbench1$MSFE))  
+                BICbench$preds <- BICbench1$pred
 
             }
 
@@ -1302,7 +1327,7 @@ setMethod(
                 VARXL <- list()
                 }
                                         # Create a new BigVAR.Results Object
-        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,RWMSFE=RWbench$Mean,MeanSD=meanbench$SD,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol,fitted=fitted,lagmatrix=lagmatrix)
+        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,AICPreds=AICbench$preds,BICPreds=BICbench$preds,RWMSFE=RWbench$Mean,RWPreds=RWbench$preds,MeanSD=meanbench$SD,MeanPreds=meanbench$preds,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol,fitted=fitted,lagmatrix=lagmatrix)
         
         return(results)
     }
@@ -1448,8 +1473,17 @@ setMethod(
                 activeset <- rep(list(rep(rep(list(0), length(jj)))), 
                                  gran2)
 
+
             }
 
+
+         if(group=="BGR"){
+               Grid <- seq(1,5,by=.025)
+              grid <- Grid*sqrt(k*p)
+              MSFE <- matrix(0, nrow = T2 - T1+1, ncol = length(grid))
+             }
+
+            
             if(!object@ownlambdas){
 
             
@@ -1460,7 +1494,14 @@ setMethod(
             }else{
 
                                         # Penalty parameter grid for just lambda
-                gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY), trainZ,group,p,k1,s+s1,m,k,MN,alpha,C,intercept,tol)
+                ## gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY), trainZ,group,p,k1,s+s1,m,k,MN,alpha,C,intercept,tol)
+                  if(group!="BGR"){
+                         gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN,alpha,C,intercept,tol)
+                     }else{
+                         gamm <- seq(1,5,by=.025)
+                         gamm <- gamm*sqrt(k*p)
+ 
+                         }
             }
         }else{
 
@@ -1629,6 +1670,8 @@ setMethod(
 
     }           
 
+
+        
     if(group=="Tapered")
 
     {
@@ -1639,6 +1682,12 @@ setMethod(
     }
 
 
+            if (group == "BGR") {
+ 
+                trainZ <- rbind(1,trainZ)
+                beta <- BGRGridSearch(trainY,trainZ,p,gamm,as.numeric(MN))
+             }
+        
     if (group == "Basic") {
 
         if(VARX){
@@ -1782,12 +1831,16 @@ setMethod(
 #' @field seoosfmsfe Standard error of out of sample MSFE of BigVAR model with optimal lambda
 #' @field MeanMSFE Average out of sample MSFE of unconditional mean forecast
 #' @field MeanSD Standard error of out of sample MSFE of unconditional mean forecast
+#' @field MeanPreds predictions from conditional mean model
 #' @field RWMSFE Average out of sample MSFE of random walk forecast
+#' @field RWPreds Predictions from random walk model
 #' @field RWSD Standard error of out of sample MSFE of random walk forecast
 #' @field AICMSFE Average out of sample MSFE of AIC forecast
 #' @field AICSD Standard error of out of sample MSFE of AIC forecast
+#' @ield AICPreds Predictions from AIC VAR/VARX model
 #' @field BICMSFE Average out of sample MSFE of BIC forecast
 #' @field BICSD Standard error of out of sample MSFE of BIC forecast
+#' @field BICPreds Predictions from BIC VAR/VARX model
 #' @field betaPred The final estimated \eqn{k\times kp+ms+1} coefficient matrix, to be used for prediction
 #' @field Zvals The final lagged values of \code{Y}, to be used for prediction
 #' @field fitted fitted values obtained from betaPred
@@ -1816,7 +1869,7 @@ setMethod(
 #' @author Will Nicholson
 #' @export
 setClass("BigVAR.results",
-representation(InSampMSFE="numeric",InSampSD="numeric",LambdaGrid="numeric",index="numeric",OptimalLambda="numeric",OOSMSFE="numeric",seoosmsfe="numeric",MeanMSFE="numeric",AICMSFE="numeric",BICMSFE="numeric",BICSD="numeric",RWMSFE="numeric",MeanSD="numeric",AICSD="numeric",RWSD="numeric",betaPred="matrix",Zvals="matrix",VARXI="logical",resids="matrix",preds="matrix",dual="logical",contemp="logical",fitted="matrix",lagmatrix="matrix"),
+representation(InSampMSFE="numeric",InSampSD="numeric",LambdaGrid="numeric",index="numeric",OptimalLambda="numeric",OOSMSFE="numeric",seoosmsfe="numeric",MeanMSFE="numeric",AICMSFE="numeric",AICPreds="matrix",BICMSFE="numeric",BICSD="numeric",BICPreds="matrix",RWMSFE="numeric",RWPreds="matrix",MeanSD="numeric",MeanPreds="matrix",AICSD="numeric",RWSD="numeric",betaPred="matrix",Zvals="matrix",VARXI="logical",resids="matrix",preds="matrix",dual="logical",contemp="logical",fitted="matrix",lagmatrix="matrix"),
 contains="BigVAR"
 )
 
