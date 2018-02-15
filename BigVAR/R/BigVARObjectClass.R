@@ -1254,12 +1254,16 @@ setMethod(
             AICbench$Mean <- as.double(NA)
             AICbench$SD <- as.double(NA)
             AICbench$preds <- as.matrix(NA)
+            AICbench$pvec <- as.double(NA)
+            AICbench$svec <- as.double(NA)                          
 
             BICbench <- list()
             BICbench$Mean <- as.double(NA)
             BICbench$SD <- as.double(NA)                          
             BICbench$preds <- as.matrix(NA)                          
 
+            BICbench$pvec <- as.double(NA)
+            BICbench$svec <- as.double(NA)                          
 
                                         # Information Criterion Benchmarks    
 
@@ -1277,6 +1281,8 @@ setMethod(
 
                 AICbench$SD <- sd(AICbench1$MSFE)/sqrt(length(AICbench1$MSFE))
                 AICbench$preds <- AICbench1$pred
+                AICbench$pvec <- AICbench1$p
+                AICbench$svec <- AICbench1$s
 
                 BICbench1 <- VARXForecastEval(matrix(ZFull$Y,ncol=k),X,p,0,T2,T,"BIC",h)
                 
@@ -1286,6 +1292,8 @@ setMethod(
 
                 BICbench$SD <- sd(BICbench1$MSFE)/sqrt(length(BICbench1$MSFE))
                 BICbench$preds <- BICbench1$pred
+                BICbench$pvec <- BICbench1$p
+                BICbench$svec <- BICbench1$s
 
             }else{
 
@@ -1301,6 +1309,8 @@ setMethod(
 
                 AICbench$SD <- sd(AICbench1$MSFE)/sqrt(length(AICbench1$MSFE))
                 AICbench$preds <- AICbench1$pred
+                AICbench$pvec <- AICbench1$p
+                AICbench$svec <- AICbench1$s
 
                 BICbench1 <- VARXForecastEval(matrix(ZFull$Y[,1:k1],ncol=k1),X,p,s,T2,T,"BIC",h=h)
 
@@ -1310,6 +1320,8 @@ setMethod(
 
                 BICbench$SD <- sd(BICbench1$MSFE)/sqrt(length(BICbench1$MSFE))  
                 BICbench$preds <- BICbench1$pred
+                BICbench$pvec <- BICbench1$p
+                BICbench$svec <- BICbench1$s
 
             }
 
@@ -1327,7 +1339,7 @@ setMethod(
                 VARXL <- list()
                 }
                                         # Create a new BigVAR.Results Object
-        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,AICPreds=AICbench$preds,BICPreds=BICbench$preds,RWMSFE=RWbench$Mean,RWPreds=RWbench$preds,MeanSD=meanbench$SD,MeanPreds=meanbench$preds,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol,fitted=fitted,lagmatrix=lagmatrix)
+        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,AICpvec=AICbench$pvec,AICsvec=AICbench$svec,AICPreds=AICbench$preds,BICpvec=BICbench$pvec,BICsvec=BICbench$svec,BICPreds=BICbench$preds,RWMSFE=RWbench$Mean,RWPreds=RWbench$preds,MeanSD=meanbench$SD,MeanPreds=meanbench$preds,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol,fitted=fitted,lagmatrix=lagmatrix)
         
         return(results)
     }
@@ -1838,9 +1850,13 @@ setMethod(
 #' @field AICMSFE Average out of sample MSFE of AIC forecast
 #' @field AICSD Standard error of out of sample MSFE of AIC forecast
 #' @ield AICPreds Predictions from AIC VAR/VARX model
+#' @field AICpvec Lag orders selected from AIC VAR model
+#' @field AICpvec Lag orders selected from AIC VARX model
 #' @field BICMSFE Average out of sample MSFE of BIC forecast
 #' @field BICSD Standard error of out of sample MSFE of BIC forecast
 #' @field BICPreds Predictions from BIC VAR/VARX model
+#' @field BICpvec Lag orders selected from BIC VAR model
+#' @field BICpvec Lag orders selected from BIC VARX model
 #' @field betaPred The final estimated \eqn{k\times kp+ms+1} coefficient matrix, to be used for prediction
 #' @field Zvals The final lagged values of \code{Y}, to be used for prediction
 #' @field fitted fitted values obtained from betaPred
@@ -1869,7 +1885,7 @@ setMethod(
 #' @author Will Nicholson
 #' @export
 setClass("BigVAR.results",
-representation(InSampMSFE="numeric",InSampSD="numeric",LambdaGrid="numeric",index="numeric",OptimalLambda="numeric",OOSMSFE="numeric",seoosmsfe="numeric",MeanMSFE="numeric",AICMSFE="numeric",AICPreds="matrix",BICMSFE="numeric",BICSD="numeric",BICPreds="matrix",RWMSFE="numeric",RWPreds="matrix",MeanSD="numeric",MeanPreds="matrix",AICSD="numeric",RWSD="numeric",betaPred="matrix",Zvals="matrix",VARXI="logical",resids="matrix",preds="matrix",dual="logical",contemp="logical",fitted="matrix",lagmatrix="matrix"),
+representation(InSampMSFE="numeric",InSampSD="numeric",LambdaGrid="numeric",index="numeric",OptimalLambda="numeric",OOSMSFE="numeric",seoosmsfe="numeric",MeanMSFE="numeric",AICMSFE="numeric",AICPreds="matrix",BICMSFE="numeric",BICpvec="numeric",BICsvec="numeric",AICpvec="numeric",AICsvec="numeric",BICSD="numeric",BICPreds="matrix",RWMSFE="numeric",RWPreds="matrix",MeanSD="numeric",MeanPreds="matrix",AICSD="numeric",RWSD="numeric",betaPred="matrix",Zvals="matrix",VARXI="logical",resids="matrix",preds="matrix",dual="logical",contemp="logical",fitted="matrix",lagmatrix="matrix"),
 contains="BigVAR"
 )
 

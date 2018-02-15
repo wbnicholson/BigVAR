@@ -1796,7 +1796,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C,intercept,tol)
 #' @param IC specifies whether to select lag order according to "AIC" or "BIC"
 #' @param h desired forecast horizon
 #' @param iterated indicator as to whether to use iterated or direct multistep forecasts (if applicable, VAR context only)
-#' @return Returns the one-step ahead MSFE as well as the forecasts over the evaluation period .
+#' @return Returns the one-step ahead MSFE as well as the forecasts over the evaluation period and lag order selected.
 #' @details This function evaluates the one-step ahead forecasts of a VAR or VARX fit by least squares over an evaluation period.  At every point in time, lag orders for the endogenous and exogenous series are selected according to AIC or BIC.  This function is run automatically when \code{\link{cv.BigVAR}} is called unless \code{ic} is set to \code{FALSE} in \code{\link{constructModel}}.      
 #' @references Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes of multivariate autoregressive models." ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
 #' @seealso \code{\link{VARXFit}},\code{\link{constructModel}}, \code{\link{cv.BigVAR}}
@@ -1827,6 +1827,8 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
 
     MSFE <- c()
     predF <- NULL
+    pvec <- NULL
+    svec <- NULL
     k <- ncol(Y)
     m <- ifelse(s!=0,ncol(X),0)
     for(i in (T1-h+2):T2){
@@ -1894,9 +1896,11 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
         predF <- rbind(predF,t(pred))
         MSFEi <- norm2(Y[i+h-1,]-pred)^2
         MSFE <- c(MSFE,MSFEi)
+        svec <- c(svec,s)
+        pvec <- c(pvec,p)
     }
 
-    return(list(MSFE=MSFE,pred=as.matrix(predF)))
+    return(list(MSFE=MSFE,pred=as.matrix(predF),p=pvec,s=svec))
 
 
 }
