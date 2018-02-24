@@ -829,7 +829,7 @@
 
                     if(h>1 & recursive){
 
-                        pred <- matrix(preds[v-T1,],nrow=1)
+                        pred <- matrix(preds[v-T1+1,],nrow=1)
                         
                         preds[v-T1+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
 
@@ -1766,8 +1766,8 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C,intercept,tol)
                     diag(BOLD[,2:(k*p+1),]) <- ifelse(C==0,diag(BOLD[,2:(k*p+1),]),0)
                     }
                 }
-                
-                if(max(abs(param))==0)
+                ## browser()
+                if(max(abs(param))< tol)
                     {
                         lambdah <- lambda
 
@@ -1896,8 +1896,8 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
         predF <- rbind(predF,t(pred))
         MSFEi <- norm2(Y[i+h-1,]-pred)^2
         MSFE <- c(MSFE,MSFEi)
-        svec <- c(svec,s)
-        pvec <- c(pvec,p)
+        svec <- c(svec,popt$s)
+        pvec <- c(pvec,popt$p)
     }
 
     return(list(MSFE=MSFE,pred=as.matrix(predF),p=pvec,s=svec))

@@ -110,8 +110,8 @@ mat FistaLV(const mat& Y, const mat& Z, mat& B, const double gam, const double e
       colvec BOLDOLD=BOLD;
 	  double thresh=10*eps;
       j=1;
-
-      while(thresh>eps)
+	  double maxiters=1000;
+      while(thresh>eps & j<maxiters)
 		  {
 
 			  colvec v=BOLD+((j-2)/(j+1))*(BOLD-BOLDOLD);
@@ -121,9 +121,9 @@ mat FistaLV(const mat& Y, const mat& Z, mat& B, const double gam, const double e
 			  BOLDOLD=BOLD;
 			  BOLD=B1;
 			  j+=1;
-			  if(j>10000){
-				  break;
-			  }
+			  // if(j>10000){
+			  // 	  break;
+			  // }
 
 
 		  }
