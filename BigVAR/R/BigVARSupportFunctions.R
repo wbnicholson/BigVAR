@@ -833,6 +833,7 @@
                         
                         preds[v-T1+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
 
+                        MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1,] - preds[v-T1+h-1,])^2                    
                     }else{
                     
                     MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1, ] - preds[v-T1-h+1,])^2
