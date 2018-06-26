@@ -5,3 +5,4 @@ using Eigen::MatrixXd;
 using arma::mat;
 using arma::cube;
 using arma::colvec;
+#define NDEBUG 1

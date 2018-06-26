@@ -26,7 +26,7 @@ VARXForecastEval(Y, X, p, s, T1, T2, IC, h, iterated = FALSE)
 \item{iterated}{indicator as to whether to use iterated or direct multistep forecasts (if applicable, VAR context only)}
 }
 \value{
-Returns the one-step ahead MSFE over the evaluation period.
+Returns the one-step ahead MSFE as well as the forecasts over the evaluation period and lag order selected.
 }
 \description{
 Evaluate forecasts from a VAR or VARX with lag orders selected by AIC/BIC

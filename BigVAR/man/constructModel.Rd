@@ -9,7 +9,7 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
   T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3), ONESE = FALSE,
   ownlambdas = FALSE, alpha = as.double(NULL), recursive = FALSE,
   C = as.double(NULL), dates = as.character(NULL), intercept = TRUE,
-  tol = 1e-04)
+  tol = 1e-04, lagselect = FALSE)
 }
 \arguments{
 \item{Y}{\eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively}
@@ -48,7 +48,13 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
 
 \item{C}{vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE})}
 
-\item{dates}{optional vector of dates corresponding to \eqn{Y}
+\item{dates}{optional vector of dates corresponding to \eqn{Y}}
+
+\item{intercept}{True or False: option to fit an intercept}
+
+\item{tol}{optimization tolerance (default 1e-4)}
+
+\item{lagselect}{lag selection indicator
 
 
  @details The choices for "struct" are as follows
@@ -63,6 +69,7 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
 \item{  "HVAROO" (Own/Other HVAR) }
 \item{  "HVARELEM" (Elementwise HVAR)}
 \item{  "Tapered" (Lag weighted Lasso VAR)}
+\item{  "BGR" (Bayesian Ridge Regression (cf. Banbura et al))}
 }
 
 The first number in the vector "gran" specifies how deep to construct the penalty grid and the second specifies how many penalty parameters to use  If ownlambas is set to TRUE, gran should contain the user-supplied penalty parameters.
@@ -70,10 +77,6 @@ The first number in the vector "gran" specifies how deep to construct the penalt
 VARX specifications consist of a list with entry k denoting the series that are to be modeled and entry s to denote the maximal lag order for exogenous series.
 
 The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.}
-
-\item{intercept}{True or False: option to fit an intercept}
-
-\item{tol}{optimization tolerance (default 1e-4)}
 }
 \description{
 Construct an object of class BigVAR
@@ -94,8 +97,10 @@ Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX
 }
 \references{
 William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
-William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector autoregressions with exogenous variables," arXiv preprint arXiv:1508.07497, 2016.
-William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimension Reduction Reduction Methods for Multivariate Time Series," \url{http://www.wbnicholson.com/BigVAR.pdf}.
+William B. Nicholson, David S. Matteson, Jacob Bien,VARX-L: Structured regularization for large vector autoregressions with exogenous variables, International Journal of Forecasting, Volume 33, Issue 3, 2017, Pages 627-651,
+William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Tools for Modeling Sparse High-Dimensional Multivariate Time Series" arxiv:1702.07094
+
+Banbura, Marta, Domenico Giannone, and Lucrezia Reichlin. "Large Bayesian vector auto regressions." Journal of Applied Econometrics 25.1 (2010): 71-92.
 }
 \seealso{
 \code{\link{cv.BigVAR}},\code{\link{BigVAR.est}}

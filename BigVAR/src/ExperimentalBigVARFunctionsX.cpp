@@ -4,6 +4,7 @@
 #include <vector>
 #include <limits>
 #include <algorithm>
+#define NDEBUG 1
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp11)]]

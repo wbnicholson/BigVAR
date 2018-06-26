@@ -190,6 +190,7 @@ setClass(
 #' @param C vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE})
 #' @param tol optimization tolerance (default 1e-4)
 #' @param dates optional vector of dates corresponding to \eqn{Y}
+#' @param lagselect lag selection indicator
 #'
 #' 
 #'  @details The choices for "struct" are as follows
@@ -218,10 +219,10 @@ setClass(
 #' @seealso \code{\link{cv.BigVAR}},\code{\link{BigVAR.est}}
 #' 
 #' @references  William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
-#' William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector autoregressions with exogenous variables," arXiv preprint arXiv:1508.07497, 2016.
-#' William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimension Reduction Reduction Methods for Multivariate Time Series," \url{http://www.wbnicholson.com/BigVAR.pdf}.
+#' William B. Nicholson, David S. Matteson, Jacob Bien,VARX-L: Structured regularization for large vector autoregressions with exogenous variables, International Journal of Forecasting, Volume 33, Issue 3, 2017, Pages 627-651,
+#' William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Tools for Modeling Sparse High-Dimensional Multivariate Time Series" arxiv:1702.07094
 #'
-#' Bańbura, Marta, Domenico Giannone, and Lucrezia Reichlin. "Large Bayesian vector auto regressions." Journal of Applied Econometrics 25.1 (2010): 71-92.
+#' Banbura, Marta, Domenico Giannone, and Lucrezia Reichlin. "Large Bayesian vector auto regressions." Journal of Applied Econometrics 25.1 (2010): 71-92.
 #' @examples
 #' # VARX Example
 #' # Create a Basic VARX-L with k=2, m=1, s=2, p=4
@@ -398,7 +399,7 @@ setMethod("show","BigVAR",
 #' @aliases plot,BigVAR-method
 #' @aliases plot-methods
 #' @docType methods
-#' @method plot
+#' @method plot method
 #' @rdname plot.BigVAR-methods
 #' @export
 #' @importFrom zoo plot.zoo
@@ -1495,7 +1496,7 @@ setMethod(
          if(group=="BGR"){
                Grid <- seq(1,5,by=.025)
               grid <- Grid*sqrt(k*p)
-              MSFE <- matrix(0, nrow = T2 - T1+1, ncol = length(grid))
+              MSFE <- matrix(0, nrow = 1, ncol = length(grid))
              }
 
             
@@ -1511,7 +1512,7 @@ setMethod(
                                         # Penalty parameter grid for just lambda
                 ## gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY), trainZ,group,p,k1,s+s1,m,k,MN,alpha,C,intercept,tol)
                   if(group!="BGR"){
-                         gamm <- .LambdaGridX(gran1, gran2, jj, as.matrix(trainY[1:T2,]), trainZ[,1:T2],group,p,k1,s+s1,m,k,MN,alpha,C,intercept,tol)
+                         gamm <- .LambdaGridX(gran1, gran2, jj, trainY, trainZ,group,p,k1,s+s1,m,k,MN,alpha,C,intercept,tol)
                      }else{
                          gamm <- seq(1,5,by=.025)
                          gamm <- gamm*sqrt(k*p)
@@ -1852,7 +1853,7 @@ setMethod(
 #' @field RWSD Standard error of out of sample MSFE of random walk forecast
 #' @field AICMSFE Average out of sample MSFE of AIC forecast
 #' @field AICSD Standard error of out of sample MSFE of AIC forecast
-#' @ield AICPreds Predictions from AIC VAR/VARX model
+#' @field AICPreds Predictions from AIC VAR/VARX model
 #' @field AICpvec Lag orders selected from AIC VAR model
 #' @field AICpvec Lag orders selected from AIC VARX model
 #' @field BICMSFE Average out of sample MSFE of BIC forecast
@@ -1904,7 +1905,7 @@ contains="BigVAR"
 #' @aliases plot,BigVAR.results-method
 #' @aliases plot-methods
 #' @docType methods
-#' @method plot
+#' @method plot method
 #' @rdname BigVAR.results-plot-methods
 #' @importFrom graphics abline
 #' @export
@@ -1927,7 +1928,7 @@ definition= function(x,y=NULL,...)
 #' @name show
 #' @aliases show,BigVAR.results-method
 #' @docType methods
-#' @method show
+#' @method show method
 #' @rdname show-methods-BigVAR.results
 #' @export
 setMethod("show","BigVAR.results",
@@ -1974,7 +1975,7 @@ function(object)
 #' @name predict
 #' @aliases predict,BigVAR.results-method
 #' @docType methods
-#' @method predict
+#' @method predict method
 #' @rdname predict-methods-BigVAR.results
 #' @examples
 #' data(Y)

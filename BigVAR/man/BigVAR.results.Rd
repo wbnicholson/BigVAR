@@ -28,7 +28,11 @@ It inherits the class BigVAR, but contains substantially more information.
 
 \item{\code{MeanSD}}{Standard error of out of sample MSFE of unconditional mean forecast}
 
+\item{\code{MeanPreds}}{predictions from conditional mean model}
+
 \item{\code{RWMSFE}}{Average out of sample MSFE of random walk forecast}
+
+\item{\code{RWPreds}}{Predictions from random walk model}
 
 \item{\code{RWSD}}{Standard error of out of sample MSFE of random walk forecast}
 
@@ -36,9 +40,21 @@ It inherits the class BigVAR, but contains substantially more information.
 
 \item{\code{AICSD}}{Standard error of out of sample MSFE of AIC forecast}
 
+\item{\code{AICPreds}}{Predictions from AIC VAR/VARX model}
+
+\item{\code{AICpvec}}{Lag orders selected from AIC VAR model}
+
+\item{\code{AICpvec}}{Lag orders selected from AIC VARX model}
+
 \item{\code{BICMSFE}}{Average out of sample MSFE of BIC forecast}
 
 \item{\code{BICSD}}{Standard error of out of sample MSFE of BIC forecast}
+
+\item{\code{BICPreds}}{Predictions from BIC VAR/VARX model}
+
+\item{\code{BICpvec}}{Lag orders selected from BIC VAR model}
+
+\item{\code{BICpvec}}{Lag orders selected from BIC VARX model}
 
 \item{\code{betaPred}}{The final estimated \eqn{k\times kp+ms+1} coefficient matrix, to be used for prediction}
 
@@ -73,6 +89,8 @@ It inherits the class BigVAR, but contains substantially more information.
 \item{\code{dual}}{indicator as to whether dual cross validation was conducted}
 
 \item{\code{contemp}}{indicator if contemporaneous exogenous predictors are used}
+
+\item{\code{lagmatrix}}{matrix of lagged values used to compute residuals (of which Zvals is the final column)}
 }}
 
 \note{

@@ -1918,6 +1918,8 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
 #' \item{"SigmaU}{Estimated \eqn{k\times k} residual covariance matrix}
 #' \item{"phat"}{Selected lag order for VAR component}
 #' \item{"shat"}{Selected lag order for VARX component}
+#' \item{"Y"}{multivariate time series retained for prediction purposes}
+#' \item{"Y"}{number of endogenous (modeled) time series}
 #' }
 #' @details This function uses a modified form of the least squares technique proposed by Neumaier and Schneider (2001).  It fits a least squares VAR or VARX via a QR decomposition that does not require explicit matrix inversion.  This results in improved computational performance as well as numerical stability over the conventional least squares approach. 
 #' @references Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes of multivariate autoregressive models." ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
@@ -1990,9 +1992,44 @@ VARXFit <- function(Y,p,IC,VARX=NULL)
             phat <- Res$p
             
         }
-
-        list(Bhat=Res$B,SigmaU=Res$SigmaU,phat=phat,shat=shat)
+        if(is.null(VARX)){
+            k=ncol(Y)
+        }else{
+            k=VARX$k
+            }
+        list(Bhat=Res$B,SigmaU=Res$SigmaU,phat=phat,shat=shat,Y=Y,k=k)
         
+    }
+
+#' One-step ahead predictions for VARX models
+#' 
+#' @param VARXRes the results from \code{\link{VARXFit}}
+#' @return Returns a vector consisting of the out-of-sample forecasts for the provided \code{\link{VARXFit}} model.
+#' @seealso \code{\link{VARXFit}}
+#' @examples
+#' data(Y)
+#' # fit a VAR_3(3)
+#' mod <- VARXFit(Y,3,NULL,NULL)
+#' pred <-PredictVARX(mod)
+#' 
+#' @export
+PredictVARX <- function(VARXRes){
+
+    B <- VARXRes$Bhat
+    Y <- VARXRes$Y
+    k <- VARXRes$k
+    m <- ncol(Y)-k
+    ## browser() 
+   
+    if(k<ncol(Y)){
+    Z <- VARXCons(Y[,1:k,drop=FALSE],Y[,(k+1):ncol(Y),drop=FALSE],k,VARXRes$phat,m,VARXRes$shat,oos=TRUE)
+    }else{
+        Z <- VARXCons(Y[,1:k,drop=FALSE],matrix(0,nrow=nrow(Y)),k,VARXRes$phat,m,VARXRes$shat,oos=TRUE)
+    }
+    
+    return(as.numeric(tail(t(B%*%Z),1)))
+        
+    
     }
 
                                         # Recursive multi-step predictions
@@ -2003,7 +2040,7 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
                                         # Augment Y with predictions, create lag matrix (no intercept if MN)
     Y <- rbind(Y,pred)
 
-    # Can't call this function directly from R due to assert errors
+    # Can't call this function direclty from R due to assert errors
     ## Z <- ZmatF(Y,p,ncol(Y),oos=TRUE,intercept=!MN)
 
     Z <- VARXCons(Y,matrix(0,nrow=nrow(Y),ncol=1),ncol(Y),p,0,0,oos=TRUE)
@@ -2074,7 +2111,7 @@ Z1 <- VARXCons(matrix(Y[,i],ncol=1),matrix(0,nrow=nrow(Y),ncol=1),1,p,0,0)
 ## Y1 <- matrix(Y[(p+1):nrow(Y),i],ncol=1)
 # get the prior cov
 K <- cbind(t(Z1),Y[(p+1):nrow(Y),i])
-sigmas[i] <- sqrt(ARFitV2(K,1,p)$SigmaU)    
+sigmas[i] <- sqrt(ARFitVARXR(K,1,p,0,0)$SigmaU)    
 ## print(sigmas[i])
 }
 ## browser()

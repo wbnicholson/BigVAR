@@ -2,6 +2,7 @@
 
 export(BigVAR.est)
 export(MultVarSim)
+export(PredictVARX)
 export(SparsityPlot.BigVAR.results)
 export(VARXFit)
 export(VARXForecastEval)

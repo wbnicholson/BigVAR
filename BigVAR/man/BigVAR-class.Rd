@@ -56,6 +56,8 @@ To construct an object of class BigVAR, use the function \code{\link{constructMo
 \item{\code{constvec}}{vector indicating variables to shrink toward a random walk instead of toward zero (valid only if Minnesota is \code{TRUE})}
 
 \item{\code{tol}}{optimization tolerance}
+
+\item{\code{lagselect}}{lag selection indicator}
 }}
 
 \seealso{

@@ -8,6 +8,7 @@
 using namespace Eigen;
 using namespace Rcpp;
 using namespace std;
+#define NDEBUG 1
 
 //triangular solver 
 MatrixXd backsolve(const MatrixXd& R2, const MatrixXd& R){
@@ -545,7 +546,7 @@ List ICX(NumericMatrix Y1, NumericMatrix X1, double k, int pmax,int smax,double 
 }
 
 
-//[[Rcpp::export]]
+
 List ARFitV2(const MatrixXd K2, const int k, const int p)
 {
   int RC=k*p+1;
@@ -568,7 +569,6 @@ List ARFitV2(const MatrixXd K2, const int k, const int p)
   MatrixXd R11=R.topLeftCorner(RC,RC);
   //old value RC RC
   MatrixXd R22=R.block(RC,RC,k,k);
-  //Rcout<<R<<std::endl;
   MatrixXd R12=R.topRightCorner(RC,k);
   MatrixXd Test= backsolve(R12,R11);
   MatrixXd Sigma=(R22.transpose()*R22)/(T-RC);
