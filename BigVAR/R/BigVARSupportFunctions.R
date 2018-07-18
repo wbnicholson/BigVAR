@@ -371,6 +371,7 @@
 
         beta <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,1))  
 
+        betaArray <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,length(MSFE)))
         if (group == "Lag") {
 
             jj <- groupfunVARX(p,k,k1,s+s1)
@@ -536,6 +537,9 @@
                 setTxtProgressBar(pb, v)
 
             }
+
+
+            betaArray[,,v-T1+h-1] <- beta
         }
                                         # Parameter estimates using all available data
         if (group == "Basic") {
@@ -571,7 +575,7 @@
 
             GG <- .SparseGroupLassoVAROOX(beta, kk, ZFull$Y, ZFull$Z, 
                                           gamm, alpha, INIactive = activeset, tol,p,MN,k1,s+s1,k,FALSE,C,intercept)
-
+            
             betaPred <- GG$beta
             
 
@@ -590,8 +594,8 @@
 
         betaPred <- as.matrix(betaPred[,,1])
 
-
-        return(list(MSFE=MSFE,betaPred=betaPred,predictions=preds))
+        
+        return(list(MSFE=MSFE,betaPred=betaPred,predictions=preds,betaArray=betaArray))
         
 
     }
@@ -618,6 +622,8 @@
 
         
         beta <- array(0,dim=c(k,p*k+1,1))
+        betaArray <-  array(0,dim=c(k,p*k+1,length(MSFE)))
+
 
         if (group == "Lag")
             {
@@ -867,6 +873,7 @@
                     setTxtProgressBar(pb, v)
 
                 }
+                betaArray[,,v-T1+h-1] <- beta
             }
 
         if (group == "Basic") {
@@ -968,7 +975,7 @@
 
         
 
-        return(list(MSFE=MSFE,betaPred=betaPred,predictions=preds))
+        return(list(MSFE=MSFE,betaPred=betaPred,predictions=preds,betaArray=betaArray))
         
 
     }
