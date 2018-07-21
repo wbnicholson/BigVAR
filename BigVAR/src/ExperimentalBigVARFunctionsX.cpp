@@ -15,6 +15,24 @@ using namespace arma;
 // omp_set_num_threads(4);
 
 
+//find max of a list 
+int ListMax(List x){
+	int n1 = x.size();
+		int max1=0;
+		int n2 = 0;
+		for(int i =0 ;i<n1;++i){
+			arma::uvec s4=as<arma::uvec>(x[i]);
+			n2 = max(s4);
+			if(n2>max1){
+				max1=n2;
+			}
+						
+		}
+	
+		return(max1);
+}
+
+
 // Soft thresholding
 double ST1a(double z,double gam){
 
@@ -592,8 +610,14 @@ colvec ThreshUpdateOO(const mat& ZZ, double lam,const mat& Y,double eps, List gr
 	  colvec BPrev=B;
 	  List active(n1);
 	  List betaActive2(3);
- 
-	  if(max(groups)==0)
+	  int count;
+	  for(int i=0; i<n1; ++i)
+		  {
+			  NumericVector g1=groups[i];
+			  count+=max(g1);
+
+		  }
+	  if(count==0)
 		  {
 
 			  B.zeros(kp);
