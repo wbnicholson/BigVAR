@@ -9,7 +9,7 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
   T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3), ONESE = FALSE,
   ownlambdas = FALSE, alpha = as.double(NULL), recursive = FALSE,
   C = as.double(NULL), dates = as.character(NULL), intercept = TRUE,
-  tol = 1e-04, lagselect = FALSE)
+  tol = 1e-04, lagselect = FALSE, window.size = 0)
 }
 \arguments{
 \item{Y}{\eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively}
@@ -54,7 +54,9 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
 
 \item{tol}{optimization tolerance (default 1e-4)}
 
-\item{lagselect}{lag selection indicator
+\item{lagselect}{lag selection indicator}
+
+\item{window.size}{size of rolling window.  If set to 0 an expanding window will be used. 
 
 
  @details The choices for "struct" are as follows

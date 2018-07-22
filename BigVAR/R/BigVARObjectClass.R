@@ -135,6 +135,7 @@ check.BigVAR <- function(object){
 #' @slot constvec vector indicating variables to shrink toward a random walk instead of toward zero (valid only if Minnesota is \code{TRUE})
 #' @slot tol optimization tolerance
 #' @slot lagselect lag selection indicator
+#' @slot window.size size of rolling window.  If set to NULL an expanding window will be used. 
 #' @details To construct an object of class BigVAR, use the function \code{\link{constructModel}}
 #' @seealso \code{\link{constructModel}}
 #' @export
@@ -163,7 +164,8 @@ setClass(
         dates="character",
         constvec="numeric",
         tol="numeric",
-        lagselect="logical"
+        lagselect="logical",
+        window.size="numeric"
         ),validity=check.BigVAR
     )
 
@@ -191,6 +193,7 @@ setClass(
 #' @param tol optimization tolerance (default 1e-4)
 #' @param dates optional vector of dates corresponding to \eqn{Y}
 #' @param lagselect lag selection indicator
+#' @param window.size size of rolling window.  If set to 0 an expanding window will be used. 
 #'
 #' 
 #'  @details The choices for "struct" are as follows
@@ -234,7 +237,7 @@ setClass(
 #' T2=floor(2*nrow(Y)/3)
 #' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 #' @export
-constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE,C=as.double(NULL),dates=as.character(NULL),intercept=TRUE,tol=1e-4,lagselect=FALSE)
+constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE,C=as.double(NULL),dates=as.character(NULL),intercept=TRUE,tol=1e-4,lagselect=FALSE,window.size=0)
 {
     if(any(is.na(Y))){stop("Remove NA values before running constructModel")}      
     if(dim(Y)[2]>dim(Y)[1] & length(VARX)==0){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
@@ -250,6 +253,7 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
     if(length(gran)!=2&ownlambdas==FALSE){stop("Granularity must have two parameters")}
     if(any(gran<=0)){stop("Granularity parameters must be positive")}
     if(tol<0 | tol>1e-1){stop("Tolerance must be positive")}
+    if(window.size>nrow(Y) | window.size<0){stop("window size must be shorter than the series length")}
     structure2 <- c("Basic","Lag","HVARC")
     cond2=struct %in% structure2
     ## k <- ncol(Y)
@@ -331,7 +335,8 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
         constvec=C,
         intercept=intercept,
         tol=tol,
-        lagselect=lagselect
+        lagselect=lagselect,
+        window.size=window.size
         ))
 
     return(BV1)
@@ -483,7 +488,7 @@ setMethod(
         recursive <- object@recursive
         VARX <- object@VARX
         tol=object@tol
-
+        window.size=object@window.size
         if(length(alpha)==0){
 
             if(length(VARX)>0){    
@@ -564,6 +569,11 @@ setMethod(
                 contemp <- FALSE
                 s1 <- 0
             }
+            if(window.size==0){
+                window.size=0
+            }else{
+                window.size <- window.size+1
+                }
 
             m <- k-k1
             Y1 <-matrix(Y[,1:k1],ncol=k1)
@@ -799,17 +809,27 @@ setMethod(
                     }
 
                     if(h>1 & !recursive){
+
+                        if(window.size!=0){
+                            ws1 <- max(c(v-window.size-h,1))
+                            trainY <- ZFull$Y[(ws1+h):(v-1), ]
+                            trainZ <- ZFull$Z[, (ws1+h):(v-h)]         
+                            }else{
+
+                                trainY <- ZFull$Y[(h):(v-1), ]
                         
-                        trainY <- ZFull$Y[(h):(v-1), ]
-                        
-                        trainZ <- ZFull$Z[, 1:(v-h)]
+                                trainZ <- ZFull$Z[, 1:(v-h)]
+                                }
                         
                     }else{
-
-                        trainY <- ZFull$Y[1:(v-1), ]
-
-                        
-                        trainZ <- ZFull$Z[, 1:(v-1)]         
+                        if(window.size!=0){
+                            ws1 <- max(c(v-window.size,1))
+                            trainY <- ZFull$Y[(ws1):(v-1), ]
+                            trainZ <- ZFull$Z[, (ws1):(v-1)]         
+                            }else{
+                                trainY <- ZFull$Y[(1):(v-1), ]                       
+                                trainZ <- ZFull$Z[, (1):(v-1)]
+                        }
                     }
                 }else{
 
@@ -1202,11 +1222,11 @@ setMethod(
         if(VARX){
 
                                         # Out of sample forecast evaluation: VARX
-            OOSEval <- .BigVAREVALX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alphaopt,C,intercept,tol)
+            OOSEval <- .BigVAREVALX(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alphaopt,C,intercept,tol,window.size)
 
         }else{
                                         # Out of sample evaluation for VAR    
-            OOSEval <- .BigVAREVAL(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alphaopt,recursive,C,intercept,tol)
+            OOSEval <- .BigVAREVAL(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alphaopt,recursive,C,intercept,tol,window.size)
         }
         MSFEOOSAgg <- na.omit(OOSEval$MSFE)
         betaPred <- OOSEval$betaPred
@@ -1345,7 +1365,7 @@ setMethod(
                 VARXL <- list()
                 }
                                         # Create a new BigVAR.Results Object
-        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,AICpvec=AICbench$pvec,AICsvec=AICbench$svec,AICPreds=AICbench$preds,BICpvec=BICbench$pvec,BICsvec=BICbench$svec,BICPreds=BICbench$preds,RWMSFE=RWbench$Mean,RWPreds=RWbench$preds,MeanSD=meanbench$SD,MeanPreds=meanbench$preds,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol,fitted=fitted,lagmatrix=lagmatrix,betaArray=betaArray)
+        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,AICpvec=AICbench$pvec,AICsvec=AICbench$svec,AICPreds=AICbench$preds,BICpvec=BICbench$pvec,BICsvec=BICbench$svec,BICPreds=BICbench$preds,RWMSFE=RWbench$Mean,RWPreds=RWbench$preds,MeanSD=meanbench$SD,MeanPreds=meanbench$preds,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol,fitted=fitted,lagmatrix=lagmatrix,betaArray=betaArray,window.size=object@window.size)
         
         return(results)
     }

@@ -409,9 +409,9 @@ List ICX(NumericMatrix Y1, NumericMatrix X1, double k, int pmax,int smax,double 
 							break;
 						}else{
 
-						int os=max(i,j);
+						os=max(i,j);
 
-						int kp  =k*i+m*j+1;
+						kp  =k*i+m*j+1;
 						// Z.resize(kp,T-os);
 
 						// MatrixXd Z(kp,T-os);

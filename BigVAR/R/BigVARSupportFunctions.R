@@ -347,7 +347,7 @@
 }
 
                                         # Forecast evaluation: VARX (called in cv.bigvar)
-.BigVAREVALX <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alpha,C,intercept,tol)
+.BigVAREVALX <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alpha,C,intercept,tol,window.size)
     {
 
         if(contemp){
@@ -430,10 +430,39 @@
                 break
             }
 
-            trainY <- ZFull$Y[h:(v-1), ]
+                    ##     if(window.size!=0){
+                    ##         ws1 <- max(c(v-window.size-h,1))
+                    ##         trainY <- ZFull$Y[(ws1+h):(v-1), ]
+                    ##         trainZ <- ZFull$Z[, (ws1+h):(v-h)]         
+                    ##         }else{
 
-            trainZ <- ZFull$Z[,1:(v-h)]
+                    ##             trainY <- ZFull$Y[(h):(v-1), ]
+                        
+                    ##             trainZ <- ZFull$Z[, 1:(v-h)]
+                    ##             }
+                        
+                    ## }else{
+                    ##     if(window.size!=0){
+                    ##         ws1 <- max(c(v-window.size,1))
+                    ##         trainY <- ZFull$Y[(ws1):(v-1), ]
+                    ##         trainZ <- ZFull$Z[, (ws1):(v-1)]         
+                    ##         }else{
+                    ##             trainY <- ZFull$Y[(1):(v-1), ]                       
+                    ##             trainZ <- ZFull$Z[, (1):(v-1)]
+                    ##     }
+                        if(window.size!=0){
+                            ws1 <- max(c(v-window.size-h,1))
+                            trainY <- ZFull$Y[(ws1+h):(v-1), ]
+                            trainZ <- ZFull$Z[, (ws1+h):(v-h)]         
+                            }else{
+            
+            
+                                trainY <- ZFull$Y[h:(v-1), ]
 
+                                trainZ <- ZFull$Z[,1:(v-h)]
+
+                            }
+            
             if (group == "Basic") {
 
                 beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, tol,p,MN,k,k1,s+s1,m,C,intercept)
@@ -539,7 +568,7 @@
             }
 
 
-            betaArray[,,v-T1+h-1] <- beta
+            betaArray[,,v-T2+h-1] <- beta
         }
                                         # Parameter estimates using all available data
         if (group == "Basic") {
@@ -602,7 +631,7 @@
 
 
                                         # Forecast evaluation: VAR (called in cv.bigvar)
-.BigVAREVAL <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2,alpha,recursive,C,intercept,tol)
+.BigVAREVAL <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2,alpha,recursive,C,intercept,tol,window.size)
     {
         
 
@@ -704,21 +733,33 @@
         for (v in (T1-h+2):T2)
             {
 
-                if(h>1 & ! recursive){
 
+                
+                                  if(h>1 & !recursive){
 
-                    trainY <- ZFull$Y[h:(v-1), ]
+                        if(window.size!=0){
+                            ws1 <- max(c(v-window.size-h,1))
+                            trainY <- ZFull$Y[(ws1+h):(v-1), ]
+                            trainZ <- ZFull$Z[, (ws1+h):(v-h)]         
+                            }else{
 
+                                trainY <- ZFull$Y[(h):(v-1), ]
+                        
+                                trainZ <- ZFull$Z[, 1:(v-h)]
+                                }
+                        
+                    }else{
+                        if(window.size!=0){
+                            ws1 <- max(c(v-window.size,1))
+                            trainY <- ZFull$Y[(ws1):(v-1), ]
+                            trainZ <- ZFull$Z[, (ws1):(v-1)]         
+                            }else{
+                                trainY <- ZFull$Y[(1):(v-1), ]                       
+                                trainZ <- ZFull$Z[, (1):(v-1)]
+                        }
+                    }
+  
 
-                    trainZ <- ZFull$Z[,1:(v-h)]
-
-                }else{
-
-
-                    trainY <- ZFull$Y[1:(v-1), ]
-
-                    trainZ <- ZFull$Z[,1:(v-1)]
-                }
                 if(v+h-1>T2){
                     break
                 }

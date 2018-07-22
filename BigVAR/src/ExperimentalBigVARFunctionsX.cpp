@@ -130,7 +130,7 @@ mat FistaLV(const mat& Y, const mat& Z, mat& B, const double gam, const double e
 	  double thresh=10*eps;
       j=1;
 	  double maxiters=1000;
-      while(thresh>eps & j<maxiters)
+      while((thresh>eps) & (j<maxiters))
 		  {
 
 			  colvec v=BOLD+((j-2)/(j+1))*(BOLD-BOLDOLD);
@@ -610,7 +610,7 @@ colvec ThreshUpdateOO(const mat& ZZ, double lam,const mat& Y,double eps, List gr
 	  colvec BPrev=B;
 	  List active(n1);
 	  List betaActive2(3);
-	  int count;
+	  int count=0;
 	  for(int i=0; i<n1; ++i)
 		  {
 			  NumericVector g1=groups[i];
