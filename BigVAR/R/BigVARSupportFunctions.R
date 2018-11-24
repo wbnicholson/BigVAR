@@ -536,8 +536,8 @@
             }
             
 
-            if(MN){
-
+            if(MN & !intecercept){
+                
                 eZ <- matrix(ZFull$Z[,v],ncol=1)
 
             }else{
@@ -999,10 +999,14 @@
             }    
         
                 ## if(group!="BGR"){
-        betaPred <- as.matrix(betaPred[,,1])
+        betaPred <- as.matrix(betaPred[,,1],drop=F)
+        ## if(MN & ! intercent){
+        ##     betaPred <- betaPred[,2:ncol(betaPred)]
+        ## }
         ## browser()
+
         
-        betaPred <- matrix(betaPred,nrow=k)
+        ## betaPred <- matrix(betaPred,nrow=k)
         ## if(group=="BGR"){
         ##     betaPred <- t(betaPred)
         ##     }
@@ -2092,9 +2096,9 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
     ## Z <- ZmatF(Y,p,ncol(Y),oos=TRUE,intercept=!MN)
 
     Z <- VARXCons(Y,matrix(0,nrow=nrow(Y),ncol=1),ncol(Y),p,0,0,oos=TRUE)
-    if(MN){
-        Z <- Z[2:nrow(Z),]
-        }
+    ## if(MN){
+    ##     Z <- Z[2:nrow(Z),]
+    ##     }
     Z <- Z[,ncol(Z)]
 
     pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)

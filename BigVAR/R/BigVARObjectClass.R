@@ -254,6 +254,9 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
     if(any(gran<=0)){stop("Granularity parameters must be positive")}
     if(tol<0 | tol>1e-1){stop("Tolerance must be positive")}
     if(window.size>nrow(Y) | window.size<0){stop("window size must be shorter than the series length")}
+
+    if( MN  & intercept){ intercept=FALSE }
+ 
     structure2 <- c("Basic","Lag","HVARC")
     cond2=struct %in% structure2
     ## k <- ncol(Y)
@@ -1078,8 +1081,11 @@ setMethod(
                             }
 
                             if(MN){
-
-                                pred <- beta[,2:dim(beta)[2],(ii-1)*nalpha+jj] %*% eZ[2:length(eZ)]                            
+                                if(!intercept){
+                                    pred <- beta[,2:dim(beta)[2],(ii-1)*nalpha+jj] %*% eZ[2:length(eZ)]
+                                }else{
+                                    pred <- beta[,,(ii-1)*nalpha+jj] %*% eZ
+                                }
                                 if(h>1 & recursive){
                                     pred <- matrix(pred,nrow=1)
                                     pred <- predictMS(pred,trainY,h-1,beta[,2:dim(beta)[2],(ii-1)*nalpha+jj],p,MN)
@@ -2013,6 +2019,9 @@ function(object,n.ahead,newxreg=NULL,...)
                                         # MN option removes intercept
         MN <- object@Minnesota
         eZ <- object@Zvals
+        ## if(MN & !object@intercept){
+        ##     eZ <- eZ[2:nrow(eZ),,drop=F]
+        ##     }
         betaPred <- object@betaPred
         Y <- object@Data
         k <-object@VARX$k
@@ -2029,6 +2038,7 @@ function(object,n.ahead,newxreg=NULL,...)
         }else{
             s1=0
         }
+        ## browser()
         fcst <- betaPred%*%eZ
 
         if(n.ahead==1)
