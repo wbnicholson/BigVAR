@@ -536,7 +536,7 @@
             }
             
 
-            if(MN & !intecercept){
+            if(MN & !intercept){
                 
                 eZ <- matrix(ZFull$Z[,v],ncol=1)
 

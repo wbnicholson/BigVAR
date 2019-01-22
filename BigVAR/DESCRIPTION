@@ -2,7 +2,7 @@ Package: BigVAR
 Type: Package
 Title: Dimension Reduction Methods for Multivariate Time Series
 Version: 1.0.3
-Author: c(
+Authors@R: c(
     person("Will", "Nicholson", email = "wbn8@cornell.edu", role = c("cre","aut")),
     person("David", "Matteson", email = "matteson@cornell.edu", role = "aut"),
     person("Jacob", "Bien", email = "bien@cornell.edu", role = "aut"))
