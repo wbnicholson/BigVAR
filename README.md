@@ -15,7 +15,7 @@ library(devtools)
 install_github("wbnicholson/BigVAR/BigVAR")
 ```
 
-The stable version is available on cran.
+The stable version is available on [cran](https://cran.r-project.org/package=BigVAR).
 
 
 If you experience any bugs or have feature requests, contact me at wbn8@cornell.edu.
