@@ -2117,13 +2117,15 @@ predictMSX <- function(pred,Y,n.ahead,B,p,newxreg,X,m,s,cumulative,MN){
     
     if(nrow(Y)!=nrow(X)){stop("error, dimension issue")}
     Z <- VARXCons(as.matrix(Y),X,ncol(Y),p,m,s,TRUE)
-    Z <- Z[,ncol(Z)]
+    Z <- Z[,ncol(Z),drop=F]
     if(MN){
 
-        Z <- as.matrix(Z[2:nrow(Z),])
-    }    
-    pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)
+        Z <- as.matrix(Z[2:nrow(Z),drop=F])
+        pred <- matrix(B[,2:ncol(B),drop=F]%*%Z,ncol=ncol(Y),nrow=1)
 
+    }else{ 
+    pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)
+    }
     if(n.ahead==1){return(pred)}
 
     predictMSX(pred,Y,n.ahead-1,B,p,newxreg,X,m,s,cumulative+1,MN)    
