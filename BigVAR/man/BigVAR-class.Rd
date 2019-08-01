@@ -57,9 +57,9 @@ To construct an object of class BigVAR, use the function \code{\link{constructMo
 
 \item{\code{tol}}{optimization tolerance}
 
-\item{\code{lagselect}}{lag selection indicator}
-
 \item{\code{window.size}}{size of rolling window.  If set to NULL an expanding window will be used.}
+
+\item{\code{separate_lambdas}}{indicator to use separate penalty parameter for each time series (default \code{FALSE})}
 }}
 
 \seealso{

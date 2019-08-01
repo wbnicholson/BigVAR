@@ -103,7 +103,7 @@
     Z <- Z - c(apply(Z, 1, mean)) %*% t(c(rep(1, ncol(Z))))
     }else{
         YMean <- rep(0,nrow(Y))
-        ZMean <- rep(0,nrow(Y))
+        ZMean <- rep(0,nrow(Z))
         }
     M1f <- list()
     M2f <- list()
@@ -129,7 +129,7 @@
     ## browser()    
     ## beta <- beta[,2:ncol(beta[,,1]),]
     
-    BB <- GamLoopSGL(beta,INIactive,gamm,alpha,Y,Z,jj,jjfull,jjcomp,eps,YMean,ZMean,k,p*k,M1f,M2f,eigs)
+    BB <- GamLoopSGL(beta,INIactive,gamm,alpha,Y,Z,jj,jjfull,jjcomp,eps,YMean,as.matrix(ZMean),k,p*k,M1f,M2f,eigs)
     BB$q1 <- q1
 
         if (MN)
@@ -430,7 +430,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
 
 
 # Elementwise HVAR
-.HVARElemAlg <- function (beta, Y, Z, lambda, eps,p,MN,C1,intercept) 
+.HVARElemAlg <- function (beta, Y, Z, lambda, eps,p,MN,C1,intercept,separate_lambdas=FALSE) 
 {
 
     k <- ncol(Y)
@@ -461,9 +461,9 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
         }
     
     tk <- 1/max(Mod(eigen(Z %*% t(Z))$values))
-
-    betaini <- array(beta[, 2:ncol(beta[, , 1]), ],dim=c(k,k*p,length(lambda)))
-    betafin <- gamloopElem(betaini,Y,Z,lambda,eps,YMean,ZMean,as.matrix(betaini[,,1]),k,p)
+    lambda <- as.matrix(lambda)
+    betaini <- array(beta[, 2:ncol(beta[, , 1]), ],dim=c(k,k*p,nrow(lambda)))
+    betafin <- gamloopElem(betaini,Y,Z,lambda,eps,YMean,ZMean,as.matrix(betaini[,,1]),k,p,separate_lambdas)
 
     if(MN)
         {
@@ -477,8 +477,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
     return(betafin)
 }
 
-# Basic-VARX-L Fista Implementation
-.lassoVARFistX <- function (B, Z, Y, gamm, eps,p,MN,k,k1,s,m,C1,intercept) 
+.lassoVARFistX <- function (B, Z, Y, gamm, eps,p,MN,k,k1,s,m,C1,intercept,separate_lambdas=FALSE) 
 {
 
     if(!"matrix"%in%class(Y))
@@ -511,24 +510,27 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
     tk <- 1/max(Mod(eigen(Z%*%t(Z),only.values=TRUE)$values))
 
     BFOO1 <- matrix(B[, 2:dim(B)[2], 1],ncol=k1)
-    BFOO <- array(B[,2:ncol(as.matrix(B[,,1])),],dim=c(k1,k1*p+(k-k1)*s,length(gamm)))
-    beta <- gamloopFista(BFOO, Y, Z, gamm, eps, 
-                         as.matrix(YMean), as.matrix(ZMean), BFOO1,k,p,tk,k1,s)
+    ## BFOO <- array(B[,2:ncol(as.matrix(B[,,1])),],dim=c(k1,k1*p+(k-k1)*s,length(gamm)))
+    
+    nc <- apply(B,3,ncol)[1]
+    ## BFOO1 <-as.matrix(B[, 2:nc,1,drop=F])
+    BFOO <- B[,2:nc,,drop=F]
+    
+    beta <- gamloopFista(BFOO, Y, Z, as.matrix(gamm), eps, 
+                         as.matrix(YMean), as.matrix(ZMean), BFOO1,k,p,tk,k1,s,separate_lambdas)
 
     if(MN)
         {
             for(i in 1:(dim(beta)[3]))             
-                beta[,2:ncol(beta[,,i]),i] <- beta[,2:ncol(beta[,,i]),i]+C
+                beta[,2:dim(beta[,,i,drop=F])[2],i] <- beta[,2:dim(beta[,,i,drop=F])[2],i]+C
         }
     
     return(beta)
 
 }
 
-
-
 #Basic VAR Fista Implementation
-.lassoVARFist <- function (B, Z, Y, gamm, eps,p,MN,C1,intercept) 
+.lassoVARFist <- function (B, Z, Y, gamm, eps,p,MN,C1,intercept,separate_lambdas=FALSE) 
 {
 
     if(!"matrix"%in%class(Y))
@@ -561,22 +563,23 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
     
     tk <- 1/max(Mod(eigen(Z%*%t(Z),only.values=TRUE)$values))
 
+    nc <- apply(B,3,ncol)[1]
     BFOO1 <- matrix(B[, 2:dim(B)[2], 1],nrow=k,ncol=k*p)
-    BFOO <- array(B[,2:ncol(as.matrix(B[,,1])),],dim=c(k,k*p,length(gamm)))
+    BFOO <- B[,2:nc,,drop=F]
 
-    beta <- gamloopFista(BFOO, Y, Z, gamm, eps, 
-        as.matrix(YMean), as.matrix(ZMean), BFOO1,k,p,tk,k,p)
+    beta <- gamloopFista(BFOO, Y, Z, as.matrix(gamm), eps, 
+        as.matrix(YMean), as.matrix(ZMean), BFOO1,k,p,tk,k,p,separate_lambdas)
 
     if(MN)
         {
             for(i in 1:(dim(beta)[3]))             
-                beta[,2:ncol(beta[,,i]),i] <- beta[,2:ncol(beta[,,i]),i]+C
+                beta[,2:dim(beta[,,i,drop=F])[2],i] <- beta[,2:dim(beta[,,i,drop=F])[2],i]+C
         }
     return(beta)
 }
 
 # Componentwise HVAR
-.HVARCAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1,intercept)
+.HVARCAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1,intercept,separate_lambdas=FALSE)
     {
     if(!"matrix"%in%class(Y))
         {
@@ -617,8 +620,13 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
     }
     tk <- 1/max(Mod(eigen(Z%*%t(Z))$values))
 
+    lambda <- as.matrix(lambda)
+    if(separate_lambdas){
+    betaini <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k,k*p,nrow(lambda)))
+    }else{
     betaini <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k,k*p,length(lambda)))
-    betafin <- gamloopHVAR(betaini,Y,Z,lambda,eps,YMean,ZMean,as.matrix(betaini[,,1]),k,p)
+    }
+    betafin <- gamloopHVAR(betaini,Y,Z,lambda,eps,YMean,ZMean,as.matrix(betaini[,,1]),k,p,separate_lambdas)
 
     if(MN)
         {
@@ -712,7 +720,7 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
         }
 
 # HVAR Own/Other
-.HVAROOAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1,intercept)
+.HVAROOAlg <- function(beta,Y,Z,lambda,eps,p,MN,C1,intercept,separate_lambdas=FALSE)
     {
 
         k <- ncol(Y)
@@ -748,9 +756,10 @@ function (beta, groups,jjcomp, Y, Z, gamm, INIactive, eps,p,MN,k,k1,s,C1,interce
 
         }
 
-        betaini <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k,k*p,length(lambda)))
+        lambda <- as.matrix(lambda)
+        betaini <- array(beta[,2:ncol(as.matrix(beta[,,1])),],dim=c(k,k*p,nrow(lambda)))
 
-        betafin <- gamloopOO(betaini,Y,Z,lambda,eps,YMEAN,ZMEAN,as.matrix(betaini[,,1]),k,p,weights,groups)
+        betafin <- gamloopOO(betaini,Y,Z,lambda,eps,YMEAN,ZMEAN,as.matrix(betaini[,,1]),k,p,weights,groups,separate_lambdas)
 
 
         if(MN)
@@ -1128,7 +1137,8 @@ if(intercept){
         W <- rep(p2^(-alpha[i]),each=k)
         ZADJ <- diag(W)%*%Z
 
-        B[,,(1+(i-1)*gran2):(i*length(gamm))] <- gamloopFista(array(BFOO[,,(1+(i-1)*gran2):(i*length(gamm))],dim=c(k,k*p,length(gamm))), Y, ZADJ, gamm, eps,as.matrix(YMean), as.matrix(ZMean), BFOO1,k,p,tk,k,p)
+        ## B[,,(1+(i-1)*gran2):(i*length(gamm))] <- gamloopFista(array(BFOO[,,(1+(i-1)*gran2):(i*length(gamm))],dim=c(k,k*p,length(gamm))), Y, ZADJ, gamm, eps,as.matrix(YMean), as.matrix(ZMean), BFOO1,k,p,tk,k,p)
+        B[,,(1+(i-1)*gran2):(i*length(gamm))] <- gamloopFista(array(BFOO[,,(1+(i-1)*gran2):(i*length(gamm))],dim=c(k,k*p,length(gamm))), Y, ZADJ, as.matrix(gamm), eps,as.matrix(YMean), as.matrix(ZMean), BFOO1,k,p,tk,k,p)
 
 
         for(j in (1+(i-1)*gran2):(i*length(gamm)))
@@ -1150,3 +1160,4 @@ if(intercept){
 
     return(B)
 }
+

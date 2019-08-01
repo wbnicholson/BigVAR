@@ -115,7 +115,7 @@ rowvec ST3bc(rowvec& z,double gam)
 }
 
 // Lasso Fista Function
-mat FistaLV(const mat& Y, const mat& Z, mat& B, const double gam, const double eps, double tk, int k,int p)
+mat FistaLV(const mat& Y, const mat& Z, mat& B, const rowvec gam, const double eps, double tk, int k,int p,bool sep_lambda=false)
 {
   B=trans(B);
   colvec B1=B.col(0);
@@ -129,20 +129,23 @@ mat FistaLV(const mat& Y, const mat& Z, mat& B, const double gam, const double e
       colvec BOLDOLD=BOLD;
 	  double thresh=10*eps;
       j=1;
+	  double tempgam;
 	  double maxiters=1000;
-      while((thresh>eps) & (j<maxiters))
+	  if(sep_lambda){
+		  tempgam=gam(i);
+	  }else{
+		  tempgam=gam(0);
+	  }
+	  while((thresh>eps) & (j<maxiters))
 		  {
 
 			  colvec v=BOLD+((j-2)/(j+1))*(BOLD-BOLDOLD);
 
-			  B1=ST3a(vectorise(v)+tk*vectorise((trans(Y.col(i))-trans(v)*Z)*trans(Z)),gam*tk);
+			  B1=ST3a(vectorise(v)+tk*vectorise((trans(Y.col(i))-trans(v)*Z)*trans(Z)),tempgam*tk);
 			  thresh=max(abs(B1-v));
 			  BOLDOLD=BOLD;
 			  BOLD=B1;
 			  j+=1;
-			  // if(j>10000){
-			  // 	  break;
-			  // }
 
 
 		  }
@@ -162,7 +165,7 @@ mat FistaLV(const mat& Y, const mat& Z, mat& B, const double gam, const double e
 //Penalty Loop For FISTA
 
 // [[Rcpp::export]]
-cube gamloopFista(NumericVector beta_, const mat& Y,const mat& Z,const  colvec gammgrid, const double eps,const colvec& YMean2, const colvec& ZMean2,mat& B1, int k, int p,double tk, int k1,int s){
+cube gamloopFista(NumericVector beta_, const mat& Y,const mat& Z,const  mat gammgrid, const double eps,const colvec& YMean2, const colvec& ZMean2,mat& B1, int k, int p,double tk, int k1,int s,bool sep_lambda=false){
 
 	mat b2=B1;
 	mat B1F2=B1;
@@ -174,15 +177,15 @@ cube gamloopFista(NumericVector beta_, const mat& Y,const mat& Z,const  colvec g
 	bcube2.fill(0);
  
 	colvec nu=zeros<colvec>(dims[0]);
-	double gam =0;
+	// double gam =0;
 
 	int i;
 	//loop through candidate lambda values
 	for (i=0; i<dims[2];++i) {
-		gam=gammgrid[i];
+		rowvec gam=gammgrid.row(i);
 
 		mat B1F2=bcube.slice(i);
-		B1 = FistaLV(Y,Z,B1F2,gam,eps,tk,k1,p); 
+		B1 = FistaLV(Y,Z,B1F2,gam,eps,tk,k1,p,sep_lambda); 
 	  
 		nu = YMean2 - B1 *ZMean2;
 		bcube2.slice(i) = mat(join_horiz(nu, B1)); 
@@ -371,7 +374,7 @@ List BlockUpdateGL(mat& beta,const mat& Z1, double lam, const mat& Y1,double eps
 						arma::mat M3=M3f_(i);
 						int k1a=M3.n_cols;
 						double deltfin=  Newton2(k1a,p,adjlam,eigvalF_(i),eigvecF_(i));
-	
+						
 						M3.diag()+=adjlam/deltfin;
 						arma::mat astar=-solve(M3,p);
 						astar.set_size(k1,s45.n_elem);
@@ -570,6 +573,13 @@ List BlockUpdate2(const mat& ZZ1, double lam,const mat& Y1,double eps, List grou
 	
 						arma::mat D1(s1.size(),s1.size());
 						D1.eye();
+						//correct for rare occurrence where newton returns zero
+						if(deltfin==0)
+							{
+								deltfin+=std::numeric_limits<double>::epsilon();
+							}
+							
+
 						arma::mat astar=-solve(M2+adjlam/deltfin*D1,p);
 
 						B.elem(s4)=astar;
@@ -1071,7 +1081,7 @@ rowvec proxcpp(colvec v2,int L,double lambda,int k,colvec w)
 }
 //Fista algorithm
 // [[Rcpp::export]]
-mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lambda,const double eps,const double tk,const int k)
+mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const rowvec lambda,const double eps,const double tk,const int k,bool sep_lambda=false)
 {
 	mat phiFIN=phi;
 
@@ -1087,6 +1097,7 @@ mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lam
 	rowvec v=phiR;
 	rowvec phiOLD=phiR;
 	rowvec phiOLDOLD=phiR;
+
 	int i;
 	for( i=0;i<k;++i)
 		{
@@ -1095,11 +1106,19 @@ mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lam
 			phiOLDOLD=phiOLD;
 			double thresh=10*eps;
 			double   j=1;
+						double templambda;
+			if(sep_lambda){
+				templambda=lambda(i);
+
+			}else{
+				templambda=lambda(0);
+			}
+
 			while(thresh>eps)
 				{
 					// Nesterov step
 					v=phiOLD+((j-2)/(j+1))*(phiOLD-phiOLDOLD);
-					phiR=proxcpp(vectorise(v)+tk*vectorise((trans(Y.col(i))-v*Z)*trans(Z)),L,tk*lambda,k,w2);
+					phiR=proxcpp(vectorise(v)+tk*vectorise((trans(Y.col(i))-v*Z)*trans(Z)),L,tk*templambda,k,w2);
 					thresh=max(abs(phiR-v));
 
 					phiOLDOLD=phiOLD;
@@ -1114,7 +1133,7 @@ mat Fistapar(const mat Y,const mat Z,const mat phi, const int L,const double lam
 }
 
 // [[Rcpp::export]]
-cube gamloopHVAR(NumericVector beta_, const mat& Y,const mat& Z, colvec gammgrid, const double eps,const colvec& YMean2, const colvec& ZMean2,mat& B1, const int k, const int p){
+cube gamloopHVAR(NumericVector beta_, const mat& Y,const mat& Z, mat gammgrid, const double eps,const colvec& YMean2, const colvec& ZMean2,mat& B1, const int k, const int p,bool sep_lambda=false){
 
 	vec eigval;
 	mat eigvec;
@@ -1134,9 +1153,9 @@ cube gamloopHVAR(NumericVector beta_, const mat& Y,const mat& Z, colvec gammgrid
 
 	for (i=0; i<ngridpts;++i) {
             
-
+		rowvec gamm=gammgrid.row(i);
 		B1=bcube.slice(i);
-		B1 = Fistapar(Y,Z,B1,p,gammgrid[i],eps,tk,k); 
+		B1 = Fistapar(Y,Z,B1,p,gamm,eps,tk,k); 
 	  
 		nu = YMean2 - B1 *ZMean2;
 		bcube2.slice(i) = mat(join_horiz(nu, B1)); 
@@ -1178,7 +1197,7 @@ rowvec proxcppOO(colvec v2,int L,double lambda,List vsubs,int k,colvec w)
 	return(trans(r));
 }
 
-mat FistaOO(const mat Y, const mat Z, mat phi, const int p, const int k, double lambda, List groups_, const double eps, const double tk,colvec w)
+mat FistaOO(const mat Y, const mat Z, mat phi, const int p, const int k, const rowvec lambda, List groups_, const double eps, const double tk,colvec w,bool sep_lambda)
 {
 
 	double j=1;
@@ -1197,13 +1216,21 @@ mat FistaOO(const mat Y, const mat Z, mat phi, const int p, const int k, double 
 			phiR=phi.row(i);
 			phiOLD=phiR;
 			phiOLDOLD=phiOLD;
+			double templambda;
+			if(sep_lambda){
+				templambda=lambda(i);
+
+			}else{
+				templambda=lambda(0);
+			}
+
 			v=phiR;
 			List vsubs=groups_[i];
 			while(thresh>eps)
 				{
 					v=phiOLD+((j-2)/(j+1))*(phiOLD-phiOLDOLD);
 
-					phiR=proxcppOO(vectorise(v)+tk*vectorise((trans(Y.col(i))-v*Z)*trans(Z)),2*p,tk*lambda,vsubs,k,w);
+					phiR=proxcppOO(vectorise(v)+tk*vectorise((trans(Y.col(i))-v*Z)*trans(Z)),2*p,tk*templambda,vsubs,k,w);
        
 					thresh=max(abs(phiR-v));
 					phiOLDOLD=phiOLD;
@@ -1217,7 +1244,7 @@ mat FistaOO(const mat Y, const mat Z, mat phi, const int p, const int k, double 
 }
 
 // [[Rcpp::export]]
-cube gamloopOO(NumericVector beta_, const mat Y,const mat Z, colvec gammgrid, const double eps,const colvec YMean2, const colvec ZMean2,mat B1, const int k, const int p,colvec w, List groups_){
+cube gamloopOO(NumericVector beta_, const mat Y,const mat Z, mat gammgrid, const double eps,const colvec YMean2, const colvec ZMean2,mat B1, const int k, const int p,colvec w, List groups_,bool sep_lambda=false){
 
 	mat B1F2=B1;
 
@@ -1242,8 +1269,9 @@ cube gamloopOO(NumericVector beta_, const mat Y,const mat Z, colvec gammgrid, co
 	for (i=0; i<ngridpts;++i) {
             
 
+		rowvec gamm=gammgrid.row(i);
 		B1F2=bcube.slice(i);
-		B1 = FistaOO(Y,Z,B1F2,p,k,gammgrid[i],groups_,eps,tk,w); 
+		B1 = FistaOO(Y,Z,B1F2,p,k,gamm,groups_,eps,tk,w,sep_lambda); 
 	  
 		nu = YMean2 - B1 *ZMean2;
 		bcube2.slice(i) = mat(join_horiz(nu, B1)); 
@@ -1327,7 +1355,7 @@ rowvec prox2(colvec v,double lambda, int k,int p,uvec res1,colvec w)
 
 
 // [[Rcpp::export]]
-mat FistaElem(const mat& Y,const mat& Z, mat phi, const int p,const int k,double lambda, const double eps,const double tk)
+mat FistaElem(const mat& Y,const mat& Z, mat phi, const int p,const int k,rowvec lambda, const double eps,const double tk,bool sep_lambda=false)
 {
 	double j=1;
 	mat phiFin=phi;
@@ -1348,11 +1376,19 @@ mat FistaElem(const mat& Y,const mat& Z, mat phi, const int p,const int k,double
 			phiOLD=phiR;
 			phiOLDOLD=phiOLD;
 			v=phiR;
+						double templambda;
+			if(sep_lambda){
+				templambda=lambda(i);
+
+			}else{
+				templambda=lambda(0);
+			}
+
 			while(thresh>eps)
 				{
 					v=phiOLD+((j-2)/(j+1))*(phiOLD-phiOLDOLD);
 
-					phiR=prox2(vectorise(v)+tk*vectorise((trans(Y.col(i))-v*Z)*trans(Z)),tk*lambda,k,p,res1,w);
+					phiR=prox2(vectorise(v)+tk*vectorise((trans(Y.col(i))-v*Z)*trans(Z)),tk*templambda,k,p,res1,w);
        
 					thresh=max(abs(phiR-v));
 					phiOLDOLD=phiOLD;
@@ -1372,7 +1408,7 @@ mat FistaElem(const mat& Y,const mat& Z, mat phi, const int p,const int k,double
 
 // Lamba loop
 // [[Rcpp::export]]
-cube gamloopElem(NumericVector beta_, const mat& Y,const mat& Z, colvec gammgrid, const double eps,const colvec YMean2, const colvec ZMean2,mat B1, const int k, const int p){
+cube gamloopElem(NumericVector beta_, const mat& Y,const mat& Z, mat gammgrid, const double eps,const colvec YMean2, const colvec ZMean2,mat B1, const int k, const int p,bool sep_lambda=false){
 
 	mat B1F2=B1;
 
@@ -1397,9 +1433,10 @@ cube gamloopElem(NumericVector beta_, const mat& Y,const mat& Z, colvec gammgrid
 
 	for (i=0; i<ngridpts;++i) {
             
+		rowvec gamm=gammgrid.row(i);
 
 		B1F2=bcube.slice(i);
-		B1 = FistaElem(Y,Z,B1F2,p,k,gammgrid[i],eps,tk); 
+		B1 = FistaElem(Y,Z,B1F2,p,k,gamm,eps,tk,sep_lambda); 
 	  
 		nu = YMean2 - B1 *ZMean2;
 		bcube2.slice(i) = mat(join_horiz(nu, B1)); 
@@ -2064,7 +2101,7 @@ List GamLoopSGL(NumericVector beta_, List Activeset,const NumericVector gamm,con
 					k2+=1;
 
 				}
-
+			
 			colvec nu= YMean2 - betaF *ZMean2;
 			betafin.slice(i)=mat(join_horiz(nu, betaF));
 			activefinal[i]=Active;

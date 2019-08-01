@@ -4,12 +4,13 @@
 \alias{constructModel}
 \title{Construct an object of class BigVAR}
 \usage{
-constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
-  MN = FALSE, verbose = TRUE, IC = TRUE, VARX = list(),
-  T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3), ONESE = FALSE,
-  ownlambdas = FALSE, alpha = as.double(NULL), recursive = FALSE,
-  C = as.double(NULL), dates = as.character(NULL), intercept = TRUE,
-  tol = 1e-04, lagselect = FALSE, window.size = 0)
+constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1,
+  cv = "Rolling", MN = FALSE, verbose = TRUE, IC = TRUE,
+  VARX = list(), T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3),
+  ONESE = FALSE, ownlambdas = FALSE, alpha = as.double(NULL),
+  recursive = FALSE, C = as.double(NULL), dates = as.character(NULL),
+  intercept = TRUE, tol = 1e-04, window.size = 0,
+  separate_lambdas = FALSE)
 }
 \arguments{
 \item{Y}{\eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively}
@@ -54,8 +55,6 @@ constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1, cv = "Rolling",
 
 \item{tol}{optimization tolerance (default 1e-4)}
 
-\item{lagselect}{lag selection indicator}
-
 \item{window.size}{size of rolling window.  If set to 0 an expanding window will be used. 
 
 
@@ -79,6 +78,8 @@ The first number in the vector "gran" specifies how deep to construct the penalt
 VARX specifications consist of a list with entry k denoting the series that are to be modeled and entry s to denote the maximal lag order for exogenous series.
 
 The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.}
+
+\item{separate_lambdas}{indicator for separate penalty parameters for each time series (default \code{FALSE})}
 }
 \description{
 Construct an object of class BigVAR

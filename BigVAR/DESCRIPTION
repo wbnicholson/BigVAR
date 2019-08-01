@@ -27,4 +27,4 @@ SystemRequirements: C++11
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 Packaged: 2018-07-22 14:34:16 UTC; will
 URL: http://www.github.com/wbnicholson/BigVAR
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1

@@ -13,8 +13,8 @@ ICX <- function(Y1, X1, k, pmax, smax, m, pen, h = 1L) {
     .Call('_BigVAR_ICX', PACKAGE = 'BigVAR', Y1, X1, k, pmax, smax, m, pen, h)
 }
 
-gamloopFista <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, tk, k1, s) {
-    .Call('_BigVAR_gamloopFista', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, tk, k1, s)
+gamloopFista <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, tk, k1, s, sep_lambda = FALSE) {
+    .Call('_BigVAR_gamloopFista', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, tk, k1, s, sep_lambda)
 }
 
 Eigencomp <- function(Z1, groups, n1, k1) {
@@ -41,24 +41,24 @@ GamLoopSGLOODP <- function(beta_, Activeset_, gamm, alpha, Y, Z, jj_, jjfull_, j
     .Call('_BigVAR_GamLoopSGLOODP', PACKAGE = 'BigVAR', beta_, Activeset_, gamm, alpha, Y, Z, jj_, jjfull_, jjcomp_, eps, YMean2, ZMean2, k1, pk, M2f_, eigs_, m)
 }
 
-Fistapar <- function(Y, Z, phi, L, lambda, eps, tk, k) {
-    .Call('_BigVAR_Fistapar', PACKAGE = 'BigVAR', Y, Z, phi, L, lambda, eps, tk, k)
+Fistapar <- function(Y, Z, phi, L, lambda, eps, tk, k, sep_lambda = FALSE) {
+    .Call('_BigVAR_Fistapar', PACKAGE = 'BigVAR', Y, Z, phi, L, lambda, eps, tk, k, sep_lambda)
 }
 
-gamloopHVAR <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p) {
-    .Call('_BigVAR_gamloopHVAR', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p)
+gamloopHVAR <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda = FALSE) {
+    .Call('_BigVAR_gamloopHVAR', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda)
 }
 
-gamloopOO <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, w, groups_) {
-    .Call('_BigVAR_gamloopOO', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, w, groups_)
+gamloopOO <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, w, groups_, sep_lambda = FALSE) {
+    .Call('_BigVAR_gamloopOO', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, w, groups_, sep_lambda)
 }
 
-FistaElem <- function(Y, Z, phi, p, k, lambda, eps, tk) {
-    .Call('_BigVAR_FistaElem', PACKAGE = 'BigVAR', Y, Z, phi, p, k, lambda, eps, tk)
+FistaElem <- function(Y, Z, phi, p, k, lambda, eps, tk, sep_lambda = FALSE) {
+    .Call('_BigVAR_FistaElem', PACKAGE = 'BigVAR', Y, Z, phi, p, k, lambda, eps, tk, sep_lambda)
 }
 
-gamloopElem <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p) {
-    .Call('_BigVAR_gamloopElem', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p)
+gamloopElem <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda = FALSE) {
+    .Call('_BigVAR_gamloopElem', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda)
 }
 
 powermethod <- function(A, x1) {

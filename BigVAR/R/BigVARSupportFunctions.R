@@ -66,7 +66,7 @@
 }
 
                                         # Constructs the Grid of Lambda Values: VAR
-.LambdaGridE<- function (gran1, gran2, jj = jj, Y, Z, group,p,k,MN,alpha,C,intercept,tol) 
+.LambdaGridE<- function (gran1, gran2, jj = jj, Y, Z, group,p,k,MN,alpha,C,intercept,tol,separate_lambdas=FALSE,verbose=FALSE) 
 {
 
     if (group == "Lag") {
@@ -83,10 +83,15 @@
         gamstart <- max(unlist(mat))
     }
     if (group == "Basic"|group=="Tapered") {
-
+        if(!separate_lambdas){
         gamstart <- max(t(Y) %*% t(Z))
-
-    }
+        }else{
+            gamstart <- c()
+            for(i in 1:k){
+            gamstart[i] <- max(t(Y[,i,drop=F]) %*% t(Z))
+            }
+        }
+        }
 
     if (group == "SparseLag") {
 
@@ -163,8 +168,11 @@
 
         }
 
+        if(!separate_lambdas){
         gamstart <- max(gmax)
-
+        }else{
+            gamstart <- gmax
+        }
     }
 
     if(group=="Tapered"){
@@ -175,10 +183,27 @@
         beta <- array(0,dim=c(k,k*p+1,1))
     }
 
-    gamstart <- LGSearch(gamstart,Y,Z,beta,group,k,p,jj,MN,alpha,C,intercept,tol)
-    
-    gamm <- exp(seq(from = log(gamstart), to = log(gamstart/gran1), 
+    if(!separate_lambdas){
+        gamstart <- LGSearch(gamstart,Y,Z,beta,group,k,p,jj,MN,alpha,C,intercept,tol)
+
+        gamm <- exp(seq(from = log(gamstart), to = log(gamstart/gran1), 
                     length = gran2))
+
+    }else{
+
+        gamm <- matrix(NA,nrow=c(gran2),ncol=k)
+
+        
+        for(i in 1:length(gamstart)){
+            gamstart[i] <- LGSearch(gamstart[i],Y,Z,beta,group,k,p,jj,MN,alpha,C,intercept,tol)
+            if(verbose & i %%20==0){
+               print( sprintf('determined lambda grid for series %s',i))
+            }
+            gamm[,i] <- exp(seq(from = log(gamstart[i]), to = log(gamstart[i]/gran1), 
+                                length = gran2))
+
+            }
+    }
 
     return(gamm)
 
@@ -631,7 +656,7 @@
 
 
                                         # Forecast evaluation: VAR (called in cv.bigvar)
-.BigVAREVAL <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2,alpha,recursive,C,intercept,tol,window.size)
+.BigVAREVAL <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2,alpha,recursive,C,intercept,tol,window.size,separate_lambdas)
     {
         
 
@@ -641,14 +666,19 @@
 
 
         gamm <- gamopt
-
+        if(separate_lambdas){
+            gamm <- matrix(gamm,nrow=1,ncol=k)
+        }
         Y <- ZFull$Y
 
         s <- p
         k1 <- k
 
+       if(separate_lambdas){
+            MSFE <- matrix(NA,nrow=length((T1+1):T2),ncol=k)
+            }else{
         MSFE <- rep(NA,length((T1+1):T2))
-
+        }
         
         beta <- array(0,dim=c(k,p*k+1,1))
         betaArray <-  array(0,dim=c(k,p*k+1,length(MSFE)))
@@ -765,7 +795,7 @@
                 }
                 if (group == "Basic") {
 
-                    beta <- .lassoVARFist(beta, trainZ, trainY,gamm, tol,p,MN,C,intercept)
+                    beta <- .lassoVARFist(beta, trainZ, trainY,gamm, tol,p,MN,C,intercept,separate_lambdas)
 
                 }
 
@@ -819,20 +849,20 @@
 
                 if (group=="HVARC"){
 
-                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
+                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas)
                     
                 }
 
 
                 if(group=="HVAROO"){
 
-                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
+                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas)
 
                 }
 
                 if(group=="HVARELEM"){
 
-                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept) 	
+                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas) 	
 
 
                 }
@@ -872,19 +902,35 @@
                                         # We don't consider an intercept for the MN lasso
                 if(MN){
 
-                    preds[v-T1+h-1,] <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
-
+                    ## preds[v-T1+h-1,] <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+                    ptemp <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+                    ## browser()
                     if(h>1 & recursive){
 
-                        pred <- matrix(preds[v-T1+1,],nrow=1)
+                        ## pred <- matrix(preds[v-T1+2,],nrow=1)
+                        pred <- matrix(ptemp,nrow=1)
                         
                         preds[v-T1+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
+                        if(separate_lambdas){
 
-                        MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1,] - preds[v-T1+h-1,])^2                    
+                            for(uu in 1:k){
+                            ## browser()
+                                    MSFE[v-T1+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T1+h-1,uu])^2
+                                }
+
+                        }else{
+                            MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1,] - preds[v-T1+h-1,])^2
+                            }
                     }else{
-                    
-                    MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1, ] - preds[v-T1-h+1,])^2
+                        if(separate_lambdas){
 
+                            for(uu in 1:k){
+                            ## browser()
+                                    MSFE[v-T1+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T1+h-1,uu])^2
+                            }
+                            }else{
+                    MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1, ] - preds[v-T1-h+1,])^2
+                    }
                     diag(beta[,2:(k+1),1]) <- diag(beta[,2:(k+1),1])-C # subtract one for warm start purposes 
 
                     }
@@ -899,7 +945,17 @@
 
                     }
                     
+                    if(separate_lambdas){
+                        for(uu in 1:k){
+                            ## browser()
+                                    MSFE[v-T1+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T1+h-1,uu])^2
+                                }
+                        }else{
+
+                    
                     MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1,] - preds[v-T1+h-1,])^2                    
+
+                        }
                     
                 }
                 ## }else{
@@ -974,14 +1030,14 @@
         if (group=="HVARC")
             {
 
-                betaPred <- .HVARCAlg(beta,ZFull$Y,ZFull$Z,gamm,tol,p,MN,C,intercept)
+                betaPred <- .HVARCAlg(beta,ZFull$Y,ZFull$Z,gamm,tol,p,MN,C,intercept,separate_lambdas)
 
             }
 
         if(group=="HVAROO")
             {
 
-                betaPred <- .HVAROOAlg(beta,ZFull$Y,ZFull$Z,gamm,tol,p,MN,C,intercept)
+                betaPred <- .HVAROOAlg(beta,ZFull$Y,ZFull$Z,gamm,tol,p,MN,C,intercept,separate_lambdas)
 
 
             }
@@ -989,7 +1045,7 @@
         if(group=="HVARELEM")
             {
 
-                betaPred<-.HVARElemAlg(beta,ZFull$Y,ZFull$Z,gamm,tol,p,MN,C,intercept) 	
+                betaPred<-.HVARElemAlg(beta,ZFull$Y,ZFull$Z,gamm,tol,p,MN,C,intercept,separate_lambdas) 	
 
             }
 
@@ -1000,10 +1056,6 @@
         
                 ## if(group!="BGR"){
         betaPred <- as.matrix(betaPred[,,1],drop=F)
-        ## if(MN & ! intercent){
-        ##     betaPred <- betaPred[,2:ncol(betaPred)]
-        ## }
-        ## browser()
 
         
         ## betaPred <- matrix(betaPred,nrow=k)
@@ -1627,7 +1679,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha,C,intercept,t
         lambdal <- 0
         activeset <- list(rep(rep(list(0), length(gs))))
 
-        while(max(lambdah-lambdal)>.00001)
+        while(max(lambdah-lambdal)>10*tol)
             {
 
                 lambda <- (lambdah+lambdal)/2
@@ -1716,6 +1768,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha,C,intercept,t
     }
 
                                         # Same as above, but for the VAR
+# no special handling for separate lambdas since it is called separately for each one
 LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C,intercept,tol)
     {
 
@@ -1735,7 +1788,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C,intercept,tol)
 
             }
 
-        while(max(abs(lambdah-lambdal))>.00001)
+        while(max(abs(lambdah-lambdal))>10*tol)
             {
 
                 lambda <- (lambdah+lambdal)/2
@@ -2096,10 +2149,10 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
     ## Z <- ZmatF(Y,p,ncol(Y),oos=TRUE,intercept=!MN)
 
     Z <- VARXCons(Y,matrix(0,nrow=nrow(Y),ncol=1),ncol(Y),p,0,0,oos=TRUE)
-    ## if(MN){
-    ##     Z <- Z[2:nrow(Z),]
-    ##     }
-    Z <- Z[,ncol(Z)]
+    if(MN){
+        Z <- Z[2:nrow(Z),,drop=F]
+        }
+    Z <- Z[,ncol(Z),drop=F]
 
     pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)
 

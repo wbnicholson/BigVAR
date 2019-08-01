@@ -134,8 +134,8 @@ check.BigVAR <- function(object){
 #' @slot recursive Indicator as to whether recursive multi-step forecasts are used (applies only to multiple horizon VAR models)
 #' @slot constvec vector indicating variables to shrink toward a random walk instead of toward zero (valid only if Minnesota is \code{TRUE})
 #' @slot tol optimization tolerance
-#' @slot lagselect lag selection indicator
-#' @slot window.size size of rolling window.  If set to NULL an expanding window will be used. 
+#' @slot window.size size of rolling window.  If set to NULL an expanding window will be used.
+#' @slot separate_lambdas indicator to use separate penalty parameter for each time series (default \code{FALSE})
 #' @details To construct an object of class BigVAR, use the function \code{\link{constructModel}}
 #' @seealso \code{\link{constructModel}}
 #' @export
@@ -164,8 +164,8 @@ setClass(
         dates="character",
         constvec="numeric",
         tol="numeric",
-        lagselect="logical",
-        window.size="numeric"
+        window.size="numeric",
+        separate_lambdas="logical"
         ),validity=check.BigVAR
     )
 
@@ -192,7 +192,7 @@ setClass(
 #' @param C vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE})
 #' @param tol optimization tolerance (default 1e-4)
 #' @param dates optional vector of dates corresponding to \eqn{Y}
-#' @param lagselect lag selection indicator
+#' @param separate_lambdas indicator for separate penalty parameters for each time series (default \code{FALSE})
 #' @param window.size size of rolling window.  If set to 0 an expanding window will be used. 
 #'
 #' 
@@ -237,7 +237,7 @@ setClass(
 #' T2=floor(2*nrow(Y)/3)
 #' Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 #' @export
-constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE,C=as.double(NULL),dates=as.character(NULL),intercept=TRUE,tol=1e-4,lagselect=FALSE,window.size=0)
+constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,verbose=TRUE,IC=TRUE,VARX=list(),T1=floor(nrow(Y)/3),T2=floor(2*nrow(Y)/3),ONESE=FALSE,ownlambdas=FALSE,alpha=as.double(NULL),recursive=FALSE,C=as.double(NULL),dates=as.character(NULL),intercept=TRUE,tol=1e-4,window.size=0,separate_lambdas=FALSE)
 {
     if(any(is.na(Y))){stop("Remove NA values before running constructModel")}      
     if(dim(Y)[2]>dim(Y)[1] & length(VARX)==0){warning("k is greater than T, is Y formatted correctly (k x T)?")}      
@@ -254,6 +254,9 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
     if(any(gran<=0)){stop("Granularity parameters must be positive")}
     if(tol<0 | tol>1e-1){stop("Tolerance must be positive")}
     if(window.size>nrow(Y) | window.size<0){stop("window size must be shorter than the series length")}
+    bss <- c("Basic","HVARC","HVAROO","HVARELEM","Tapered")
+    
+    if(separate_lambdas & !struct%in%c("Basic","HVARC","HVAROO","HVARELEM","Tapered")){stop(print(cat("separate lambda estimation only available for ",bss)))}
 
     if( MN  & intercept){ intercept=FALSE }
  
@@ -338,8 +341,8 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
         constvec=C,
         intercept=intercept,
         tol=tol,
-        lagselect=lagselect,
-        window.size=window.size
+        window.size=window.size,
+        separate_lambdas=separate_lambdas
         ))
 
     return(BV1)
@@ -492,6 +495,7 @@ setMethod(
         VARX <- object@VARX
         tol=object@tol
         window.size=object@window.size
+        verbose <- object@verbose         
         if(length(alpha)==0){
 
             if(length(VARX)>0){    
@@ -518,7 +522,7 @@ setMethod(
         MN <- object@Minnesota
         h <- object@horizon
         jj <- 0
-
+        separate_lambdas <- object@separate_lambdas
         if(!"matrix"%in%class(Y)){Y=matrix(Y,ncol=1)}
 
         if(object@crossval=="Rolling"){
@@ -613,6 +617,8 @@ setMethod(
 
             }
             if(object@ownlambdas==FALSE){
+
+                
                 if(dual){
                                         # Constructs penalty grid if both alpha and lambda are selected
                     gamm <- .LambdaGridXDual(gran1, gran2, jj, trainY, trainZ,group,p,k1,s,m,k,MN,alpha,C,intercept,tol)
@@ -702,11 +708,13 @@ setMethod(
 
                 }else{
 
-                    ## gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C,intercept,tol)
                                          if(group!="BGR"){
-                        gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C,intercept,tol)
- 
-                     }else{
+                                             
+                                             gamm <- .LambdaGridE(gran1, gran2, jj, GY, GZ,group,p,k,MN,alpha,C,intercept,tol,separate_lambdas = separate_lambdas,verbose)
+
+                                         }else{
+
+                                        # BGR operates on a fixed grid
                         gamm <- seq(1,5,by=.025)
                          gamm <- gamm*sqrt(k*p)
  
@@ -758,7 +766,7 @@ setMethod(
             beta <- array(0,dim=c(k,k*p+1,gran2*length(alpha)))
         }           
         h <- object@horizon
-        verbose <- object@verbose         
+        
         ZFull <- list()
 
         if(!is.matrix(trainZ)){trainZ <- matrix(trainZ,ncol=1)}
@@ -787,7 +795,14 @@ setMethod(
         }
 
         if(!dual){
-            MSFE <- matrix(0, nrow = T2 - T1+1, ncol = gran2)
+                        if(separate_lambdas){
+                MSFE <- array(0,dim=c(T2-T1+1,gran2,k))
+                
+            }else{
+                MSFE <- matrix(0, nrow = T2 - T1+1, ncol = gran2)
+                gamm <- as.matrix(gamm)
+                }
+
         }else{
 
             nalpha <- length(alpha)
@@ -985,19 +1000,19 @@ setMethod(
 
             if(group=="HVARC")
                 {
-                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
+                    beta <- .HVARCAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas)
 
                 }
 
             if(group=="HVAROO")
                 {
-                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
+                    beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas)
                 }
 
             if(group=="HVARELEM")
                 {
 
-                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
+                    beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas)
 
                 }
             
@@ -1027,7 +1042,17 @@ setMethod(
                                 pred <- predictMS(pred,trainY,h-1,beta[,2:dim(beta)[2],ii],p,MN)
                             }
                             
-                            MSFE[v - (T1 - h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
+                                if(separate_lambdas)
+                                {
+                                    ## if(ii==10){browser()}
+                                  pred <- matrix(pred,ncol=1)  
+                                for(uu in 1:k){
+                                    MSFE[v - (T1 -h), ii,uu] <- (ZFull$Y[v+h-1,uu] - pred[uu,1])^2
+                                    }
+                                }else{
+                                      ## browser()                                  ## if(ii==10){browser()}
+                                    MSFE[v - (T1 -h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
+                                }
                                         # Subtract one from diagonal for warm start purposes
                             
                             diag(beta[,2:(k1+1),ii]) <- diag(beta[,2:(k1+1),ii])-C
@@ -1041,8 +1066,21 @@ setMethod(
                                 if(h>1 & recursive){
                                     pred <- matrix(pred,nrow=1)
                                     pred <- predictMS(pred,trainY,h-1,beta[,,ii],p)
+                                    ## pred <- 
                                 }
-                                MSFE[v - (T1 -h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
+                                if(separate_lambdas)
+                                {
+                                    ## if(ii==10){browser()}
+                                    ## pred <- t(pred)
+                                    pred <- matrix(pred,ncol=1)  
+                                    for(uu in 1:k){
+                                    
+                                    MSFE[v - (T1 -h), ii,uu] <- (ZFull$Y[v+h-1,uu] - pred[uu,1])^2
+                                    }
+                                }else{
+                                      ## browser()                                  ## if(ii==10){browser()}
+                                    MSFE[v - (T1 -h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
+                                }
 
 
                             }else{
@@ -1050,7 +1088,7 @@ setMethod(
 
                                     eZ <- VARXCons(matrix(Y[(v-p):(v),1:k1],ncol=k1),Y[(v-p):(v),(ncol(Y)-m+1):(ncol(Y))],k1,p
                                                    ,m,s,contemp=contemp)
-
+                                    
                                     pred <- beta[,,ii] %*% eZ
 
 
@@ -1103,9 +1141,24 @@ setMethod(
                                 }
                                 
                                 if(object@crossval=="Rolling"){
-                                    MSFE[v - (T1 - h), (ii-1)*nalpha+jj] <- norm2(ZFull$Y[v+h-1,1:k1] - beta[,,(ii-1)*nalpha+jj] %*% eZ)^2
-                                    err <- norm2(ZFull$Y[v,1:k1] - beta[,,ii] %*% eZ)^2
-                             
+                                  pred <- beta[,,ii] %*% eZ
+
+                                if(h>1 & recursive){
+                                    pred <- matrix(pred,nrow=1)
+                                    pred <- predictMS(pred,trainY,h-1,beta[,,ii],p)
+                                }
+                                
+                                ## if(separate_lambdas)
+                                ## {
+                                    
+                                ## for(uu in 1:k){
+                                ##     MSFE[v - (T1 -h), ii,uu] <- (ZFull$Y[v+h-1,uu] - pred[uu,1])^2
+                                ##     }
+                                ## }else{
+                                ##       browser()                                  
+                                    MSFE[v - (T1 -h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
+                                ## }
+
                                 }else{
                                     if(VARX){          
                                         eZ<- VARXCons(matrix(Y[(v-p):(v),1:k1],ncol=k1),Y[(v-p):(v),(ncol(Y)-m+1):(ncol(Y))],k1,p,m,s,contemp=contemp)
@@ -1184,7 +1237,7 @@ setMethod(
 
 
                                         # one standard error correction     
-        if(ONESE & !dual){
+        if(ONESE & !dual &!separate_lambdas){
             MSFE2 <- MSFE 
             G2 <- colMeans(na.omit(MSFE2))
             G3 <- sd(na.omit(MSFE2))/sqrt(nrow(na.omit(MSFE2)))
@@ -1195,8 +1248,44 @@ setMethod(
             if(group!="Tapered" & !dual){
                                         # in rare cases in which MSFE is equal, the smaller penalty parameter is chosen.
                                         # This prevents extremely sparse solutions
+
+                if(separate_lambdas){
+                    ## browser()
+                    if(ONESE){
+                        MSFES <- t(apply(MSFE,3,colMeans))
+                        sds <- t(apply(MSFE,3,function(x)sd(na.omit(x))/sqrt(nrow(na.omit(x)))))
+                        ## for()
+                        ## optinds <- apply(MSFES,2,function(x)min(which(x<x+sds)))
+                        gamopt <- c()
+                        optinds <- c()
+                        for(i in 1:k){
+                        optinds[i] <- min(which(MSFES[i]<sds[i]+min(MSFES[i])))
+                        gamopt[i] <- gamm[optinds[i],i]
+                    }
+                    optind=optinds
+                    }else{
+                        ## MSFES <- t(apply(MSFE,3,colMeans))
+                        ## browser()
+                        ## G3 <- sd(na.omit(MSFE2))/sqrt(nrow(na.omit(MSFE2)))
+                        ## optind <- min(which(G2<(min(G2)+G3)))
+                        ## gamopt <- gamm[optind]
+
+
+                        MSFES <- t(apply(MSFE,3,colMeans))
+                        optinds <- apply(MSFES,1,which.min)
+                        gamopt <- c()
+                        for(i in 1:k){
+                        gamopt[i] <- gamm[optinds[i],i]
+                        }
+                        optind=optinds
+
+
+                    }
+                }else{
+
                 optind <- max(which(colMeans(na.omit(MSFE))==min(colMeans(na.omit(MSFE)))))
                 gamopt <- gamm[optind]
+                }
             }else if(dual){
                 
                 if(!ONESE){
@@ -1218,12 +1307,13 @@ setMethod(
                 gamm <- gamm[,inds[2]]
                 alphaopt <- alpha[inds[2]]
                 optind <- inds
-                ## print(paste("alphaopt",alphaopt))
+
             }
         }
         if(!dual){
             alphaopt <- alpha
         }
+
         
         if(VARX){
 
@@ -1232,7 +1322,7 @@ setMethod(
 
         }else{
                                         # Out of sample evaluation for VAR    
-            OOSEval <- .BigVAREVAL(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alphaopt,recursive,C,intercept,tol,window.size)
+            OOSEval <- .BigVAREVAL(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alphaopt,recursive,C,intercept,tol,window.size,separate_lambdas)
         }
         MSFEOOSAgg <- na.omit(OOSEval$MSFE)
         betaPred <- OOSEval$betaPred
@@ -1370,9 +1460,25 @@ setMethod(
             }else{
                 VARXL <- list()
                 }
+
+        if(separate_lambdas){
+            tmean <- t(apply(MSFE,3,colMeans))
+        }
+ 
+        ## isMSFE <- ifelse(separate_lambdas,apply(tmean,1,mean),colMeans(MSFE))
+        if(separate_lambdas){
+            ## isMSFE <- tmean
+            ## isMSFE <- as.matrix(MSFE[,,1])
+            ## isMS
+            isMSFE <- MSFE
+        }else{
+            
+            isMSFE <- array(MSFE,dim=c(nrow(MSFE),ncol(MSFE),1))
+        }
+
                                         # Create a new BigVAR.Results Object
-        results <- new("BigVAR.results",InSampMSFE=colMeans(MSFE),InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=gamm,index=optind,OptimalLambda=gamopt,OOSMSFE=MSFEOOSAgg,seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,AICpvec=AICbench$pvec,AICsvec=AICbench$svec,AICPreds=AICbench$preds,BICpvec=BICbench$pvec,BICsvec=BICbench$svec,BICPreds=BICbench$preds,RWMSFE=RWbench$Mean,RWPreds=RWbench$preds,MeanSD=meanbench$SD,MeanPreds=meanbench$preds,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol,fitted=fitted,lagmatrix=lagmatrix,betaArray=betaArray,window.size=object@window.size)
-        
+        results <- new("BigVAR.results",InSampMSFE=isMSFE,InSampSD=apply(MSFE,2,sd)/sqrt(nrow(MSFE)),LambdaGrid=as.matrix(gamm),index=optind,OptimalLambda=gamopt,OOSMSFE=as.matrix(MSFEOOSAgg),seoosmsfe=seoos,MeanMSFE=meanbench$Mean,AICMSFE=AICbench$Mean,AICpvec=AICbench$pvec,AICsvec=AICbench$svec,AICPreds=AICbench$preds,BICpvec=BICbench$pvec,BICsvec=BICbench$svec,BICPreds=BICbench$preds,RWMSFE=RWbench$Mean,RWPreds=RWbench$preds,MeanSD=meanbench$SD,MeanPreds=meanbench$preds,AICSD=AICbench$SD,BICMSFE=BICbench$Mean,BICSD=BICbench$SD,RWSD=RWbench$SD,Data=object@Data,lagmax=object@lagmax,Structure=object@Structure,Minnesota=object@Minnesota,Relaxed=object@Relaxed,Granularity=object@Granularity,horizon=object@horizon,betaPred=betaPred,Zvals=Zvals,resids=resids,VARXI=VARX,VARX=VARXL,preds=preds,T1=T1,T2=T2,dual=dual,alpha=alphaopt,crossval=object@crossval,ownlambdas=object@ownlambdas,tf=object@tf,recursive=recursive,constvec=C,intercept=intercept,tol=tol,fitted=fitted,lagmatrix=lagmatrix,betaArray=betaArray,window.size=object@window.size,separate_lambdas=object@separate_lambdas) 
+       
         return(results)
     }
     )
@@ -1416,7 +1522,7 @@ setMethod(
             gran2 <- length(gamm)
 
         }      
-
+        separate_lambdas <- object@separate_lambdas
         C <- object@constvec
         group <- object@Structure
         Y <- object@Data
@@ -1643,7 +1749,17 @@ setMethod(
             
 
         }else{
-            gamm <- .LambdaGridE(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C,intercept,tol)
+            verbose=object@verbose
+            if(group!="BGR"){
+                                             
+                                             
+                                             gamm <- .LambdaGridE(gran1, gran2, jj, trainY, trainZ,group,p,k,MN,alpha,C,intercept,tol,separate_lambdas = separate_lambdas,verbose)
+                                                                  }else{
+                        gamm <- seq(1,5,by=.025)
+                         gamm <- gamm*sqrt(k*p)
+ 
+                         }
+
             }
         }else{
 
@@ -1737,7 +1853,7 @@ setMethod(
         if(VARX){
             beta <- .lassoVARFistX(beta, trainZ, trainY,gamm, tol,p,MN,k,k1,s,m,C,intercept)}
         else{
-            beta <- .lassoVARFist(beta, trainZ, trainY,gamm, tol,p,MN,C,intercept)
+            beta <- .lassoVARFist(beta, trainZ, trainY,gamm, tol,p,MN,C,intercept,separate_lambdas)
         }
     }
 
@@ -1837,20 +1953,20 @@ setMethod(
     if(group=="HVARC")
     {
 
-        beta <- .HVARCAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
+        beta <- .HVARCAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas)
 
     }
     if(group=="HVAROO")
     {
 
-        beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
 
+        beta <- .HVAROOAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas)
     }
 
     if(group=="HVARELEM")
     {
 
-        beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept)
+        beta <- .HVARElemAlg(beta,trainY,trainZ,gamm,tol,p,MN,C,intercept,separate_lambdas)
     }      
     
     return(list(B=beta,lambdas=gamm))
@@ -1918,7 +2034,7 @@ setMethod(
 #' @author Will Nicholson
 #' @export
 setClass("BigVAR.results",
-representation(InSampMSFE="numeric",InSampSD="numeric",LambdaGrid="numeric",index="numeric",OptimalLambda="numeric",OOSMSFE="numeric",seoosmsfe="numeric",MeanMSFE="numeric",AICMSFE="numeric",AICPreds="matrix",BICMSFE="numeric",BICpvec="numeric",BICsvec="numeric",AICpvec="numeric",AICsvec="numeric",BICSD="numeric",BICPreds="matrix",RWMSFE="numeric",RWPreds="matrix",MeanSD="numeric",MeanPreds="matrix",AICSD="numeric",RWSD="numeric",betaPred="matrix",Zvals="matrix",VARXI="logical",resids="matrix",preds="matrix",dual="logical",contemp="logical",fitted="matrix",lagmatrix="matrix",betaArray="array"),
+representation(InSampMSFE="array",InSampSD="numeric",LambdaGrid="matrix",index="numeric",OptimalLambda="numeric",OOSMSFE="matrix",seoosmsfe="numeric",MeanMSFE="numeric",AICMSFE="numeric",AICPreds="matrix",BICMSFE="numeric",BICpvec="numeric",BICsvec="numeric",AICpvec="numeric",AICsvec="numeric",BICSD="numeric",BICPreds="matrix",RWMSFE="numeric",RWPreds="matrix",MeanSD="numeric",MeanPreds="matrix",AICSD="numeric",RWSD="numeric",betaPred="matrix",Zvals="matrix",VARXI="logical",resids="matrix",preds="matrix",dual="logical",contemp="logical",fitted="matrix",lagmatrix="matrix",betaArray="array"),
 contains="BigVAR"
 )
 
@@ -1937,16 +2053,23 @@ contains="BigVAR"
 #' @method plot method
 #' @rdname BigVAR.results-plot-methods
 #' @importFrom graphics abline
+#' @importFrom graphics par
 #' @export
 setMethod(f="plot",signature="BigVAR.results",
 definition= function(x,y=NULL,...)
     {
 
-        plot(x@LambdaGrid,x@InSampMSFE,type="o",xlab="Value of Lambda",ylab="MSFE",log="x")
-
-        abline(v=x@OptimalLambda,col="green")
-
+        if(!x@separate_lambdas){
+        plot(x@LambdaGrid,colMeans(x@InSampMSFE[,,1]),type="o",xlab="Value of Lambda",ylab="MSFE",log="x")
+        }else{
+            k <- ncol(x@Data)
+            par(mfrow=c(k,1))
+for(i in 1:k){
+      plot(x@LambdaGrid[,i],colMeans(x@InSampMSFE[,,i]),type="o",xlab="Value of Lambda",ylab="MSFE",log="x")   
+        abline(v=x@OptimalLambda[i],col="green")
     }
+        }
+        }
 )
 
 #' Default show method for an object of class BigVAR.results
@@ -1982,7 +2105,8 @@ function(object)
         }        
         cat("Grid Depth \n") ;print(object@Granularity[1])
         cat("Index of Optimal Lambda \n");print(object@index)
-        cat("In-Sample MSFE\n");print(round(min(object@InSampMSFE),digits=3))
+        
+        cat("In-Sample MSFE\n");print(round(mean(object@InSampMSFE,2),digits=3))
         cat("BigVAR Out of Sample MSFE\n");print(round(mean(object@OOSMSFE),digits=3))
         cat("*** Benchmark Results *** \n")
         cat("Conditional Mean Out of Sample MSFE\n");print(round(object@MeanMSFE,digits=3))
