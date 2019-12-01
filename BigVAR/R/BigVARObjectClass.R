@@ -838,7 +838,7 @@ setMethod(
                 palpha <- NULL
             }
 
-        if(class(ZFull$Y)!="matrix" ){
+        if(!"matrix"%in%class(ZFull$Y)){
             ZFull$Y <- matrix(ZFull$Y,ncol=1)
         }
 

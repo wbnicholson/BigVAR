@@ -11,8 +11,12 @@
 #' @param p Endogenous Lag order
 #' @param s exogenous lag order (default zero)
 #' @param oos indicator as to whether the data should be constructed for out of sample prediction (i.e. last available entries of Y as final lags default FALSE)
-#' @param contemp indicator as to whether to use contemporaneous exogenous predictors (for example, if exogenous series become available before exogenous default FALSe).
-#' @return Returns a \eqn{kp \times kp} coefficient matrix representing all coefficient matrices contained in Ai as a VAR(1).
+#' @param contemp indicator as to whether to use contemporaneous exogenous predictors (for example, if exogenous series become available before exogenous default FALSE).
+#' @return list with two entries:
+#' \itemize{
+#' \item{"Z"}{\eqn{kp+ms+1\times T-max(p,s)} VARX lag matrix}
+#' \item{"Y"}{adjusted \eqn{k\times T-max(p,s)} endogenous series}
+#' }
 #' @details This function is not required unless you which to design your own cross validation routine. 
 #' @references
 #' See page 15 of Lutkepohl, "A New Introduction to Multiple Time Series Analysis
@@ -20,7 +24,7 @@
 #' @examples
 #' data(Y)
 #' # construct VAR lag matrix with p=4
-#' Z<-VARXLagCons(Y,X=NULL,p=4,s=0)
+#' ZZ<-VARXLagCons(Y,X=NULL,p=4,s=0)
 #' @export
 VARXLagCons <- function(Y,X=NULL,p,s=0,oos=FALSE,contemp=FALSE){
     if(is.null(X)){X <- matrix(0,nrow=nrow(Y))}
@@ -36,8 +40,9 @@ VARXLagCons <- function(Y,X=NULL,p,s=0,oos=FALSE,contemp=FALSE){
     if(p<0|m<0){stop("lag orders must be positive")}
     k=ncol(Y)
     
-XX <- VARXCons(Y,X,k,p,m,s,oos,contemp)
-return(XX)
+    XX <- VARXCons(Y,X,k,p,m,s,oos,contemp)
+    Y <- t(Y[(max(c(p,s))+1):nrow(Y),])
+return(list(Z=XX,Y=Y))
 }
 
                                         # mean benchmark

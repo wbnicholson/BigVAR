@@ -7,7 +7,7 @@ Authors@R: c(
     person("David", "Matteson", email = "matteson@cornell.edu", role = "aut"),
     person("Jacob", "Bien", email = "bien@cornell.edu", role = "aut"))
 Maintainer: Will Nicholson <wbn8@cornell.edu>
-Date: 2018-07-22
+Date: 2019-12-1
 Description: Estimates VAR and VARX models with structured Lasso Penalties.
 Depends:
     R (>= 3.1.0),
