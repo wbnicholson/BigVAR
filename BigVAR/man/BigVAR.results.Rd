@@ -93,6 +93,8 @@ It inherits the class BigVAR, but contains substantially more information.
 \item{\code{lagmatrix}}{matrix of lagged values used to compute residuals (of which Zvals is the final column)}
 
 \item{\code{betaArray}}{array of VAR/VARX coefficients from out of sample forecasts}
+
+\item{\code{sparse_count}}{average fraction of active coefficients in validation period}
 }}
 
 \note{

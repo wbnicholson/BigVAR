@@ -46,5 +46,5 @@ modXBIC <- VARXFit(Y,6,"BIC",list(k=1,s=4))
 Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes of multivariate autoregressive models." ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
 }
 \seealso{
-\code{\link{constructModel}}, \code{\link{cv.BigVAR}}
+\code{\link{constructModel}}, \code{\link{cv.BigVAR}},\code{\link{BigVAR.fit}}
 }

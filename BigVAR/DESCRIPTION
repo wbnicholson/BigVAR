@@ -1,7 +1,7 @@
 Package: BigVAR
 Type: Package
 Title: Dimension Reduction Methods for Multivariate Time Series
-Version: 1.0.3
+Version: 1.0.5
 Authors@R: c(
     person("Will", "Nicholson", email = "wbn8@cornell.edu", role = c("cre","aut")),
     person("David", "Matteson", email = "matteson@cornell.edu", role = "aut"),
@@ -27,4 +27,4 @@ SystemRequirements: C++11
 LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 Packaged: 2018-07-22 14:34:16 UTC; will
 URL: http://www.github.com/wbnicholson/BigVAR
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.1

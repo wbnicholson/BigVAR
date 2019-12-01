@@ -49,7 +49,7 @@ To construct an object of class BigVAR, use the function \code{\link{constructMo
 
 \item{\code{tf}}{Indicator for transfer function}
 
-\item{\code{alpha}}{Grid of candidate alpha values (applies only to Sparse VARX-L models)}
+\item{\code{alpha}}{Grid of candidate alpha values (applies only to Sparse VARX-L and Elastic Net models)}
 
 \item{\code{recursive}}{Indicator as to whether recursive multi-step forecasts are used (applies only to multiple horizon VAR models)}
 

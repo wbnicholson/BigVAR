@@ -5,7 +5,7 @@
 #' @author Will Nicholson \email{wbn8@@cornell.edu},
 
 #' @docType package
-#' @useDynLib BigVAR
+#' @useDynLib BigVAR 
 #' @name BigVAR
 #' @details To use the facilities of this package, starting with an \eqn{T \times k+m} multivariate time series (in which T denotes the length of the series, k the number of endogenous or "model") and run \code{\link{constructModel}} to create an object of class \code{\link{BigVAR}}.  \code{\link{cv.BigVAR}} creates an object of class \code{\link{BigVAR.results}}, which chooses an optimal penalty parameter based on minimizing h-step ahead forecasts on a specified cross-validation period over a grid of values as well as comparisons against AIC, BIC, unconditional mean, and a random walk.  There are plot functions for both BigVAR (\code{\link{plot.BigVAR}}) and BigVAR.results (\code{\link{plot}}) as well as a predict function for BigVAR.results (\code{\link{predict}}).
 #' @seealso \code{\link{constructModel}}, \code{\link{cv.BigVAR}}, \code{\link{BigVAR.results}}, \code{\link{plot}}, \code{\link{predict}}

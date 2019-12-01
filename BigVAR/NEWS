@@ -1,9 +1,9 @@
-BigVAR v 1.0.3 (Release date: 2018-07-22)
+BigVAR v 1.0.5 (Release date: 2019-11-15)
 ==============
 
 Changes: 
 
-* Fixed Rcpp conflict due to calling max of a List object.
-* Added support for rolling window estimation
-* Added support for Bayesian VAR method from Banbura et al (2010)
-* Expanded BigVAR results to save all coefficient matrices estimated in evaluation period as well as all predictions
+* Added BigVAR.fit function for estimation with fixed penalty parameter
+* Minor bug fixes in C++ estimation routines
+* Added Elastic net penalty ("BasicEN")
+
