@@ -2242,7 +2242,7 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
 
                                         # Can't call this function direclty from R due to assert errors
     ## Z <- ZmatF(Y,p,ncol(Y),oos=TRUE,intercept=!MN)
-
+    
     Z <- VARXCons(Y,matrix(0,nrow=nrow(Y),ncol=1),ncol(Y),p,0,0,oos=TRUE)
     if(MN){
         Z <- Z[2:nrow(Z),,drop=F]
@@ -2258,20 +2258,26 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
 }
 
                                         # Multi-step VARX with new data.
-predictMSX <- function(pred,Y,n.ahead,B,p,newxreg,X,m,s,cumulative,MN){
+predictMSX <- function(pred,Y,n.ahead,B,p,newxreg,X,m,s,cumulative,MN,contemp=FALSE){
 
     Y <- rbind(Y,pred)
     X <- rbind(X,matrix(newxreg[cumulative,],ncol=m))
     
     if(nrow(Y)!=nrow(X)){stop("error, dimension issue")}
-    Z <- VARXCons(as.matrix(Y),X,ncol(Y),p,m,s,TRUE)
+    if(!contemp){
+        Z <- VARXCons(as.matrix(Y),X,ncol(Y),p,m,s,oos=TRUE)
+    }else{
+        ## ## browser()
+        Z <- VARXCons(as.matrix(Y),as.matrix(X),ncol(Y),p,m,s,oos=FALSE,contemp=TRUE)
+    }
     Z <- Z[,ncol(Z),drop=F]
     if(MN){
 
         Z <- as.matrix(Z[2:nrow(Z),drop=F])
         pred <- matrix(B[,2:ncol(B),drop=F]%*%Z,ncol=ncol(Y),nrow=1)
 
-    }else{ 
+    }else{
+    
         pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)
     }
     if(n.ahead==1){return(pred)}

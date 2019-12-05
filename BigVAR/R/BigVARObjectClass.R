@@ -2035,17 +2035,10 @@ function(object,n.ahead,newxreg=NULL,...)
         p <- object@lagmax
         s <- object@VARX$s
         VARX <- object@VARXI
-        contemp <- object@VARX$contemp
+        contemp <- object@contemp
         s1 <- 0
-        if(VARX){
-            if(contemp){
-                s1 <- 1
-            }
-        }else{
-            s1=0
-        }
-        ## browser()
-        fcst <- betaPred%*%eZ
+        ## if(VARX){
+        fcst <- matrix(betaPred%*%eZ,ncol=1)
 
         if(n.ahead==1)
             {
@@ -2053,7 +2046,7 @@ function(object,n.ahead,newxreg=NULL,...)
             }else{
                 if(!VARX){
                                         # iterative multistep forecasts
-                    fcst <- predictMS(matrix(fcst,nrow=1),Y[(nrow(Y)-p+1):nrow(Y),],n.ahead-1,betaPred,p,MN)
+                    fcst <- matrix(predictMS(matrix(fcst,nrow=1),Y[(nrow(Y)-p+1):nrow(Y),],n.ahead-1,betaPred,p,MN),ncol=1)
 
                 }else{
 
@@ -2066,9 +2059,11 @@ function(object,n.ahead,newxreg=NULL,...)
                             if(nrow(newxreg)<n.ahead-1){
                                 stop(paste("Need at least ",n.ahead-1,"rows of new data"))
                             }
+                            
                             C <- max(p,s)
-
-                            fcst <- predictMSX(matrix(fcst,nrow=1),as.matrix(Y[(nrow(Y)-C+1):nrow(Y),1:(k)]),n.ahead-1,betaPred,p,newxreg,matrix(Y[(nrow(Y)-C+1):nrow(Y),(ncol(Y)-m+1):ncol(Y)],ncol=m),m,s,1,MN)
+                            if(contemp){C <- C+3}
+                            ## browser()
+                            fcst <- matrix(predictMSX(matrix(fcst,nrow=1),as.matrix(Y[(nrow(Y)-C+1):nrow(Y),1:(k)]),n.ahead-1,betaPred,p,newxreg,matrix(Y[(nrow(Y)-C+1):nrow(Y),(ncol(Y)-m+1):ncol(Y)],ncol=m),m,s,1,MN,contemp),ncol=1)
                         }
                 }
 
