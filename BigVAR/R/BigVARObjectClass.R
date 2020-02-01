@@ -262,9 +262,15 @@ constructModel <- function(Y,p,struct,gran,RVAR=FALSE,h=1,cv="Rolling",MN=FALSE,
     if(tol<0 | tol>1e-1){stop("Tolerance must be positive")}
     if(window.size>nrow(Y) | window.size<0){stop("window size must be shorter than the series length")}
     bss <- c("Basic","HVARC","HVAROO","HVARELEM","Tapered")
-    
+
     if(separate_lambdas & !struct%in%c("Basic","HVARC","HVAROO","HVARELEM","Tapered","BasicEN")){stop(print(cat("separate lambda estimation only available for ",bss)))}
 
+    start_ind <- (T1-p-h+1)
+    print(start_ind)
+    if(cv=="Rolling" & start_ind<5){
+        stop("too few values for rolling validation, try running BigVAR.fit")
+    }
+        
     if( MN  & intercept){ intercept=FALSE }
  
     structure2 <- c("Basic","Lag","HVARC")
@@ -868,7 +874,7 @@ setMethod(
                                         # Start of penalty parameter selection     
         betaWS <- beta
         for (v in (T1-h+1):T2) {
-
+            ## browser()
             if(cvtype=="Rolling")
 
                 {
@@ -945,7 +951,6 @@ setMethod(
                     assign(objs[i],NULL)
                            }
             }
-            ## browser()
             temp <- .BigVAR.fit(group,betaWS,trainZ,trainY,gamm,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk,palpha)
             beta <- temp$beta
             betaWS <- temp$beta
@@ -964,7 +969,6 @@ setMethod(
 
                         if (RVAR)
                         {
-                            ## browser(2)
                                         # Relaxed Least Squares (intercept ignored)
                                 beta[,,ii] <- RelaxedLS(cbind(t(trainZ),trainY),beta[,,ii],k,p,k1,s+s1)
                             }
@@ -985,7 +989,6 @@ setMethod(
                                     MSFE[v - (T1 -h), ii,uu] <- (ZFull$Y[v+h-1,uu] - pred[uu,1])^2
                                     }
                                 }else{
-                                      ## browser()                                  ## if(ii==10){browser()}
                                     MSFE[v - (T1 -h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
                                 }
                                         # Subtract one from diagonal for warm start purposes
@@ -1012,7 +1015,6 @@ setMethod(
                                     MSFE[v - (T1 -h), ii,uu] <- (ZFull$Y[v+h-1,uu] - pred[uu,1])^2
                                     }
                                 }else{
-                                    ## if(i==1){browser()}
                                     MSFE[v - (T1 -h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
                                 }
 
@@ -1042,7 +1044,6 @@ setMethod(
 
                     }
                 }else{
-                    ## browser()
                                         # If alpha and lambda are jointly fit, calculate MSFE for each alpha, lambda combination
                     for (ii in 1:gran2) {
                         for(j in 1:length(alpha)){
@@ -1067,7 +1068,6 @@ setMethod(
                                 MSFE[v - (T1 - h), (ii-1)*nalpha+j] <- norm2(ZFull$Y[v+h-1,1:k1] - beta[,2:dim(beta)[2],(ii-1)*nalpha+j] %*% eZ[2:length(eZ)])^2
                                 
                             }else{
-                                ## if((ii-1)*nalpha+j==51){browser()}
                                 pred <- beta[,,(ii-1)*nalpha+j] %*% eZ
 
                                 if(h>1 & recursive){
@@ -1091,9 +1091,8 @@ setMethod(
                                 ##     MSFE[v - (T1 -h), ii,uu] <- (ZFull$Y[v+h-1,uu] - pred[uu,1])^2
                                 ##     }
                                 ## }else{
-                                ##       browser()                                  
                                     ## MSFE[v - (T1 -h), ii] <- norm2(ZFull$Y[v+h-1,1:k1] - pred)^2
-                                    ## if(j==2){browser()}
+
                                     MSFE[v - (T1 - h), (ii-1)*nalpha+j] <- norm2(ZFull$Y[v,1:k1] - pred)^2
                                     ## browser()
                                     ## beta2[,,(ii-1)*nalpha+j] <<-
@@ -1820,11 +1819,11 @@ setMethod(
     }
 
 
-            if (group == "BGR") {
+            ## if (group == "BGR") {
  
-                trainZ <- rbind(1,trainZ)
-                beta <- BGRGridSearch(trainY,trainZ,p,gamm,as.numeric(MN))
-             }
+            ##     trainZ <- rbind(1,trainZ)
+            ##     beta <- BGRGridSearch(trainY,trainZ,p,gamm,as.numeric(MN))
+            ##  }
         
         needed.objs <- c('group','beta','trainZ','trainY','gamm','tol','p','m','k1','s',
                         's1','m','MN','C','intercept','separate_lambdas','dual','activeset','alpha','jj','jjcomp','kk','palpha')

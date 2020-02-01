@@ -162,7 +162,7 @@
     }
 
     if(group=="BGR"){
-
+        ## browser()
         trainZ <- rbind(1,trainZ)
         beta <- BGRGridSearch(trainY,trainZ,p,gamm,as.numeric(MN))
     }
@@ -235,11 +235,12 @@
 #' @export
 BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas=F,MN=F,C=as.double(NULL),intercept=TRUE,tf=F,tol=1e-4,RVAR=F,beta=NULL){
     if(!is.matrix(Y)){stop("Y needs to be a matrix")}
+    if(is.null(lambda)){stop("Must include penalty parameter")}
     if(is.null(alpha)){alpha=1/(ncol(Y)+1)}
     dual=FALSE
     k <- ncol(Y)
                                         # runs constructModel just to check for errors
-    temp.bv <- constructModel(Y,p,struct=struct,gran=c(lambda),ownlambdas=TRUE,MN,intercept=intercept,C=C,VARX=VARX)
+    temp.bv <- constructModel(Y,p,struct=struct,gran=c(lambda),ownlambdas=TRUE,MN,intercept=intercept,C=C,VARX=VARX,cv="LOO")
     gran2 <- length(lambda)
     ## structures=c("Basic","Lag","SparseLag","OwnOther","SparseOO","HVARC","HVAROO","HVARELEM","Tapered","EFX","BGR")
     group=struct
@@ -284,9 +285,6 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
             trainZ <- VARXCons(matrix(0,ncol=1,nrow=nrow(X)),matrix(X,ncol=m),k=0,p=0,m=m,s=s,contemp=contemp,oos=FALSE)
 
         }
-
-        
-        trainZ <- trainZ[2:nrow(trainZ),]
 
         trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
 
@@ -411,9 +409,7 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
 
         Z1 <- VARXCons(Y,matrix(0,nrow=nrow(Y)),k,p,0,0) 
 
-
-        trainZ <- Z1[2:nrow(Z1),]   
-
+            trainZ <- Z1[2:nrow(Z1),]   
 
         trainY <- matrix(Y[(p+1):nrow(Y),],ncol=k)          
 
@@ -499,7 +495,7 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
         
         trainZ <- rbind(1,trainZ)
         beta <- BGRGridSearch(trainY,trainZ,p,lambda,as.numeric(MN))
-    }
+    }else{
     ## browser()
     
     ## needed.objs <- c('group','beta','trainZ','trainY','lambda','tol','p','m','k1','s','s1','m','MN','C','intercept','separate_lambdas','dual','activeset','q1a')
@@ -514,7 +510,7 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
     ## browser()
     temp <- .BigVAR.fit(group,beta,trainZ,trainY,lambda,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk)
     beta <- temp$beta
-
+        }
                                         # refit if varx
     if(RVAR){
         beta <- RelaxedLS(cbind(t(trainZ),trainY),beta,k,p,k1,s+s1)

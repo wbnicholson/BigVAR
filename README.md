@@ -19,4 +19,3 @@ The stable version is available on [cran](https://cran.r-project.org/package=Big
 
 
 If you experience any bugs or have feature requests, contact me at wbn8@cornell.edu.
-

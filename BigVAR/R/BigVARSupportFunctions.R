@@ -2254,7 +2254,7 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
     if(n.ahead==1){return(pred)}
     
     predictMS(pred,Y,n.ahead-1,B,p,MN)
-    
+g    
 }
 
                                         # Multi-step VARX with new data.
@@ -2312,10 +2312,12 @@ findind <- function(opt,lambda1,lambda2)
 BVARLitterman <- function(Y,Z,p,tau,mu,H,iRW)
 {
     T <- nrow(Y); k <- ncol(Y)
+
+    ## browser()
                                         # prior covariance based on univariate AR models
     sigmas <- c()
     for(i in 1:k){
-        Z1 <- VARXCons(matrix(Y[,i],ncol=1),matrix(0,nrow=nrow(Y),ncol=1),1,p,0,0)
+        Z1 <- VARXCons(Y[,i,drop=F],matrix(0,nrow=nrow(Y),ncol=1),1,p,0,0)
         ## Y1 <- matrix(Y[(p+1):nrow(Y),i],ncol=1)
                                         # get the prior cov
         K <- cbind(t(Z1),Y[(p+1):nrow(Y),i])
