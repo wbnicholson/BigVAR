@@ -2254,7 +2254,7 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
     if(n.ahead==1){return(pred)}
     
     predictMS(pred,Y,n.ahead-1,B,p,MN)
-g    
+
 }
 
                                         # Multi-step VARX with new data.
