@@ -4,63 +4,99 @@
 \alias{constructModel}
 \title{Construct an object of class BigVAR}
 \usage{
-constructModel(Y, p, struct, gran, RVAR = FALSE, h = 1,
-  cv = "Rolling", MN = FALSE, verbose = TRUE, IC = TRUE,
-  VARX = list(), T1 = floor(nrow(Y)/3), T2 = floor(2 * nrow(Y)/3),
-  ONESE = FALSE, ownlambdas = FALSE, alpha = as.double(NULL),
-  recursive = FALSE, C = as.double(NULL), dates = as.character(NULL),
-  intercept = TRUE, tol = 1e-04, window.size = 0,
-  separate_lambdas = FALSE)
+constructModel(
+  Y,
+  p,
+  struct,
+  gran,
+  RVAR = FALSE,
+  h = 1,
+  cv = "Rolling",
+  MN = FALSE,
+  verbose = TRUE,
+  IC = TRUE,
+  VARX = list(),
+  T1 = floor(nrow(Y)/3),
+  T2 = floor(2 * nrow(Y)/3),
+  ONESE = FALSE,
+  ownlambdas = FALSE,
+  alpha = as.double(NULL),
+  recursive = FALSE,
+  C = as.double(NULL),
+  dates = as.character(NULL),
+  intercept = TRUE,
+  tol = 1e-04,
+  window.size = 0,
+  separate_lambdas = FALSE,
+  linear = TRUE,
+  loss = "L2",
+  delta = 2.5,
+  rolling_oos = FALSE
+)
 }
 \arguments{
-\item{Y}{\eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively}
+\item{Y}{\eqn{T \times k} multivariate time series or Y \eqn{T \times (k+m)} endogenous and exogenous series, respectively.}
 
-\item{p}{Predetermined maximal lag order (for modeled series)}
+\item{p}{Predetermined maximal lag order (for modeled series).}
 
 \item{struct}{The choice of penalty structure (see details).}
 
 \item{gran}{vector of penalty parameter specifications.}
 
-\item{RVAR}{True or False: option to refit based upon the support selected using the Relaxed-VAR procedure}
+\item{RVAR}{True or False: option to refit based upon the support selected using the Relaxed-VAR procedure.}
 
-\item{h}{Desired forecast horizon}
+\item{h}{Desired forecast horizon.}
 
 \item{cv}{Cross-validation approach, either "Rolling" for rolling cross-validation or "LOO" for leave-one-out cross-validation.}
 
-\item{MN}{Minnesota Prior Indicator}
+\item{MN}{Minnesota Prior Indicator.}
 
-\item{verbose}{Verbose output while estimating}
+\item{verbose}{Verbose output while estimating.}
 
-\item{IC}{True or False: whether to include AIC and BIC benchmarks}
+\item{IC}{True or False: whether to include AIC and BIC benchmarks.}
 
 \item{VARX}{List containing VARX model specifications.}
 
-\item{T1}{Index of time series in which to start cross validation}
+\item{T1}{Index of time series in which to start cross validation.}
 
-\item{T2}{Index of times series in which to start forecast evaluation}
+\item{T2}{Index of times series in which to start forecast evaluation.}
 
-\item{ONESE}{True or False: whether to use the "One Standard Error Heuristic"}
+\item{ONESE}{True or False: whether to use the "One Standard Error Heuristic."}
 
-\item{ownlambdas}{True or False: Indicator for user-supplied penalty parameters}
+\item{ownlambdas}{True or False: Indicator for user-supplied penalty parameters.}
 
-\item{alpha}{grid of candidate parameters for the alpha in the Sparse Lag and Sparse Own/Other VARX-L}
+\item{alpha}{grid of candidate parameters for the alpha in the Sparse Lag and Sparse Own/Other VARX-L.}
 
-\item{recursive}{True or False: Indicator as to whether iterative multi-step predictions are desired in the VAR context if the forecast horizon is greater than 1}
+\item{recursive}{True or False: Indicator as to whether iterative multi-step predictions are desired in the VAR context if the forecast horizon is greater than 1.}
 
-\item{C}{vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE})}
+\item{C}{vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE}).}
 
-\item{dates}{optional vector of dates corresponding to \eqn{Y}}
+\item{dates}{optional vector of dates corresponding to \eqn{Y}.}
 
-\item{intercept}{True or False: option to fit an intercept}
+\item{intercept}{True or False: option to fit an intercept.}
 
-\item{tol}{optimization tolerance (default 1e-4)}
+\item{tol}{optimization tolerance (default 1e-4).}
 
-\item{window.size}{size of rolling window.  If set to 0 an expanding window will be used. 
+\item{window.size}{size of rolling window.  If set to 0 an expanding window will be used.}
 
+\item{separate_lambdas}{indicator for separate penalty parameters for each time series (default \code{FALSE}).}
 
- @details The choices for "struct" are as follows
+\item{linear}{indicator for linearly decrementing penalty grid (FALSE is log-linear).}
+
+\item{loss}{Loss function to select penalty parameter (one of "L1","L2","Huber").}
+
+\item{delta}{delta parameter for Huber loss (default 2.5)}
+
+\item{rolling_oos}{True or False: indicator to update the penalty parameter over the evaluation period (default \code{False})}
+}
+\description{
+Construct an object of class BigVAR
+}
+\details{
+The choices for "struct" are as follows
 \itemize{
 \item{  "Basic" (Basic VARX-L)}
+\item{  "BasicEN" (Elastic Net VARX-L)}
 \item{  "Lag" (Lag Group VARX-L)} 
 \item{  "SparseLag" (Lag Sparse Group VARX-L)} 
 \item{  "OwnOther" (Own/Other Group VARX-L) }
@@ -77,15 +113,10 @@ The first number in the vector "gran" specifies how deep to construct the penalt
 
 VARX specifications consist of a list with entry k denoting the series that are to be modeled and entry s to denote the maximal lag order for exogenous series.
 
-The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.}
-
-\item{separate_lambdas}{indicator for separate penalty parameters for each time series (default \code{FALSE})}
-}
-\description{
-Construct an object of class BigVAR
+The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.
 }
 \note{
-The specifications "Basic", "Lag," "SparseLag," "SparseOO," and "OwnOther" can accommodate both VAR and VARX models.  EFX only applies to VARX models.  "HVARC," "HVAROO," "HVARELEM," and "Tapered" can only be used with VAR models.
+The specifications "Basic","BasicEN", "Lag," "SparseLag," "SparseOO," and "OwnOther" can accommodate both VAR and VARX models.  EFX only applies to VARX models.  "HVARC," "HVAROO," "HVARELEM," and "Tapered" can only be used with VAR models.
 }
 \examples{
 # VARX Example
@@ -99,7 +130,7 @@ T2=floor(2*nrow(Y)/3)
 Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 }
 \references{
-William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
+Nicholson, William, I. Wilms, J. Bien, and D. S. Matteson. High dimensional forecasting via interpretable vector autoregression. Journal of Machine Learning Research, 21(166):1–52, 2020.
 William B. Nicholson, David S. Matteson, Jacob Bien,VARX-L: Structured regularization for large vector autoregressions with exogenous variables, International Journal of Forecasting, Volume 33, Issue 3, 2017, Pages 627-651,
 William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Tools for Modeling Sparse High-Dimensional Multivariate Time Series" arxiv:1702.07094
 

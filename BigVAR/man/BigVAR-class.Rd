@@ -60,6 +60,12 @@ To construct an object of class BigVAR, use the function \code{\link{constructMo
 \item{\code{window.size}}{size of rolling window.  If set to NULL an expanding window will be used.}
 
 \item{\code{separate_lambdas}}{indicator to use separate penalty parameter for each time series (default \code{FALSE})}
+
+\item{\code{loss}}{Loss function to select penalty parameter (one of "L1","L2","Huber").}
+
+\item{\code{delta}}{delta parameter for Huber loss (default 2.5)}
+
+\item{\code{rolling_oos}}{True or False: indicator to update the penalty parameter over the evaluation period (default \code{False})}
 }}
 
 \seealso{

@@ -20,7 +20,6 @@ MatrixXd backsolve(const MatrixXd& R2, const MatrixXd& R){
 
 }
 
-
 MatrixXd ZmatF(const MatrixXd& Y,  int p, const int k,bool intercept=true,bool oos=false,bool contemp=false,int offset=0)
 {
 
@@ -43,6 +42,7 @@ MatrixXd ZmatF(const MatrixXd& Y,  int p, const int k,bool intercept=true,bool o
 	Y2a.transposeInPlace();
 	VectorXd Y1(Map<VectorXd>(Y2a.data(),Y2a.cols()*Y2a.rows()));
 	int M=T-p-offset;
+   
 	if(contemp){
 		//fixed
 		M+=1;

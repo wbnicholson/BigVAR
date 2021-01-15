@@ -3,7 +3,6 @@
 \docType{package}
 \name{BigVAR}
 \alias{BigVAR}
-\alias{BigVAR-package}
 \title{Dimension Reduction Methods for Multivariate Time Series.}
 \description{
 BigVAR implements the HVAR and VARX-L frameworks which allow for the estimation of vector autoregressions and vector autoregressions with exogenous variables using structured convex penalties.  This package originated as a 2014 Google "Summer of Code" Project.  The development version of this package is hosted on github: \url{http://www.github.com/wbnicholson/BigVAR}.

@@ -33,7 +33,9 @@ int ListMax(List x){
 }
 
 
+
 // Soft thresholding
+// [[Rcpp::export]]
 double ST1a(double z,double gam){
 
 	if(z>0 && gam<fabs(z)) return(z-gam);

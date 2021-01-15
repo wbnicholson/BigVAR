@@ -4,7 +4,19 @@
 \alias{VARXForecastEval}
 \title{Evaluate forecasts from a VAR or VARX with lag orders selected by AIC/BIC}
 \usage{
-VARXForecastEval(Y, X, p, s, T1, T2, IC, h, iterated = FALSE)
+VARXForecastEval(
+  Y,
+  X,
+  p,
+  s,
+  T1,
+  T2,
+  IC,
+  h,
+  iterated = FALSE,
+  loss = "L2",
+  delta = 2.5
+)
 }
 \arguments{
 \item{Y}{a \eqn{T \times k} multivariate time series}
@@ -24,6 +36,10 @@ VARXForecastEval(Y, X, p, s, T1, T2, IC, h, iterated = FALSE)
 \item{h}{desired forecast horizon}
 
 \item{iterated}{indicator as to whether to use iterated or direct multistep forecasts (if applicable, VAR context only)}
+
+\item{loss}{loss function (default "L2", one of "L1","L2","Huber")}
+
+\item{delta}{delta for Huber loss function (default 2.5)}
 }
 \value{
 Returns the one-step ahead MSFE as well as the forecasts over the evaluation period and lag order selected.

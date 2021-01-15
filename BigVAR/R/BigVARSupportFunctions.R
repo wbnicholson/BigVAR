@@ -31,22 +31,42 @@ VARXLagCons <- function(Y,X=NULL,p,s=0,oos=FALSE,contemp=FALSE){
     if(nrow(Y)!=nrow(X)){
         stop("Y and X must have same dimensions")
     }
-    if(s==0){
+    if(s==0 & !contemp){
         m=0
     }else{
         m=ncol(X)
     }
 
     if(p<0|m<0){stop("lag orders must be positive")}
-    k=ncol(Y)
-    
+    k <- ifelse(is.null(Y),ncol(Y),0)    
     XX <- VARXCons(Y,X,k,p,m,s,oos,contemp)
     Y <- t(Y[(max(c(p,s))+1):nrow(Y),])
-return(list(Z=XX,Y=Y))
+    return(list(Z=XX,Y=Y))
 }
 
+.huber_loss <- function(r,delta){
+    l <- ifelse(abs(r)<delta,1/2*abs(r)^2,delta*(abs(r)-1/2*delta))
+    return(l)
+}
+
+.calc.loss <-function(x,univ=FALSE,loss,delta){
+    if(loss=="L1"){
+        l <- sum(abs(x))
+    }else if(loss=="L2"){
+        if(univ){
+            l=x^2
+        }else{
+            l=norm2(x)^2
+        }
+
+    }else if(loss=="Huber"){
+        l=.huber_loss(x,delta)
+        
+    }
+    return(sum(l))
+}
                                         # mean benchmark
-.evalMean <- function(Y,T1,T2,h=1)
+.evalMean <- function(Y,T1,T2,h=1,loss="L2",delta=2.5)
 {
 
     ypredF <- NULL
@@ -76,14 +96,15 @@ return(list(Z=XX,Y=Y))
         uhat <- matrix(Y[u+h-1, ] - ypred, 
                        ncol = k)
 
-        MSFE <- c(MSFE,norm2(uhat)^2)
+        MSFE <- c(MSFE,.calc.loss(uhat,univ=FALSE,loss,delta))
+        ## MSFE <- c(MSFE,norm2(uhat)^2)
 
     }
     return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MSFE))),preds=as.matrix(ypredF)))
 }
 
                                         # random walk benchmark
-.evalRW <- function(Y,T1,T2,h=1)
+.evalRW <- function(Y,T1,T2,h=1,loss="L2",delta=2.5)
 {
 
     if(!"matrix"%in%class(Y)){
@@ -103,22 +124,23 @@ return(list(Z=XX,Y=Y))
         uhat <- matrix(Y[u+h-1, ] - trainY1, 
                        ncol = k)
         
-        MSFE <- c(MSFE,norm2(uhat)^2)
+        ## MSFE <- c(MSFE,norm2(uhat)^2)
+        MSFE <- c(MSFE,.calc.loss(uhat,univ=FALSE,loss,delta))
+        
     }
     return(list(Mean=mean(na.omit(MSFE)),SD=sd(na.omit(MSFE))/sqrt(length(na.omit(MSFE))),preds=as.matrix(ypredF)))
 }
 
                                         # Constructs the Grid of Lambda Values: VAR
-.LambdaGridE<- function (gran1, gran2, jj = jj, Y, Z, group,p,k,MN,alpha,C,intercept,tol,separate_lambdas=FALSE,verbose=FALSE) 
+.LambdaGridE<- function (gran1, gran2, jj = jj, Y, Z, group,p,k,MN,alpha,C,intercept,tol,separate_lambdas=FALSE,verbose=FALSE,linear=FALSE) 
 {
-
+    ## browser()
     if (group == "Lag") {
         mat <- list()
         for (i in 1:length(jj)) {
             if(k>1){
                 mat[[i]] <- norm2(Z[jj[[i]], ]%*%Y)
             }
-
             else{
                 mat[[i]] <- norm2(t(Y)%*%Z[jj[[i]],])
             }
@@ -127,14 +149,31 @@ return(list(Z=XX,Y=Y))
     }
     if (group == "Basic"|group=="Tapered"|group=="BasicEN") {
         if(!separate_lambdas ){
-            gamstart <- max(t(Y) %*% t(Z))
+            ## browser()
+            if(group == "Basic"|group=="Tapered"){
+                gamstart <- max(abs(t(Y) %*% t(Z)))
+                }else{
+                    gamstart <- max(abs(t(Y) %*% t(Z)))/alpha
+                    }
+            ## print(gamstart)
         }else{
             gamstart <- c()
             for(i in 1:k){
-                gamstart[i] <- max(t(Y[,i,drop=F]) %*% t(Z))
+
+                if(group == "Basic"|group=="Tapered"){
+                    gamstart[i] <- max(abs(t(Y[,i,drop=F]) %*% t(Z)))
+                }else{
+                    gamstart[i] <- max(abs(t(Y[,i,drop=F]) %*% t(Z)))/alpha
+                }  
             }
         }
     }
+
+    ## if (group == "MCP"|group=="SCAD") {
+    ##     ## browser()
+    ##     gamstart <- max(abs(crossprod(t(Z),Y)))/nrow(Y)
+    ## }
+
 
     if (group == "SparseLag") {
 
@@ -228,10 +267,14 @@ return(list(Z=XX,Y=Y))
 
     if(!separate_lambdas){
         gamstart <- LGSearch(gamstart,Y,Z,beta,group,k,p,jj,MN,alpha,C,intercept,tol)
-
-        gamm <- exp(seq(from = log(gamstart), to = log(gamstart/gran1), 
-                        length = gran2))
-
+        if(!linear){
+            gamm <- exp(seq(from = log(gamstart), to = log(gamstart/gran1), 
+                            length = gran2))
+        }else{
+            gamm <- exp(seq(from = gamstart, to = gamstart/gran1, 
+                            length = gran2))
+            
+        }
     }else{
 
         gamm <- matrix(NA,nrow=c(gran2),ncol=k)
@@ -242,6 +285,7 @@ return(list(Z=XX,Y=Y))
             if(verbose & i %%20==0){
                 print( sprintf('determined lambda grid for series %s',i))
             }
+            
             gamm[,i] <- exp(seq(from = log(gamstart[i]), to = log(gamstart[i]/gran1), 
                                 length = gran2))
 
@@ -295,19 +339,34 @@ return(list(Z=XX,Y=Y))
     }
 
     if (group == "Basic"|group=="BasicEN") {
-        
-        ## gamstart <- max(t(Y)%*%t(Z))
-
         if(!separate_lambdas ){
-            gamstart <- max(t(Y) %*% t(Z))
+            ## browser()
+            if(group == "Basic"){
+                gamstart <- max(abs(t(Y) %*% t(Z)))
+                }else{
+                    gamstart <- max(abs(t(Y) %*% t(Z)))/alpha
+                    }
+            ## print(gamstart)
         }else{
             gamstart <- c()
-            for(i in 1:k1){
-                gamstart[i] <- max(t(Y[,i,drop=F]) %*% t(Z))
-            }
+            for(i in 1:k){
 
+                if(group == "Basic"){
+                    gamstart[i] <- max(abs(t(Y[,i,drop=F]) %*% t(Z)))
+                }else{
+                    gamstart[i] <- max(abs(t(Y[,i,drop=F]) %*% t(Z)))/alpha
+                }  
+            }
         }
     }
+
+
+    ## if (group == "MCP"|group=="SCAD") {
+    ##     ## browser()
+    ##     gamstart <- max(abs(crossprod(t(Z),Y)))/nrow(Y)
+
+    ## }
+
 
     if (group == "SparseLag") {
 
@@ -449,7 +508,7 @@ return(list(Z=XX,Y=Y))
 }
 
                                         # Forecast evaluation: VARX (called in cv.bigvar)
-.BigVAREVALX <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alpha,C,intercept,tol,window.size,separate_lambdas)
+.BigVAREVALX <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alpha,C,intercept,tol,window.size,separate_lambdas,loss="L2",delta=2.5)
 {
     VARX <- TRUE
     if(contemp){
@@ -468,7 +527,7 @@ return(list(Z=XX,Y=Y))
     gamm <- gamopt
     if(separate_lambdas){
         gamm <- matrix(gamm,nrow=1,ncol=k1 )
-                       
+        
     }
 
     Y <- ZFull$Y
@@ -538,8 +597,8 @@ return(list(Z=XX,Y=Y))
     ##     betaArray <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,nrow(MSFE)))
 
     ## }else{
-        MSFE <- rep(NA,length((T2+1):T))
-        betaArray <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,length(MSFE)))
+    MSFE <- rep(NA,length((T2+1):T))
+    betaArray <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,length(MSFE)))
     ## }
 
     for (v in (T2-h+2):T) {
@@ -556,7 +615,7 @@ return(list(Z=XX,Y=Y))
             
             trainY <- ZFull$Y[h:(v-1), ]
 
-            trainZ <- ZFull$Z[,1:(v-h)]
+            trainZ <- ZFull$Z[,1:(v-h),drop=F]
 
         }
         
@@ -589,7 +648,7 @@ return(list(Z=XX,Y=Y))
         }
         
 
-        if(MN & !intercept){
+        if(MN ){
             
             eZ <- matrix(ZFull$Z[,v],ncol=1)
 
@@ -609,13 +668,16 @@ return(list(Z=XX,Y=Y))
             ##             MSFE[v-T2+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T2+h-1,uu])^2
             ##         }
             ## }else{
-            MSFE[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+            ## MSFE[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+            MSFE[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ,univ=FALSE,loss,delta)
 
+            
             ## preds[v-T2+h-1,] <-  betaEVAL[,2:ncol(betaEVAL)] %*% eZ
 
             diag(beta[,2:(k1+1),1]) <- diag(beta[,2:(k1+1),1])-C # subtract one for warm start purposes 
             ## }
         }else{
+            ## browser()
             preds[v-T2+h-1,] <- betaEVAL %*% eZ
             ## if(separate_lambdas){
 
@@ -623,10 +685,13 @@ return(list(Z=XX,Y=Y))
             ##             ## browser()
             ##             MSFE[v-T2+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T2+h-1,uu])^2
             ##         }
-                ## }else{
+            ## }else{
 
-            MSFE[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL %*% eZ)^2
-                    ## }
+            ## MSFE[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL %*% eZ)^2
+
+            MSFE[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1,1:k1] - betaEVAL %*% eZ,univ=FALSE,loss,delta)
+
+            ## }
             
         }
 
@@ -642,7 +707,7 @@ return(list(Z=XX,Y=Y))
 
     temp <- .BigVAR.fit(group,beta,ZFull$Z,ZFull$Y,gamm,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk,palpha)
     betaPred <- temp$beta        
-
+    ## browser()
     betaPred <- as.matrix(betaPred[,,1])
 
     
@@ -652,8 +717,1060 @@ return(list(Z=XX,Y=Y))
 }
 
 
+
+                                        # BigVAR with incremental re-estimation 
+.BigVAREVAL_rolling <- function(ZFull,MSFE,gamm,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,alpha,recursive,C,intercept,tol,window.size,separate_lambdas,loss,delta,ONESE)
+{
+    ## VARX <- TRUE
+    ## if(contemp){
+    ##     s1 <- 1
+
+    ## }else{
+
+    ##     s1 <- 0
+
+    ## }
+    s=0;k1=0;s1=0;m=0
+    preds <- matrix(NA,nrow=length((T2+1):T),ncol=k)
+    gran2 <- nrow(gamm)
+    ## if(separate_lambdas){
+    ##     gamm <- matrix(gamm,nrow=1,ncol=k )
+    
+    ## }
+
+
+    if(verbose)
+    {
+
+        print("Evaluation Stage")
+
+        pb <- txtProgressBar(min = T2-h+2, max = T, style = 3)
+
+    }
+
+    Y <- ZFull$Y
+
+
+    betaArray <-  array(0,dim=c(k,p*k+1,dim(MSFE)[1]))
+
+    beta <-  array(0,dim=c(k,p*k+1,nrow(gamm)))
+
+    
+    kk <- NULL
+    jj <- NULL
+    jjcomp <- NULL
+    activeset <- NULL
+    q1a <- NULL
+    if (group == "Lag"){
+
+        jj <- .groupfuncpp(p,k)
+
+        jjcomp <- .groupfuncomp(p,k)
+
+        activeset <- rep(list(rep(rep(list(0), length(jj)))), 
+                         gran2)
+
+    }else if (group == "SparseLag"){
+
+        jj <- .groupfun(p, k)
+
+        q1a <- list()
+
+        for (i in 1:(p)) {
+
+            q1a[[i]] <- matrix(runif(k, -1, 1), ncol = 1)
+
+        }
+
+        activeset <- rep(list(rep(rep(list(0), length(jj)))), 
+                         gran2)
+
+        
+
+    }else if (group == "OwnOther"){
+
+
+        kk <- .lfunction3cpp(p, k)
+
+        activeset <- rep(list(rep(rep(list(0), length(kk)))), 
+                         gran2)
+
+    }else if (group == "SparseOO") {
+
+        kk <- .lfunction3cpp(p, k)
+
+        jjcomp <- .lfunctioncomp(p,k)
+
+        jj=.lfunction3(p,k)
+
+        activeset <- rep(list(rep(rep(list(0), length(kk)))), 
+                         gran2)
+
+        q1a <- list()
+
+        for (i in 1:(2*p))
+        {
+
+            q1a[[i]] <- matrix(runif(length(kk[[i]]), -1, 1), ncol = 1)
+
+        }
+
+    }else{
+
+        kk=NULL
+        jj=NULL
+        activeset=NULL
+        jjcomp=NULL
+        
+    }
+    if(!separate_lambdas){
+        MSFE_oos <- c()
+    }else{
+        MSFE_oos <- matrix()
+    }
+    gamm_evolve <- c()
+    MSFE_old <- MSFE
+    ## browser()
+    for(v in (T2-h+2):T){
+
+        if(h>1 & !recursive){
+
+            if(window.size!=0){
+                ws1 <- max(c(v-window.size-h,1))
+                trainY <- ZFull$Y[(ws1+h):(v-1), ]
+                trainZ <- ZFull$Z[, (ws1+h):(v-h)]         
+            }else{
+
+                trainY <- ZFull$Y[(h):(v-1), ]
+                
+                trainZ <- ZFull$Z[, 1:(v-h)]
+            }
+            
+        }else{
+            if(window.size!=0){
+                ws1 <- max(c(v-window.size,1))
+                trainY <- ZFull$Y[(ws1):(v-1), ]
+                trainZ <- ZFull$Z[, (ws1):(v-1)]         
+            }else{
+                trainY <- ZFull$Y[(1):(v-1), ]                       
+                trainZ <- ZFull$Z[, (1):(v-1)]
+            }
+        }
+        
+
+        if(v+h-1>T){
+            break
+        }
+
+        dual <- FALSE
+        if(!group%in%c("SparseLag","SparseOO")){
+            q1a <- NULL
+        }
+        ## browser()
+        VARX <- FALSE
+        temp <- .BigVAR.fit(group,beta,trainZ,trainY,gamm,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk,palpha)
+        beta <- temp$beta
+        activeset <- temp$activeset
+        q1a <- temp$q1a
+        
+
+        if(MN ){
+            
+            eZ <- matrix(ZFull$Z[,v],ncol=1)
+
+        }else{
+
+            eZ <- matrix(c(1,ZFull$Z[,v]),ncol=1)
+
+        }
+        ## browser()
+        ## abind::adrop(beta[,,1,drop=F],3)
+        if(!ONESE & !separate_lambdas){
+            optind <- max(which(colMeans(na.omit(MSFE))==min(colMeans(na.omit(MSFE)))))
+
+            gamm_opt <- apply(MSFE,1,which.min)
+
+            gamopt <- gamm[optind]
+        }else if(ONESE & !separate_lambdas){
+
+            MSFE2 <- MSFE 
+            G2 <- colMeans(na.omit(MSFE2))
+            G3 <- sd(na.omit(MSFE2))/sqrt(nrow(na.omit(MSFE2)))
+            optind <- min(which(G2<(min(G2)+G3)))
+            gamopt <- gamm[optind]
+
+            
+        }else if (separate_lambdas){
+            ## browser()
+            if(ONESE){
+                MSFES <- t(apply(MSFE,3,colMeans))
+                sds <- t(apply(MSFE,3,function(x)sd(na.omit(x))/sqrt(nrow(na.omit(x)))))
+                ## for()
+                ## optinds <- apply(MSFES,2,function(x)min(which(x<x+sds)))
+                gamopt <- c()
+                optinds <- c()
+                for(i in 1:nrow(MSFES)){
+                    optinds[i] <- min(which(MSFES[i,]<sds[i]+min(MSFES[i,])))
+                    gamopt[i] <- gamm[optinds[i],i,drop=F]
+                }
+                optind=optinds
+            }else{
+                ## MSFES <- t(apply(MSFE,3,colMeans))
+                ## browser()
+                ## G3 <- sd(na.omit(MSFE2))/sqrt(nrow(na.omit(MSFE2)))
+                ## optind <- min(which(G2<(min(G2)+G3)))
+                ## gamopt <- gamm[optind]
+
+
+                MSFES <- t(apply(MSFE,3,colMeans))
+                optinds <- apply(MSFES,1,which.min)
+                ## optinds <- sapply(MSFES,which.min)
+                ## browser()
+                gamopt <- c()
+                for(i in 1:nrow(MSFES)){
+                    gamopt[i] <- gamm[optinds[i],i]
+                }
+                optind=optinds
+
+
+            }
+
+
+        }
+        
+        
+        gamm_evolve <- rbind(gamm_evolve,gamopt)
+        if(!separate_lambdas){
+            MSFE_temp <- matrix(0,nrow=1,ncol=length(gamm))
+        }else{
+            MSFE_temp <- array(0,dim=c(1,nrow(gamm),ncol(ZFull$Y)))
+            temp_loss <- matrix(0,nrow=1,ncol=k)
+        }
+        ## browser()
+        for(ii in 1:nrow(gamm)){
+            betaEVAL <-  abind::adrop(beta[,,ii,drop=F],3)
+
+            
+            if (RVAR) {
+                
+                betaEVAL <- RelaxedLS(cbind(t(trainZ),trainY),betaEVAL,k,p,0,0)      
+                
+            }
+
+            
+            if(MN){
+                if(h>1 & recursive){
+
+                    ptemp <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+
+                    pred <- matrix(ptemp,nrow=1)
+
+                    
+                    if(ii%in%optind){
+                        preds[v-T2+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
+                        if(separate_lambdas){
+                            inds <- which(optind==ii)
+                            for(j in 1:ncol(ZFull$Y)){
+                                if(j%in%inds){
+                                    ## MSFE_oos[v-T2+h-1,j] <- .calc.loss(ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j],univ=FALSE,loss,delta)
+                                    temp_loss[,j] <- ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j]
+
+                                    betaArray[j,,v-T2+h-1] <- betaEVAL[j,]    
+                                    preds[v-T2+h-1,j] <- preds[v-T2+h-1,j]   ## betaEVAL[j,2:ncol(betaEVAL),drop=F] %*% eZ                
+
+                                }
+                            }
+
+
+                        }else{
+                            MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1] - preds[v-T2+h-1,],univ=FALSE,loss,delta)
+                        }
+                    }
+                    ptemp2 <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
+                    if(separate_lambdas){
+                        for(j in 1:ncol(ZFull$Y)){
+
+                            MSFE_temp[1,ii,j] <- .calc.loss(ZFull$Y[v+h-1,j] - ptemp[j,1],univ=FALSE,loss,delta)
+                        }
+                    }else{
+                        MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,] - ptemp,univ=FALSE,loss,delta)## norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                    }
+                }else{     
+                    
+                    if(ii%in%optind){
+
+                        preds[v-T2+h-1,] <-  betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+                        ## MSFE_oos[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                        if(separate_lambdas){
+                            inds <- which(optind==ii)
+                            for(j in 1:ncol(ZFull$Y)){
+                                if(j%in%inds){
+                                    temp_loss[,j] <- ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j]
+
+                                    betaArray[j,,v-T2+h-1] <- betaEVAL[j,]    
+                                    preds[v-T2+h-1,j] <- betaEVAL[j,2:ncol(betaEVAL),drop=F] %*% eZ                
+
+                                }
+                            }
+                            ## MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j],univ=FALSE,loss,delta)
+                        }else{
+                            MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1,] - preds[v-T2+h-1,],univ=FALSE,loss,delta)
+                        }
+                    }
+                    if(separate_lambdas){
+                        for(j in 1:ncol(ZFull$Y)){
+
+                            MSFE_temp[1,ii,j] <- .calc.loss(ZFull$Y[v+h-1,j] - betaEVAL[j,2:ncol(betaEVAL)] %*% eZ,univ=FALSE,loss,delta)
+                        }
+                    }else{
+                        MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ,univ=FALSE,loss,delta)## norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                    }
+                    diag(beta[,2:(dim(beta)[2]),ii]) <- diag(beta[,2:(dim(beta)[2]),ii])-C # subtract one for warm start purposes
+                }
+            }else{
+
+                if(h>1&recursive){
+                    ptemp <- betaEVAL %*% eZ
+
+                    pred <- matrix(ptemp,nrow=1)
+
+                    
+                    if(ii%in%optind){
+                        preds[v-T2+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL,p,FALSE)
+
+                        if(separate_lambdas){
+
+                            inds <- which(optind==ii)
+                            for(j in 1:ncol(ZFull$Y)){
+                                if(j%in%inds){
+                                    temp_loss <- ZFull$Y[v+h-1,j] - betaEVAL[j,] %*% eZ
+                                    betaArray[j,,v-T2+h-1] <- betaEVAL[j,]    
+                                    preds[v-T2+h-1,j] <- betaEVAL[j,] %*% eZ                
+
+                                }
+                            }
+                        }else{
+                            MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1] - preds[v-T2+h-1,],univ=FALSE,loss,delta)
+                        }
+                    }
+                    ptemp2 <- predictMS(pred,trainY,h-1,betaEVAL,p,FALSE)
+                    if(separate_lambdas){
+
+
+                        for(j in 1:ncol(ZFull$Y)){
+
+                            MSFE_temp[1,ii,j] <- .calc.loss(ZFull$Y[v+h-1,j] - ptemp2[j],univ=FALSE,loss,delta)
+                        }
+
+                    }else{
+                        
+                        
+                        MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,] - ptemp2,univ=FALSE,loss,delta)## norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                    }
+                }else{
+                    
+                    if(ii%in%optind){
+                        ## browser()
+
+                        if(separate_lambdas){
+
+                            inds <- which(optind==ii)
+                            for(j in 1:ncol(ZFull$Y)){
+                                if(j%in%inds){
+                                    temp_loss[,j] <- ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j] %*% eZ
+
+                                    betaArray[j,,v-T2+h-1] <- betaEVAL[j,]    
+                                    preds[v-T2+h-1,j] <- betaEVAL %*% eZ                
+                                    ## MSFE_oos[v-T2+h-1] <-.calc.loss(ZFull$Y[v+h-1,] - preds[v-T2+h-1,],univ=FALSE,loss,delta) ## norm2(ZFull$Y[v+h-1,1:k1] - betaEVA                      
+                                }
+                            }
+                        }else{
+
+                            
+                            if(!separate_lambdas){
+
+                                betaArray[,,v-T2+h-1] <- betaEVAL    
+
+                                preds[v-T2+h-1,] <- betaEVAL %*% eZ
+                                
+                                MSFE_oos[v-T2+h-1] <-.calc.loss(ZFull$Y[v+h-1,] - preds[v-T2+h-1,],univ=FALSE,loss,delta) ## norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL %*% eZ)^2
+                            }
+
+                            if(separate_lambdas){
+                                for(j in 1:ncol(ZFull$Y)){
+                                    MSFE_temp[1,ii,j] <- ZFull$Y[v+h-1,j] - betaEVAL[j,] %*% eZ
+                                    
+                                }
+                            }else{          
+                                MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,] - betaEVAL %*% eZ,univ=FALSE,loss,delta)
+                            }
+                        }
+                        
+                        ## if(v>T2-h+2){browser()}
+                        ## MSFE_temp[1,ii] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL %*% eZ)^2
+                    }
+
+                }
+            }
+        }
+        if(!separate_lambdas){    
+            MSFE <- rbind(MSFE,MSFE_temp)
+            MSFE <- MSFE[2:nrow(MSFE),]
+        }else{
+            MSFE <- abind::abind(MSFE,MSFE_temp,along=1)
+            MSFE <- MSFE[2:dim(MSFE)[1],,]
+        }
+        if(verbose){
+
+            setTxtProgressBar(pb, v)
+
+        }
+        
+        if(separate_lambdas){
+            MSFE_oos[v-T2+h-1] <- .calc.loss(temp_loss,univ=FALSE,loss,delta)
+        }
+    }
+    ## browser()
+    betaPred <- betaEVAL
+    
+    return(list(MSFE=MSFE_oos,betaPred=betaPred,predictions=preds,betaArray=betaArray,gamm_evolve=gamm_evolve))
+    
+
+}
+
+
+
+.BigVAREVALX_rolling <- function(ZFull,MSFE,gamm,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contempalpha,recursive,C,intercept,tol,window.size,separate_lambdas,loss,delta,ONESE)
+{
+    VARX <- TRUE
+    if(contemp){
+        s1 <- 1
+
+    }else{
+
+        s1 <- 0
+
+    }
+    ## s=0;k1=0;s1=0;m=0
+    preds <- matrix(NA,nrow=length((T2+1):T),ncol=k1)
+    gran2 <- nrow(gamm)
+    ## if(separate_lambdas){
+    ##     gamm <- matrix(gamm,nrow=1,ncol=k )
+    
+    ## }
+
+
+    if(verbose)
+    {
+
+        print("Evaluation Stage")
+
+        pb <- txtProgressBar(min = T2-h+2, max = T-h, style = 3)
+
+    }
+
+    Y <- ZFull$Y
+
+
+    beta <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,gran2))  
+
+
+    ## beta <-  array(0,dim=c(k,p*k+1,nrow(gamm)))
+
+    
+    kk <- NULL
+    jj <- NULL
+    jjcomp <- NULL
+    activeset <- NULL
+    q1a <- NULL
+    if (group == "Lag") {
+
+        jj <- groupfunVARX(p,k,k1,s+s1)
+
+        jjcomp <- groupfunVARXcomp(p,k,k1,s+s1)
+
+        activeset <- rep(list(rep(rep(list(0), length(jj)))), 
+                         gran2)
+
+    }else if (group == "SparseLag") {
+
+        jj <- groupfunVARX(p, k,k1,s+s1)
+
+        q1a <- list()
+
+        for (i in 1:(p+s+s1)) {
+
+            q1a[[i]] <- matrix(runif(k1, -1, 1), ncol = 1)
+
+        }
+
+        activeset <- rep(list(rep(rep(list(0), length(jj)))), 
+                         gran2)
+
+
+    }else if (group == "OwnOther") {
+
+        kk <- diaggroupfunVARX(p, k,k1,s+s1)
+        activeset <- rep(list(rep(rep(list(0), length(kk)))), 
+                         gran2)
+    }else if (group == "SparseOO") {
+
+        kk <- diaggroupfunVARX(p, k,k1,s+s1)
+
+        activeset <- rep(list(rep(rep(list(0), length(kk)))), 
+                         gran2)
+    }else{
+
+        jj <- NULL
+        kk <- NULL
+        activeset <- NULL
+    }
+    ## if(!separate_lambdas){
+        MSFE_oos <- c()
+    ## }else{
+    ##     MSFE_oos <- matrix()
+    ## }
+    gamm_evolve <- c()
+    MSFE_old <- MSFE
+    ## browser()
+    for(v in (T2-h+2):T){
+
+        if(h>1 & !recursive){
+
+            if(window.size!=0){
+                ws1 <- max(c(v-window.size-h,1))
+                trainY <- ZFull$Y[(ws1+h):(v-1), ]
+                trainZ <- ZFull$Z[, (ws1+h):(v-h)]         
+            }else{
+
+                trainY <- ZFull$Y[(h):(v-1), ]
+                
+                trainZ <- ZFull$Z[, 1:(v-h)]
+            }
+            
+        }else{
+            if(window.size!=0){
+                ws1 <- max(c(v-window.size,1))
+                trainY <- ZFull$Y[(ws1):(v-1), ]
+                trainZ <- ZFull$Z[, (ws1):(v-1)]         
+            }else{
+                trainY <- ZFull$Y[(1):(v-1), ]                       
+                trainZ <- ZFull$Z[, (1):(v-1)]
+            }
+        }
+        
+
+        if(v+h-1>T){
+            break
+        }
+
+        dual <- FALSE
+        if(!group%in%c("SparseLag","SparseOO")){
+            q1a <- NULL
+        }
+        ## browser()
+        temp <- .BigVAR.fit(group,beta,trainZ,trainY,gamm,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk,palpha)
+        beta <- temp$beta
+        activeset <- temp$activeset
+        q1a <- temp$q1a
+        
+
+        if(MN ){
+            
+            eZ <- matrix(ZFull$Z[,v],ncol=1)
+
+        }else{
+
+            eZ <- matrix(c(1,ZFull$Z[,v]),ncol=1)
+
+        }
+        ## browser()
+        ## abind::adrop(beta[,,1,drop=F],3)
+        if(!ONESE & !separate_lambdas){
+            optind <- max(which(colMeans(na.omit(MSFE))==min(colMeans(na.omit(MSFE)))))
+
+            gamm_opt <- apply(MSFE,1,which.min)
+
+            gamopt <- gamm[optind]
+        }else if(ONESE & !separate_lambdas){
+
+            MSFE2 <- MSFE 
+            G2 <- colMeans(na.omit(MSFE2))
+            G3 <- sd(na.omit(MSFE2))/sqrt(nrow(na.omit(MSFE2)))
+            optind <- min(which(G2<(min(G2)+G3)))
+            gamopt <- gamm[optind]
+
+            
+        }else if (separate_lambdas){
+            ## browser()
+            if(ONESE){
+                MSFES <- t(apply(MSFE,3,colMeans))
+                sds <- t(apply(MSFE,3,function(x)sd(na.omit(x))/sqrt(nrow(na.omit(x)))))
+                ## for()
+                ## optinds <- apply(MSFES,2,function(x)min(which(x<x+sds)))
+                gamopt <- c()
+                optinds <- c()
+                for(i in 1:nrow(MSFES)){
+                    optinds[i] <- min(which(MSFES[i,]<sds[i]+min(MSFES[i,])))
+                    gamopt[i] <- gamm[optinds[i],i,drop=F]
+                }
+                optind=optinds
+            }else{
+                ## MSFES <- t(apply(MSFE,3,colMeans))
+                ## browser()
+                ## G3 <- sd(na.omit(MSFE2))/sqrt(nrow(na.omit(MSFE2)))
+                ## optind <- min(which(G2<(min(G2)+G3)))
+                ## gamopt <- gamm[optind]
+
+
+                MSFES <- t(apply(MSFE,3,colMeans))
+                optinds <- apply(MSFES,1,which.min)
+                ## optinds <- sapply(MSFES,which.min)
+                ## browser()
+                gamopt <- c()
+                for(i in 1:nrow(MSFES)){
+                    gamopt[i] <- gamm[optinds[i],i]
+                }
+                optind=optinds
+
+
+            }
+
+
+        }
+        
+        
+        gamm_evolve <- rbind(gamm_evolve,gamopt)
+        if(!separate_lambdas){
+            MSFE_temp <- matrix(0,nrow=1,ncol=length(gamm))
+        }else{
+            MSFE_temp <- array(0,dim=c(1,nrow(gamm),ncol(ZFull$Y)))
+            temp_loss <- matrix(0,nrow=1,ncol=k1)
+        }
+        ## browser()
+        for(ii in 1:nrow(gamm)){
+            betaEVAL <-  abind::adrop(beta[,,ii,drop=F],3)
+
+            
+            if (RVAR) {
+                
+            betaEVAL <- RelaxedLS(cbind(t(trainZ),trainY),betaEVAL,k,p,k1,s)      
+                
+            }
+
+            
+            if(MN){
+                if(h>1 & recursive){
+
+                    ptemp <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+
+                    pred <- matrix(ptemp,nrow=1)
+
+                    
+                    if(ii%in%optind){
+                        preds[v-T2+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
+                        if(separate_lambdas){
+                            inds <- which(optind==ii)
+                            for(j in 1:ncol(ZFull$Y)){
+                                if(j%in%inds){
+                                    ## MSFE_oos[v-T2+h-1,j] <- .calc.loss(ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j],univ=FALSE,loss,delta)
+                                    temp_loss[,j] <- ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j]
+
+                                    betaArray[j,,v-T2+h-1] <- betaEVAL[j,]    
+                                    preds[v-T2+h-1,j] <- preds[v-T2+h-1,j]   ## betaEVAL[j,2:ncol(betaEVAL),drop=F] %*% eZ                
+
+                                }
+                            }
+
+
+                        }else{
+                            MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1] - preds[v-T2+h-1,],univ=FALSE,loss,delta)
+                        }
+                    }
+                    ptemp2 <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
+                    if(separate_lambdas){
+                        for(j in 1:ncol(ZFull$Y)){
+
+                            MSFE_temp[1,ii,j] <- .calc.loss(ZFull$Y[v+h-1,j] - ptemp[j,1],univ=FALSE,loss,delta)
+                        }
+                    }else{
+                        MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,] - ptemp,univ=FALSE,loss,delta)## norm2(ZFull$Y[v+h-1,1:k11] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                    }
+                }else{     
+                    
+                    if(ii%in%optind){
+
+                        preds[v-T2+h-1,] <-  betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+                        ## MSFE_oos[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k11] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                        if(separate_lambdas){
+                            inds <- which(optind==ii)
+                            for(j in 1:ncol(ZFull$Y)){
+                                if(j%in%inds){
+                                    temp_loss[,j] <- ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j]
+
+                                    betaArray[j,,v-T2+h-1] <- betaEVAL[j,]    
+                                    preds[v-T2+h-1,j] <- betaEVAL[j,2:ncol(betaEVAL),drop=F] %*% eZ                
+
+                                }
+                            }
+                            ## MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j],univ=FALSE,loss,delta)
+                        }else{
+                            MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1,] - preds[v-T2+h-1,],univ=FALSE,loss,delta)
+                        }
+                    }
+                    if(separate_lambdas){
+                        for(j in 1:ncol(ZFull$Y)){
+
+                            MSFE_temp[1,ii,j] <- .calc.loss(ZFull$Y[v+h-1,j] - betaEVAL[j,2:ncol(betaEVAL)] %*% eZ,univ=FALSE,loss,delta)
+                        }
+                    }else{
+                        MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ,univ=FALSE,loss,delta)## norm2(ZFull$Y[v+h-1,1:k11] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                    }
+                    diag(beta[,2:(dim(beta)[2]),ii]) <- diag(beta[,2:(dim(beta)[2]),ii])-C # subtract one for warm start purposes
+                }
+            }else{
+
+                if(h>1&recursive){
+                    ptemp <- betaEVAL %*% eZ
+
+                    pred <- matrix(ptemp,nrow=1)
+
+                    
+                    if(ii%in%optind){
+                        preds[v-T2+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL,p,FALSE)
+
+                        if(separate_lambdas){
+
+                            inds <- which(optind==ii)
+                            for(j in 1:ncol(ZFull$Y)){
+                                if(j%in%inds){
+                                    temp_loss <- ZFull$Y[v+h-1,j] - betaEVAL[j,] %*% eZ
+                                    betaArray[j,,v-T2+h-1] <- betaEVAL[j,]    
+                                    preds[v-T2+h-1,j] <- betaEVAL[j,] %*% eZ                
+
+                                }
+                            }
+                        }else{
+                            MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1] - preds[v-T2+h-1,],univ=FALSE,loss,delta)
+                        }
+                    }
+                    ptemp2 <- predictMS(pred,trainY,h-1,betaEVAL,p,FALSE)
+                    if(separate_lambdas){
+
+
+                        for(j in 1:ncol(ZFull$Y)){
+
+                            MSFE_temp[1,ii,j] <- .calc.loss(ZFull$Y[v+h-1,j] - ptemp2[j],univ=FALSE,loss,delta)
+                        }
+
+                    }else{
+                        
+                        
+                        MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,] - ptemp2,univ=FALSE,loss,delta)## norm2(ZFull$Y[v+h-1,1:k11] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                    }
+                }else{
+                    
+                    if(ii%in%optind){
+                        ## browser()
+
+                        if(separate_lambdas){
+
+                            inds <- which(optind==ii)
+                            for(j in 1:ncol(ZFull$Y)){
+                                if(j%in%inds){
+                                    temp_loss[,j] <- ZFull$Y[v+h-1,j] - preds[v-T2+h-1,j] %*% eZ
+
+                                    betaArray[j,,v-T2+h-1] <- betaEVAL[j,]    
+                                    preds[v-T2+h-1,j] <- betaEVAL %*% eZ                
+                                    ## MSFE_oos[v-T2+h-1] <-.calc.loss(ZFull$Y[v+h-1,] - preds[v-T2+h-1,],univ=FALSE,loss,delta) ## norm2(ZFull$Y[v+h-1,1:k11] - betaEVA                      
+                                }
+                            }
+                        }else{
+
+                            
+                            if(!separate_lambdas){
+
+                                betaArray[,,v-T2+h-1] <- betaEVAL    
+
+                                preds[v-T2+h-1,] <- betaEVAL %*% eZ
+                                
+                                MSFE_oos[v-T2+h-1] <-.calc.loss(ZFull$Y[v+h-1,] - preds[v-T2+h-1,],univ=FALSE,loss,delta) ## norm2(ZFull$Y[v+h-1,1:k11] - betaEVAL %*% eZ)^2
+                            }
+
+                            if(separate_lambdas){
+                                for(j in 1:ncol(ZFull$Y)){
+                                    MSFE_temp[1,ii,j] <- ZFull$Y[v+h-1,j] - betaEVAL[j,] %*% eZ
+                                    
+                                }
+                            }else{          
+                                MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,] - betaEVAL %*% eZ,univ=FALSE,loss,delta)
+                            }
+                        }
+                        
+                        ## if(v>T2-h+2){browser()}
+                        ## MSFE_temp[1,ii] <- norm2(ZFull$Y[v+h-1,1:k11] - betaEVAL %*% eZ)^2
+                    }
+
+                }
+            }
+        }
+        if(!separate_lambdas){    
+            MSFE <- rbind(MSFE,MSFE_temp)
+            MSFE <- MSFE[2:nrow(MSFE),]
+        }else{
+            MSFE <- abind::abind(MSFE,MSFE_temp,along=1)
+            MSFE <- MSFE[2:dim(MSFE)[1],,]
+        }
+        if(verbose){
+
+            setTxtProgressBar(pb, v)
+
+        }
+        
+        if(separate_lambdas){
+            MSFE_oos[v-T2+h-1] <- .calc.loss(temp_loss,univ=FALSE,loss,delta)
+        }
+    }
+    ## browser()
+    betaPred <- betaEVAL
+    
+    return(list(MSFE=MSFE_oos,betaPred=betaPred,predictions=preds,betaArray=betaArray,gamm_evolve=gamm_evolve))
+    
+
+}
+
+
+
+
+                                        # BigVAR with incremental re-estimation 
+.BigVAREVALX_rolling <- function(ZFull,MSFE,gamm,k,p,group,h,MN,verbose,RVAR,palpha,T2,T,k1,s,m,contemp,alpha,C,intercept,tol,window.size,separate_lambdas,loss,delta)
+{
+    VARX <- TRUE
+    if(contemp){
+        s1 <- 1
+
+    }else{
+
+        s1 <- 0
+
+    }
+
+    if(verbose)
+    {
+
+        print("Evaluation Stage")
+
+        pb <- txtProgressBar(min = T2-h+2, max = T, style = 3)
+
+    }
+    
+    preds <- matrix(NA,nrow=length((T2+1):T),ncol=k1)
+    gran2 <- length(gamm)
+    if(separate_lambdas){
+        gamm <- matrix(gamm,nrow=1,ncol=k1 )
+        
+    }
+
+    Y <- ZFull$Y
+
+    beta <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,gran2))  
+
+    kk <- NULL
+    jj <- NULL
+    jjcomp <- NULL
+    activeset <- NULL
+    q1a <- NULL
+    if (group == "Lag") {
+
+        jj <- groupfunVARX(p,k,k1,s+s1)
+
+        jjcomp <- groupfunVARXcomp(p,k,k1,s+s1)
+
+        activeset <- rep(list(rep(rep(list(0), length(jj)))), 
+                         gran2)
+
+    }else if (group == "SparseLag") {
+
+        jj <- groupfunVARX(p, k,k1,s+s1)
+
+        q1a <- list()
+
+        for (i in 1:(p+s+s1)) {
+
+            q1a[[i]] <- matrix(runif(k1, -1, 1), ncol = 1)
+
+        }
+
+        activeset <- rep(list(rep(rep(list(0), length(jj)))), 
+                         gran2)
+
+
+    }else if (group == "OwnOther") {
+
+        kk <- diaggroupfunVARX(p, k,k1,s+s1)
+        activeset <- rep(list(rep(rep(list(0), length(kk)))), 
+                         gran2)
+    }else if (group == "SparseOO") {
+
+        kk <- diaggroupfunVARX(p, k,k1,s+s1)
+
+        activeset <- rep(list(rep(rep(list(0), length(kk)))), 
+                         gran2)
+    }else{
+
+        jj <- NULL
+        kk <- NULL
+        activeset <- NULL
+    }
+
+
+    if(verbose){
+
+        print("Evaluation Stage")
+
+        pb <- txtProgressBar(min = T2-h+2, max = T, style = 3)
+    }
+    ## if(separate_lambdas){
+    ##     MSFE <- matrix(NA,nrow=length((T1+1):T2),ncol=k1)
+    ##     betaArray <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,nrow(MSFE)))
+
+    ## }else{
+    ## MSFE <- rep(NA,length((T2+1):T))
+    betaArray <- array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,length((T2-h+2):T)))
+    ## betaArray <- list()
+    ## }
+    MSFE_oos <- c()
+    gamm_evolve <- c()
+    MSFE_old <- MSFE
+    ## browser()
+    for(v in (T2-h+2):T){
+
+        if(v+h-1>T){
+            break
+        }
+        if(window.size!=0){
+            ws1 <- max(c(v-window.size-h,1))
+            trainY <- ZFull$Y[(ws1+h):(v-1), ]
+            trainZ <- ZFull$Z[, (ws1+h):(v-h)]         
+        }else{
+            
+            
+            trainY <- ZFull$Y[h:(v-1), ]
+
+            trainZ <- ZFull$Z[,1:(v-h)]
+
+        }
+
+        ## needed.objs <- c('group','beta','trainZ','trainY','gamm','tol','p','m','k1','k','s','s1','m','MN','C','intercept','separate_lambdas','activeset','alpha','jj','jjcomp','kk','palpha','q1a')
+        dual <- FALSE
+        if(!group%in%c("SparseLag","SparseOO")){
+            q1a <- NULL
+        }
+        ## objs <- sapply(needed.objs,exists)
+        ## objs <- setdiff(needed.objs,ls())
+        ## if(length(objs)>0){
+        
+        ##     for(i in 1:length(objs)){               
+        ##         assign(objs[i],NULL)
+        ##                }
+        ## }
+        ## browser()
+        temp <- .BigVAR.fit(group,beta,trainZ,trainY,gamm,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk,palpha)
+        beta <- temp$beta
+        activeset <- temp$activeset
+        q1a <- temp$q1a
+        
+        
+        
+        ## betaEVAL <- matrix(beta[,,1],nrow=k1,ncol=(k1*p+(k-k1)*(s+s1)+1))
+
+        if (RVAR) {
+
+            betaEVAL <- RelaxedLS(cbind(t(trainZ),trainY),betaEVAL,k,p,k1,s+s1)
+            
+        }
+        
+
+        if(MN ){
+            
+            eZ <- matrix(ZFull$Z[,v],ncol=1)
+
+        }else{
+
+            eZ <- matrix(c(1,ZFull$Z[,v]),ncol=1)
+
+        }
+        gamm_opt <- apply(MSFE,1,which.min)
+        ## browser()
+        abind::adrop(beta[,,1,drop=F],3)
+        optind <- max(which(colMeans(na.omit(MSFE))==min(colMeans(na.omit(MSFE)))))
+
+        gamopt <- gamm[optind]
+
+        gamm_evolve <- c(gamm_evolve,gamopt)
+
+        MSFE_temp <- matrix(0,nrow=1,ncol=length(gamm))
+        ## browser()
+        for(ii in 1:length(gamm)){
+            betaEVAL <-  abind::adrop(beta[,,ii,drop=F],3)
+            
+            if(MN){
+
+                if(ii==optind){
+
+                    preds[v-T2+h-1,] <-  betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+
+                    ## MSFE_oos[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                    MSFE_oos[v-T2+h-1] <- .calc.loss(ZFull$Y[v+h-1,1:k1] - betaEVAL,univ=FALSE,loss,delta)
+                }
+                ## MSFE_temp[v-T2+h-1,ii] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL[,2:ncol(betaEVAL)] %*% eZ)^2
+                MSFE_temp[v-T2+h-1,ii] <-  .calc.loss(ZFull$Y[v+h-1,1:k1] - preds[v-T2+h-1,],univ=FALSE,loss,delta)
+                ## preds[v-T2+h-1,] <-  betaEVAL[,2:ncol(betaEVAL)] %*% eZ
+
+                diag(beta[,2:(k1+1),ii]) <- diag(beta[,2:(k1+1),ii])-C # subtract one for warm start purposes 
+                ## }
+            }else{
+                
+                ## if(separate_lambdas){
+
+                ##         for(uu in 1:ncol(ZFull$Y)){
+                ##             ## browser()
+                ##             MSFE[v-T2+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T2+h-1,uu])^2
+                ##         }
+                ## }else{
+                if(ii==optind){
+                    ## browser()
+                    betaArray[,,v-T2+h-1] <- betaEVAL    
+                    preds[v-T2+h-1,] <- betaEVAL %*% eZ                
+                    ## MSFE_oos[v-T2+h-1] <- norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL %*% eZ)^2
+                    MSFE_oos[v-T2+h-1,ii] <-  .calc.loss(ZFull$Y[v+h-1,1:k1] - preds[v-T2+h-1,],univ=FALSE,loss,delta)
+                }
+                ## if(v>T2-h+2){browser()}
+                MSFE_temp[1,ii] <- .calc.loss(ZFull$Y[v+h-1,1:k1] - betaEVAL%*%eZ,univ=FALSE,loss,delta)## norm2(ZFull$Y[v+h-1,1:k1] - betaEVAL %*% eZ)^2
+                
+            }
+
+        }
+        MSFE <- rbind(MSFE,MSFE_temp)
+        MSFE <- MSFE[2:nrow(MSFE),]
+        if(verbose){
+
+            setTxtProgressBar(pb, v)
+
+        }
+    }
+    
+    betaPred <- betaEVAL
+    
+    return(list(MSFE=MSFE_oos,betaPred=betaPred,predictions=preds,betaArray=betaArray,gamm_evolve=gamm_evolve))
+    
+
+}
+
+
+
                                         # Forecast evaluation: VAR (called in cv.bigvar)
-.BigVAREVAL <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2,alpha,recursive,C,intercept,tol,window.size,separate_lambdas)
+.BigVAREVAL <- function(ZFull,gamopt,k,p,group,h,MN,verbose,RVAR,palpha,T1,T2,alpha,recursive,C,intercept,tol,window.size,separate_lambdas,loss="L2",delta=2.5)
 {
     
 
@@ -677,8 +1794,8 @@ return(list(Z=XX,Y=Y))
     ##     MSFE <- matrix(NA,nrow=length((T1+1):T2),ncol=k)
     ##     betaArray <-  array(0,dim=c(k,p*k+1,nrow(MSFE)))
     ## }else{
-        MSFE <- rep(NA,length((T1+1):T2))
-        betaArray <-  array(0,dim=c(k,p*k+1,length(MSFE)))
+    MSFE <- rep(NA,length((T1+1):T2))
+    betaArray <-  array(0,dim=c(k,p*k+1,length(MSFE)))
     ## }
     
     beta <- array(0,dim=c(k,p*k+1,1))
@@ -843,37 +1960,18 @@ return(list(Z=XX,Y=Y))
                                         # We don't consider an intercept for the MN lasso
         if(MN){
 
-            ## preds[v-T1+h-1,] <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
             ptemp <- betaEVAL[,2:ncol(betaEVAL)] %*% eZ
-            ## browser()
             if(h>1 & recursive){
 
-                ## pred <- matrix(preds[v-T1+2,],nrow=1)
                 pred <- matrix(ptemp,nrow=1)
                 
                 preds[v-T1+h-1,] <- predictMS(pred,trainY,h-1,betaEVAL[,2:ncol(betaEVAL)],p,TRUE)
-                ## if(separate_lambdas){
 
-                ##     for(uu in 1:ncol(ZFull$Y)){
-                ##         ## browser()
-                ##         MSFE[v-T1+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T1+h-1,uu])^2
-                ##     }
-
-                ## }else{
-                    
-                    MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1,] - preds[v-T1+h-1,])^2
+                MSFE[v-T1+h-1] <- .calc.loss(ZFull$Y[v+h-1] - preds[v-T1+h-1,],univ=FALSE,loss,delta)
                 ## }
             }else{
                 preds[v-T1+h-1,] <- ptemp 
-                ## if(separate_lambdas){
-
-                ##     for(uu in 1:ncol(ZFull$Y)){
-                ##         ## browser()
-                ##         MSFE[v-T1+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T1+h-1,uu])^2
-                ##     }
-                ## }else{
-                    MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1, ] - preds[v-T1-h+1,])^2
-                ## }
+                MSFE[v-T1+h-1] <- .calc.loss(ZFull$Y[v+h-1] - preds[v-T1-h+1,],univ=FALSE,loss,delta)
                 diag(beta[,2:(k+1),1]) <- diag(beta[,2:(k+1),1])-C # subtract one for warm start purposes 
 
             }
@@ -888,25 +1986,10 @@ return(list(Z=XX,Y=Y))
 
             }
             
-            ## if(separate_lambdas){
-            ##     for(uu in 1:k){
-            ##         ## browser()
-            ##         MSFE[v-T1+h-1,uu] <- norm2(ZFull$Y[v+h-1,uu] - preds[v-T1+h-1,uu])^2
-            ##     }
-            ## }else{
+            MSFE[v-T1+h-1] <- .calc.loss(ZFull$Y[v+h-1,] - preds[v-T1+h-1,],univ=FALSE,loss,delta)
 
-                
-                MSFE[v-T1+h-1] <- norm2(ZFull$Y[v+h-1,] - preds[v-T1+h-1,])^2                    
-
-            ## }
             
         }
-        ## }else{
-        
-        ##     ## browser()
-        ##     MSFE[v - (T1 - h)] <- norm2(Y[v+h-1,1:k1] - beta[,,1])^2
-
-        ##     }
         if(verbose){
 
 
@@ -1561,8 +2644,7 @@ LGSearchX <- function(gstart,Y,Z,BOLD,group,k1,p,s,m,gs,k,MN,alpha,C,intercept,t
     ##             }
     ## }
 
-    
-    gran2 <- 1
+    gran2=1
     kk <- NULL
     jj <- NULL
     jjcomp <- NULL
@@ -1996,6 +3078,8 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C,intercept,tol)
 #' @param T2 end of forecast evaluation period
 #' @param IC specifies whether to select lag order according to "AIC" or "BIC"
 #' @param h desired forecast horizon
+#' @param loss loss function (default "L2", one of "L1","L2","Huber")
+#' @param delta delta for Huber loss function (default 2.5)
 #' @param iterated indicator as to whether to use iterated or direct multistep forecasts (if applicable, VAR context only)
 #' @return Returns the one-step ahead MSFE as well as the forecasts over the evaluation period and lag order selected.
 #' @details This function evaluates the one-step ahead forecasts of a VAR or VARX fit by least squares over an evaluation period.  At every point in time, lag orders for the endogenous and exogenous series are selected according to AIC or BIC.  This function is run automatically when \code{\link{cv.BigVAR}} is called unless \code{ic} is set to \code{FALSE} in \code{\link{constructModel}}.      
@@ -2013,7 +3097,7 @@ LGSearch <- function(gstart,Y,Z,BOLD,group,k,p,gs,MN,alpha,C,intercept,tol)
 #' BICMSFE <- VARXForecastEval(Y,X,p,0,T1,T2,"BIC",1)
 #' 
 #' @export
-VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
+VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE,loss="L2",delta=2.5)
 {
 
 
@@ -2095,7 +3179,10 @@ VARXForecastEval <- function(Y,X,p,s,T1,T2,IC,h,iterated=FALSE)
         }
         ## browser()
         predF <- rbind(predF,t(pred))
-        MSFEi <- norm2(Y[i+h-1,]-pred)^2
+        MSFEi <-  .calc.loss(Y[i+h-1,] - pred,univ=FALSE,loss,delta)
+
+        ## MSFEi <- norm2(Y[i+h-1,]-pred)^2
+
         MSFE <- c(MSFE,MSFEi)
         svec <- c(svec,popt$s)
         pvec <- c(pvec,popt$p)
@@ -2277,7 +3364,7 @@ predictMSX <- function(pred,Y,n.ahead,B,p,newxreg,X,m,s,cumulative,MN,contemp=FA
         pred <- matrix(B[,2:ncol(B),drop=F]%*%Z,ncol=ncol(Y),nrow=1)
 
     }else{
-    
+        
         pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)
     }
     if(n.ahead==1){return(pred)}

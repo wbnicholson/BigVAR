@@ -1,9 +1,9 @@
-BigVAR v 1.0.6 (Release date: 2019-12-1)
+BigVAR v 1.0.7 (Release date: 2021-01-15)
 ==============
 
 Changes: 
 
-* Added BigVAR.fit function for estimation with fixed penalty parameter
-* Minor bug fixes in C++ estimation routines
-* Added Elastic net penalty ("BasicEN")
+* Minor bug fixes in predict method and penalty grid construction
+* Added options for rolling out of sample evaluation
+* Added additional choices for loss function (L1, Huber)
 

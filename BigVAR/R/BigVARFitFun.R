@@ -167,7 +167,15 @@
         beta <- BGRGridSearch(trainY,trainZ,p,gamm,as.numeric(MN))
     }
 
+    if(group=="MCP"|group=="SCAD")
+    {
 
+        beta <- .MCPFit(beta,trainZ,trainY,gamm,tol,p,MN,k,k1,s,m,C,intercept,group,gamma)
+
+    }
+    
+    
+    
     if(!exists('activeset')){
         activeset <- NULL
     }
@@ -285,6 +293,7 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
             trainZ <- VARXCons(matrix(0,ncol=1,nrow=nrow(X)),matrix(X,ncol=m),k=0,p=0,m=m,s=s,contemp=contemp,oos=FALSE)
 
         }
+        trainZ <- trainZ[2:nrow(trainZ),]
 
         trainY <- matrix(Y[(max(c(p,s))+1):nrow(Y),1:k1],ncol=k1)
 
@@ -319,7 +328,7 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
 
         
                                         # Initial Coefficient Matrix         
-        beta1=array(0,dim=c(k1,k1*p+(k-k1)*s+1,gran2*length(alpha)))
+        beta1=array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,gran2*length(alpha)))
         if(!is.null(beta)&all(dim(beta)==dim(beta1))){
             beta=beta
         }else{
@@ -409,7 +418,7 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
 
         Z1 <- VARXCons(Y,matrix(0,nrow=nrow(Y)),k,p,0,0) 
 
-            trainZ <- Z1[2:nrow(Z1),]   
+            trainZ <- Z1[2:nrow(Z1),,drop=F]   
 
         trainY <- matrix(Y[(p+1):nrow(Y),],ncol=k)          
 
@@ -510,7 +519,9 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
     ## browser()
     temp <- .BigVAR.fit(group,beta,trainZ,trainY,lambda,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk)
     beta <- temp$beta
-        }
+    }
+
+    
                                         # refit if varx
     if(RVAR){
         beta <- RelaxedLS(cbind(t(trainZ),trainY),beta,k,p,k1,s+s1)

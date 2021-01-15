@@ -1,6 +1,164 @@
 # BigVAR Algorithms
 # Most of the computationally expensive portions of the code have been exported to C++
 
+
+## ST <- function(z,gam)
+## {
+##     if(z>0 & gam<abs(z))
+##     {return(z-gam)}
+    
+##     if(z<0 & gam<abs(z))
+##     {return(z+gam)}
+##     if(gam >=abs(z) )
+##     {return(0)}
+
+## }
+
+## MCP_pen <- function(z,lambda,gamma){
+##     if(abs(z)>gamma*lambda){
+##         return(z)
+##     }
+##     if(abs(z)<=gamma*lambda){
+##         return(ST(z,lambda)/(1-1/gamma))
+##     }
+## }
+
+## MCP <- function(Z, Y, lambda,gamma, maxiter=1e3, tol, B=NULL,znorm2) {
+##     pk <- nrow(Z)
+##     T <- ncol(Z)
+##     k <- nrow(Y)
+##     if (is.null(B)) B <- matrix(0, nrow=length(lambda), ncol=pk)
+##     BOLD <- B[1,]
+
+##                                         # need to update the partial residual or bring in entire grid
+##     ## r=as.numeric(Y[1,]-B%*%Z)
+##     r=Y[1,]
+##     gloss <- sum(r^2)
+##     sdy <- sqrt(gloss/T)
+##     tot_iter=0
+##     max_iter=10000
+##     for (l in seq(nrow(B))) {
+##         thresh=10
+##         if(l>1){
+##             BOLD <- B[l-1,]
+##         }
+##         while (tot_iter < max_iter) {
+            
+##             tot_iter=tot_iter+1
+##             for (m in seq(ncol(B))) {
+
+##                 zhat <- as.numeric(r%*%Z[m,]/T)+BOLD[m]
+
+##                 B[l,m] <- MCP_pen(zhat,lambda[l],gamma)
+##                 if(l==30){
+##                     print(sprintf("zhat %f",zhat))
+##                     print(sprintf("b %f",B[l,m]))
+##                 }
+
+##                 shift <- B[l,m]-BOLD[m]
+##                 if(shift!=0){
+##                     r <- as.numeric(r-(shift)%*%Z[m,])
+##                 }
+                
+##             }
+##             thresh <- max(abs(B[l,]-BOLD))
+##             BOLD <- B[l,]
+##             if (thresh < tol*sdy) {
+##                 break
+##             }
+
+
+##         }
+
+##     }
+##     print(tot_iter)
+##     return(B)
+## }
+
+## .mcp_fit <- function(trainY,trainZ,gamm,beta){
+##     ## browser()
+##     trainZ <- t(trainZ)
+##     ## mod <- scad(trainZ,trainY,lambda=gamm,penalty="SCAD")
+##     for(i in 1:length(gamm)){
+##         if(i<=ncol(mod$beta)){
+##             beta[,,i] <- mod$beta[,i]
+##             }
+##     }
+##     ## browser()
+##     return(beta)
+## }
+
+## .MCPFit <- function (B, Z, Y, gamm, eps,p,MN,k,k1,s,m,C1,intercept,group,gamma=3) 
+## {
+    
+##     if(!"matrix"%in%class(Y))
+##    {
+##        Y <- matrix(Y,ncol=1)
+##    }
+  
+
+##     if(MN)
+##         {
+##             C <- matrix(0,nrow=k1,ncol=k1*p+s*m)        
+##             diag(C) <- C1
+##             Y <- t(Y)
+##             Y <- Y-C%*%Z
+##             Y <- t(Y)
+##         }
+    
+##     Y <- t(Y)
+##     intercept=TRUE
+##     if(intercept){
+##     YMean <- c(apply(Y, 1, mean))
+##     ZMean <- c(apply(Z, 1, mean))
+##     Y <- Y - YMean %*% t(c(rep(1, ncol(Y))))
+##     Z <- Z - ZMean %*% t(c(rep(1, ncol(Z))))
+##     }else{
+##         YMean <- rep(0,nrow(Y))
+##         ZMean <- rep(0,nrow(Z))
+##         }
+##     Y <- t(Y)
+
+##     tk <- 1/max(Mod(eigen(Z%*%t(Z),only.values=TRUE)$values))
+
+##     BFOO1 <- matrix(B[, 2:dim(B)[2], 1],ncol=k1)
+##     ## BFOO <- array(B[,2:ncol(as.matrix(B[,,1])),],dim=c(k1,k1*p+(k-k1)*s,length(gamm)))
+    
+##     nc <- apply(B,3,ncol)[1]
+##     ## BFOO1 <-as.matrix(B[, 2:nc,1,drop=F])
+##     BFOO <- B[,2:nc,,drop=F]
+##     ## browser()
+##     if(group=="MCP"){
+##        mcp=TRUE
+##     }else{
+##        mcp=FALSE
+##     }
+##     ## browser()
+##     ## if(length(gamm)==1){browser()}
+##     beta <- gamloopMCP(BFOO,Y,Z,as.matrix(gamm),eps,as.matrix(YMean),as.matrix(ZMean),gamma=3,mcp)
+##     ## foo2=MCP(Z,as.matrix(t(Y[,1])),lambda=gamm,gamma=3,maxiter=1000,tol=1e-4,B=NULL,NULL)
+
+##     ## dyn.load('/home/will/Downloads/ncvreg_control/ncvreg/src/aaa')
+##     ## X <- t(Z)
+##     ## res2 <- .Call("rawfit_gaussian", t(Z), t(Y), BFOO[,,1], "MCP", gamm, 1e-4, as.integer(10000), as.double(3),rep(1,nrow(Z)), alpha=1)
+
+##     ## res <- .Call("cdfit_gaussian", t(Z), Y, "MCP", gamm, as.double(1e-4), as.integer(10000), as.double(3), rep(1,ncol(X)),1, as.integer(ncol(X)+1), as.integer(FALSE))
+
+##     ## beta <- gamloopFista(BFOO, Y, Z, as.matrix(gamm), eps, 
+##     ##                      as.matrix(YMean), as.matrix(ZMean), BFOO1,k,p,tk,k1,s,separate_lambdas)
+
+##     if(MN)
+##         {
+##             for(i in 1:(dim(beta)[3]))             
+##                 beta[,2:dim(beta[,,i,drop=F])[2],i] <- beta[,2:dim(beta[,,i,drop=F])[2],i]+C
+##         }
+    
+##     return(beta)
+
+## }
+
+
+
 # Sparse Own/Other (VAR)
 .SparseGroupLassoVAROO<-function(beta,groups,Y,Z,gamm,alpha,INIactive,eps,q1a,p,MN,dual=FALSE,C1,intercept) 
 {

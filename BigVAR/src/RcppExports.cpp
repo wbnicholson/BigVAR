@@ -59,6 +59,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ST1a
+double ST1a(double z, double gam);
+RcppExport SEXP _BigVAR_ST1a(SEXP zSEXP, SEXP gamSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type z(zSEXP);
+    Rcpp::traits::input_parameter< double >::type gam(gamSEXP);
+    rcpp_result_gen = Rcpp::wrap(ST1a(z, gam));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gamloopFista
 cube gamloopFista(NumericVector beta_, const mat& Y, const mat& Z, const mat gammgrid, const double eps, const colvec& YMean2, const colvec& ZMean2, mat& B1, int k, int p, double tk, int k1, int s, bool sep_lambda);
 RcppExport SEXP _BigVAR_gamloopFista(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP tkSEXP, SEXP k1SEXP, SEXP sSEXP, SEXP sep_lambdaSEXP) {
@@ -514,6 +526,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BigVAR_VARXCons", (DL_FUNC) &_BigVAR_VARXCons, 8},
     {"_BigVAR_ARFitVARXR", (DL_FUNC) &_BigVAR_ARFitVARXR, 5},
     {"_BigVAR_ICX", (DL_FUNC) &_BigVAR_ICX, 8},
+    {"_BigVAR_ST1a", (DL_FUNC) &_BigVAR_ST1a, 2},
     {"_BigVAR_gamloopFista", (DL_FUNC) &_BigVAR_gamloopFista, 14},
     {"_BigVAR_gamloopFistaEN", (DL_FUNC) &_BigVAR_gamloopFistaEN, 15},
     {"_BigVAR_Eigencomp", (DL_FUNC) &_BigVAR_Eigencomp, 4},

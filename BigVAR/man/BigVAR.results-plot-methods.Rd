@@ -4,6 +4,7 @@
 \name{plot}
 \alias{plot}
 \alias{plot,BigVAR.results-method}
+\alias{plot-methods}
 \title{Plot an object of class BigVAR.results}
 \usage{
 \S4method{plot}{BigVAR.results}(x, y = NULL, ...)
