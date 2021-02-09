@@ -2092,7 +2092,7 @@ setMethod("show","BigVAR.results",
 #' predict(results,n.ahead=1)
 #' @export
 setMethod("predict","BigVAR.results",
-          function(object,n.ahead,newxreg=NULL,...)
+          function(object,n.ahead,newxreg=NULL,predict_all=FALSE,...)
           {
                                         # MN option removes intercept
               MN <- object@Minnesota
@@ -2111,14 +2111,23 @@ setMethod("predict","BigVAR.results",
               s1 <- 0
               ## if(VARX){
               fcst <- matrix(betaPred%*%eZ,ncol=1)
-
+              fcst_full <- fcst
               if(n.ahead==1)
               {
                   return(fcst)
               }else{
                   if(!VARX){
                                         # iterative multistep forecasts
-                      fcst <- matrix(predictMS(matrix(fcst,nrow=1),Y[(nrow(Y)-p+1):nrow(Y),],n.ahead-1,betaPred,p,MN),ncol=1)
+                      
+                      fcst <- predictMS(matrix(fcst,nrow=1),Y[(nrow(Y)-p+1):nrow(Y),],n.ahead-1,betaPred,p,MN,predict_all=predict_all)
+                      if(predict_all){
+                          row.names(fcst) <- paste0("T+",1:n.ahead)
+                      }else{
+                          fcst <- t(fcst)
+                      }
+                      
+                          
+                                                ## }
 
                   }else{
 

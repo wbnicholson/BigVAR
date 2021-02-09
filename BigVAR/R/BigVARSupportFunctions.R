@@ -3322,7 +3322,7 @@ PredictVARX <- function(VARXRes){
                                         # Recursive multi-step predictions
 
 
-predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
+predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE,predict_all=FALSE,n.ahead_full=n.ahead){
 
                                         # Augment Y with predictions, create lag matrix (no intercept if MN)
     Y <- rbind(Y,pred)
@@ -3335,12 +3335,21 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE){
         Z <- Z[2:nrow(Z),,drop=F]
     }
     Z <- Z[,ncol(Z),drop=F]
-
-    pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)
-
-    if(n.ahead==1){return(pred)}
+    ## if(predict.all=FALSE)
+    ## browser()
+    ## if(predict_all & n.ahead==1){
+    ##     pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)
+    ## }else{
+           pred <- matrix(B%*%Z,ncol=ncol(Y),nrow=1)
+    ## }
     
-    predictMS(pred,Y,n.ahead-1,B,p,MN)
+    if(n.ahead==1){
+        ## browser()
+        if(predict_all){return(rbind(Y[(nrow(Y)-n.ahead_full):nrow(Y),],pred))}else{                                                                                       return(pred)
+                                                                                    }
+    }
+    
+    predictMS(pred,Y,n.ahead-1,B,p,MN,predict_all,n.ahead_full=n.ahead)
 
 }
 
