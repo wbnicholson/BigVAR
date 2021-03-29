@@ -38,7 +38,7 @@ VARXLagCons <- function(Y,X=NULL,p,s=0,oos=FALSE,contemp=FALSE){
     }
 
     if(p<0|m<0){stop("lag orders must be positive")}
-    k <- ifelse(is.null(Y),ncol(Y),0)    
+    k <- ifelse(is.null(Y),0,ncol(Y))    
     XX <- VARXCons(Y,X,k,p,m,s,oos,contemp)
     Y <- t(Y[(max(c(p,s))+1):nrow(Y),])
     return(list(Z=XX,Y=Y))
