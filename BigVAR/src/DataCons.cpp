@@ -70,9 +70,9 @@ MatrixXd ZmatF(const MatrixXd& Y,  int p, const int k,bool intercept=true,bool o
 	// }
 	MatrixXd ones(1,M);
 	ones.setOnes();
-	if(p==0){return(ones);
+	// if(p==0){return(ones);
 
-	}
+	// }
 
 	if(intercept){
 		MatrixXd ZF(k*p+1,M);
@@ -158,17 +158,17 @@ MatrixXd VARXCons(NumericMatrix Y1, NumericMatrix X1, const int k, const int p, 
 	// MatrixXd Z2(m*s,T-s);
 
 		
-	if(s==0){
+	if(s==0 & m==0){
 		MatrixXd Z1=ZmatF(Y,p,k,true,oos,false);
 		return(Z1);
-	}else if (p==0){
+	// }else if (p==0){
 	// }else if(p==0){
 
-		const Map<MatrixXd>  X(as<Map<MatrixXd> >(X1));
+		// const Map<MatrixXd>  X(as<Map<MatrixXd> >(X1));
 
-		MatrixXd ZF=ZmatF(X,s,m,true,oos,contemp);
+		// MatrixXd ZF=ZmatF(X,s,m,true,oos,contemp);
 	  
-		return(ZF);
+		// return(ZF);
 	}else{
 
 
