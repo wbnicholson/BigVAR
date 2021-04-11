@@ -3241,11 +3241,14 @@ VARXFit <- function(Y,p,IC,VARX=NULL)
         Y1 <- matrix(Y[,1:k1],ncol=k1)
         m <- ncol(Y)-k1
         X <- matrix(Y[,(k1+1):ncol(Y)],ncol=m)
-        Z <- VARXCons(Y1,X,k1,p,m,s)
+
+        if(exists('contemp',where=VARX)){
+            contemp=VARX$contemp
+        }
+        Z <- VARXCons(Y1,X,k1,p,m,s,contemp=contemp)
         offset <- max(p,s)+1
         YT <- matrix(Y1[offset:nrow(Y),],ncol=k1)
         X <- matrix(X[offset:nrow(X),],ncol=m)
-        
     }else{
 
         k <- ncol(Y)
