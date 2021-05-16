@@ -1709,7 +1709,7 @@ setMethod(
             }
 
                                         # Initial Coefficient Matrix         
-            beta=array(0,dim=c(k1,k1*p+(k-k1)*s+1,gran2*length(alpha)))
+            beta=array(0,dim=c(k1,k1*p+(k-k1)*(s+s1)+1,gran2*length(alpha)))
 
                                         # Initialize groups, active sets, power method calculations, etc
             if (group == "Lag") {
