@@ -2282,3 +2282,55 @@ setMethod(
 )
 
 
+                                        # show-default method to show an object when its name is printed in the console.
+#' Default coef method BigVAR-results, returns the last coefficient matrix from the evaluation period
+#'
+#' @param object BigVAR.results object created from \code{cv.BigVAR}
+#' @param 
+#' @details displays formatted coefficient matrix
+#' @name coef
+#' @import methods
+#' @aliases coef,BigVAR.results-method
+#' @aliases coef-methods
+#' @docType methods
+#' @method coef method
+#' @rdname BigVAR.results-coef-methods
+#' @export
+setMethod(f="coef",signature="BigVAR.results",
+          definition= function(object)
+          {
+              B=data.frame(object@betaPred)
+              k <- nrow(B)
+              p <- object@lagmax
+              row.names(B) <- paste0("Y",1:k)
+              if(length(object@VARX)==0){
+                   bnames <- c(outer(X=paste0("Y",1:k),Y=paste0("L",1:p),paste0))
+                  if(object@intercept){
+                      bnames <- c("intercept",bnames)
+                  }
+                  names(B) <- bnames
+              }else{
+                  if(p>0){
+                       bnames <- c(outer(X=paste0("Y",1:k),Y=paste0("L",1:p),paste0))
+                  }else{
+                      bnames <- NULL
+                  }
+                  m <- ncol(Y)-k
+                  s <- object@VARX$s
+                  if(is.null(object@VARX$contemp)){
+                      bnamesX <- c(outer(X=paste0("X",1:m),Y=paste0("L",1:s),paste0))
+                  }else{
+                      bnamesX <- c(outer(X=paste0("X",1:m),Y=paste0("L",0:s),paste0))
+                  }
+                  
+                      
+                  
+                  bnames <- c(bnames,bnamesX)
+                  if(object@intercept){
+                  bnames <- c('intercept',bnames)    
+                      }
+                  names(B) <- bnames
+              }
+              return(B)
+          }
+)          
