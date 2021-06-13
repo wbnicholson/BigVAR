@@ -3348,7 +3348,7 @@ predictMS <- function(pred,Y,n.ahead,B,p,MN=FALSE,predict_all=FALSE,n.ahead_full
     
     if(n.ahead==1){
         ## browser()
-        if(predict_all){return(rbind(Y[(nrow(Y)-n.ahead_full):nrow(Y),],pred))}else{                                                                                       return(pred)
+        if(predict_all){return(rbind(Y[((nrow(Y)-n.ahead_full)+1):nrow(Y),],pred))}else{                                                                                       return(pred)
                                                                                     }
     }
     

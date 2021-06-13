@@ -2092,7 +2092,7 @@ setMethod("show","BigVAR.results",
 #' predict(results,n.ahead=1)
 #' @export
 setMethod("predict","BigVAR.results",
-          function(object,n.ahead,newxreg=NULL,predict_all=FALSE,...)
+          function(object,n.ahead=1,newxreg=NULL,predict_all=FALSE,...)
           {
                                         # MN option removes intercept
               MN <- object@Minnesota

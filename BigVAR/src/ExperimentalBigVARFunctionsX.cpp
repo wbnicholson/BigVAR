@@ -262,8 +262,6 @@ cube gamloopFistaEN(NumericVector beta_, const mat& Y,const mat& Z,const  mat ga
  
 	colvec nu=zeros<colvec>(dims[0]);
 	// double gam =0;
-
-	int i;
 	int nlambda=gammgrid.n_rows;
 	int nalpha=gammgrid.n_cols;
 	//loop through candidate lambda values
@@ -1304,7 +1302,6 @@ List GamLoopSGLOO(NumericVector beta_,const List Activeset_,const NumericVector 
 			// Rcout<<i<<endl;
 			betaPrev=beta2.slice(i);
 			List Active = Activeset_[i];
-			int k2=0;
 			converge=0;
 			colvec B=vectorise(betaPrev);
 			List betaFull(3);
