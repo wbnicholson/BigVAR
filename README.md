@@ -40,7 +40,7 @@ pip install -e .
 
 An example script is below
 
-```bash
+```python
 
 import numpy as np
 from BigVAR.BigVARSupportFunctions import MultVARSim, CreateCoefMat
@@ -56,18 +56,17 @@ A=CreateCoefMat(B,p,k)
 Y=MultVARSim(A,p,k,0.01*np.identity(3),500)
 VARX={}
 
-```
-construct BigVAR object:
-Arguments:
-Y T x k multivariate time series
-p: lag order
-penalty structure (only Basic and BasicEN supported)
-granularity (depth of grid and number of gridpoints)
-T1: Start of rolling validation
-T2: End of rolling validation
-alpha: elastic net alpha candidate
-VARX: VARX specifications as dict with keys k (number of endogenous series), s (lag order of exogenous series)
-```
+# construct BigVAR object:
+# Arguments:
+# Y T x k multivariate time series
+# p: lag order
+# penalty structure (only Basic and BasicEN supported)
+# granularity (depth of grid and number of gridpoints)
+# T1: Start of rolling validation
+# T2: End of rolling validation
+# alpha: elastic net alpha candidate
+# VARX: VARX specifications as dict with keys k (number of endogenous series), s (lag order of exogenous series)
+
 mod=BigVAR(Y,p,"Basic",[50,10],50,80,alpha=0.4,VARX=VARX)
 
 res=rolling_validate(mod)
