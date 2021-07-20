@@ -141,7 +141,10 @@ def eval_ar(Y, T1, T2, ic, p, loss):
         var_mod = VAR(trainY)
         mod = var_mod.fit(maxlags=p, ic=ic)
         lag_order = mod.k_ar
-        yhat = mod.forecast(trainY[-lag_order:], 1)
+        if lag_order!=0:
+            yhat = mod.forecast(trainY[-lag_order:], 1)
+        else:
+            yhat = mod.params
         MSFE_temp = calc_loss(Y[u+p, :]-yhat, loss)
         MSFE.append(MSFE_temp)
     MSFE = np.array(MSFE)

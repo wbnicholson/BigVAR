@@ -47,11 +47,11 @@ from BigVAR.BigVARSupportFunctions import MultVARSim, CreateCoefMat
 from BigVAR.BigVARClass import BigVAR,rolling_validate
 
 # example coefficient matrix
+k=3;p=4
 B1=np.array([[.4,-.02,.01],[-.02,.3,.02],[.01,.04,0.3]])
 B2=np.array([[.2,0,0],[0,.3,0],[0,0,0.13]])
 B=np.concatenate((B1,B2),axis=1)
 B=np.concatenate((B,np.zeros((k,2*k))),axis=1)
-k=3;p=4
 A=CreateCoefMat(B,p,k)
 Y=MultVARSim(A,p,k,0.01*np.identity(3),500)
 VARX={}
