@@ -24,7 +24,7 @@ def ST(x, lam):
     if x < -lam:
         return(x+lam)
     else:
-        return 0
+        return float(0)
 
 
 """
