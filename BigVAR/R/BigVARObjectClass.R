@@ -588,9 +588,8 @@ setMethod(
                 ONESE <-FALSE
             }
             
-        }     
-        if(object@Granularity[2]==1){
-            stop("only one penalty parameter; run BigVAR.est instead of cv.BigVAR")
+        }else if(object@Granularity[2]==1){             
+            warning("only one penalty parameter; more efficient to run BigVAR.est instead of cv.BigVAR")
         }
         
         
@@ -1498,7 +1497,7 @@ setMethod(
         ## if(group%in%c("Basic","BasicEN","Lag","HVARC","HVAROO","HVARELEM")){
         sparse_count <- function(x){
             x_ss <- x[,2:ncol(x)]
-            sc <- length(x_ss[x_ss!=0])/length(x)
+            sc <- length(x_ss[x_ss!=0])/length(x_ss)
             sc
             
         }
