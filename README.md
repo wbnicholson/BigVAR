@@ -26,7 +26,7 @@ If you experience any bugs or have feature requests, contact me at wbn8@cornell.
 
 # Python Package
 
-A minimalist Python implementation (partially inspired by this [abandoned effort](https://github.com/josh-alley/BigVARPython)) has been released.  Currently, it only has the capability to fit VARs Basic or Elastic Net penalty structures.  Feel free to suggest other functionality or submit pull requests.
+A minimalist Python implementation (partially inspired by this [abandoned effort](https://github.com/josh-alley/BigVARPython)) has been released.  Currently, it only has the capability to fit Basic or Elastic Net penalty structures.  Feel free to suggest other functionality or submit pull requests.
 
 ## Installation
 
