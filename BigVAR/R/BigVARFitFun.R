@@ -517,7 +517,7 @@ BigVAR.fit <- function(Y,p,struct,lambda,alpha=NULL,VARX=list(),separate_lambdas
     ##     }
     ## }
     ## browser()
-    temp <- .BigVAR.fit(group,beta,trainZ,trainY,lambda,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk)
+    temp <- .BigVAR.fit(group,beta,trainZ,trainY,lambda,tol,p,m,k1,k,s,s1,MN,C,intercept,separate_lambdas,dual,activeset,q1a,jj,jjcomp,VARX,alpha,kk,palpha)
     beta <- temp$beta
     }
 
