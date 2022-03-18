@@ -17,6 +17,10 @@ ST1a <- function(z, gam) {
     .Call('_BigVAR_ST1a', PACKAGE = 'BigVAR', z, gam)
 }
 
+ST3a <- function(z, gam) {
+    .Call('_BigVAR_ST3a', PACKAGE = 'BigVAR', z, gam)
+}
+
 gamloopFista <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, tk, k1, s, sep_lambda = FALSE) {
     .Call('_BigVAR_gamloopFista', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, tk, k1, s, sep_lambda)
 }
@@ -53,8 +57,8 @@ Fistapar <- function(Y, Z, phi, L, lambda, eps, tk, k, sep_lambda = FALSE) {
     .Call('_BigVAR_Fistapar', PACKAGE = 'BigVAR', Y, Z, phi, L, lambda, eps, tk, k, sep_lambda)
 }
 
-gamloopHVAR <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda = FALSE) {
-    .Call('_BigVAR_gamloopHVAR', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda)
+gamloopHLAG <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda = FALSE) {
+    .Call('_BigVAR_gamloopHLAG', PACKAGE = 'BigVAR', beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda)
 }
 
 gamloopOO <- function(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, w, groups_, sep_lambda = FALSE) {
@@ -77,8 +81,8 @@ norm2 <- function(x) {
     .Call('_BigVAR_norm2', PACKAGE = 'BigVAR', x)
 }
 
-RelaxedLS <- function(K, B2, k, p, k1, s) {
-    .Call('_BigVAR_RelaxedLS', PACKAGE = 'BigVAR', K, B2, k, p, k1, s)
+RelaxedLS <- function(K, B2) {
+    .Call('_BigVAR_RelaxedLS', PACKAGE = 'BigVAR', K, B2)
 }
 
 GamLoopSGLX <- function(beta_, Activeset, gamm, alpha, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigs, k1) {
@@ -99,5 +103,13 @@ GamLoopSGLDP <- function(beta_, Activeset, gamm, alpha, Y1, Z1, jj, jjfull, jjco
 
 GamLoopSGLXDP <- function(beta_, Activeset, gamm, alpha, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigs, k1) {
     .Call('_BigVAR_GamLoopSGLXDP', PACKAGE = 'BigVAR', beta_, Activeset, gamm, alpha, Y1, Z1, jj, jjfull, jjcomp, eps, YMean2, ZMean2, k, pk, M2f_, eigs, k1)
+}
+
+mcp_loop <- function(Y, Z, B, lambda, tol, gamma, mcp = TRUE) {
+    .Call('_BigVAR_mcp_loop', PACKAGE = 'BigVAR', Y, Z, B, lambda, tol, gamma, mcp)
+}
+
+gamloopMCP <- function(beta_, Y, Z, lambda, eps, YMean2, ZMean2, gamma, mcp) {
+    .Call('_BigVAR_gamloopMCP', PACKAGE = 'BigVAR', beta_, Y, Z, lambda, eps, YMean2, ZMean2, gamma, mcp)
 }
 

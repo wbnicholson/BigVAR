@@ -5,7 +5,7 @@
 \alias{BigVAR}
 \title{Dimension Reduction Methods for Multivariate Time Series.}
 \description{
-BigVAR implements the HVAR and VARX-L frameworks which allow for the estimation of vector autoregressions and vector autoregressions with exogenous variables using structured convex penalties.  This package originated as a 2014 Google "Summer of Code" Project.  The development version of this package is hosted on github: \url{http://www.github.com/wbnicholson/BigVAR}.
+BigVAR implements the HLAG and VARX-L frameworks which allow for the estimation of vector autoregressions and vector autoregressions with exogenous variables using structured convex penalties.  This package originated as a 2014 Google "Summer of Code" Project.  The development version of this package is hosted on github: \url{https://github.com/wbnicholson/BigVAR}.
 }
 \details{
 To use the facilities of this package, starting with an \eqn{T \times k+m} multivariate time series (in which T denotes the length of the series, k the number of endogenous or "model") and run \code{\link{constructModel}} to create an object of class \code{\link{BigVAR}}.  \code{\link{cv.BigVAR}} creates an object of class \code{\link{BigVAR.results}}, which chooses an optimal penalty parameter based on minimizing h-step ahead forecasts on a specified cross-validation period over a grid of values as well as comparisons against AIC, BIC, unconditional mean, and a random walk.  There are plot functions for both BigVAR (\code{\link{plot.BigVAR}}) and BigVAR.results (\code{\link{plot}}) as well as a predict function for BigVAR.results (\code{\link{predict}}).
@@ -23,10 +23,11 @@ predict(results,n.ahead=1)
 }
 \references{
 Lutkepohl "New Introduction to Multivariate Time Series",
-William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
-William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector
-autoregressions with exogenous variables," arXiv preprint arXiv:1508.07497, 2016..
-William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimension Reduction Reduction Methods for Multivariate Time Series," \url{http://www.wbnicholson.com/BigVAR.pdf}.
+Banbura, Marta, Domenico Giannone, and Lucrezia Reichlin. 'Large Bayesian vector auto regressions.' Journal of Applied Econometrics 25.1 (2010): 71-92.
+Breheny P, Huang J (2011). “Coordinate descent algorithms for nonconvex penalized regression, with applications to biological feature selection.” Annals of Applied Statistics, 5(1), 232–253.
+Nicholson, William, I. Wilms, J. Bien, and D. S. Matteson. High dimensional forecasting via interpretable vector autoregression. Journal of Machine Learning Research, 21(166):1–52, 2020.
+William B. Nicholson, David S. Matteson, Jacob Bien,VARX-L: Structured regularization for large vector autoregressions with exogenous variables, International Journal of Forecasting, Volume 33, Issue 3, 2017, Pages 627-651,
+William B Nicholson, David S. Matteson, and Jacob Bien (2016), 'BigVAR: Tools for Modeling Sparse High-Dimensional Multivariate Time Series' arxiv:1702.07094
 }
 \seealso{
 \code{\link{constructModel}}, \code{\link{cv.BigVAR}}, \code{\link{BigVAR.results}}, \code{\link{plot}}, \code{\link{predict}}

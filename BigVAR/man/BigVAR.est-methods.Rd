@@ -15,16 +15,16 @@ BigVAR.est(object)
 An array of \eqn{k \times kp \times n} or \eqn{k\times kp+ms \times n} coefficient matrices; one for each of the n values of lambda.
 }
 \description{
-Fit a BigVAR object with a structured penalty (VARX-L or HVAR).
+Fit a BigVAR object with a structured penalty (VARX-L or HLAG).
 }
 \details{
-Fits HVAR or VARX-L model on a BigVAR object.  Does not perform cross-validation.  This method allows the user to construct their own penalty parameter selection procedure.
+Fits HLAG or VARX-L model on a BigVAR object.  Does not perform cross-validation.  This method allows the user to construct their own penalty parameter selection procedure.
 }
 \examples{
 data(Y)
 Y=Y[1:100,]
 #construct a Basic VAR-L
-Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10))
+Model1=constructModel(Y,p=4,struct='Basic',gran=c(50,10))
 BigVAR.est(Model1)
 }
 \seealso{

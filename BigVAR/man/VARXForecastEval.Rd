@@ -31,13 +31,13 @@ VARXForecastEval(
 
 \item{T2}{end of forecast evaluation period}
 
-\item{IC}{specifies whether to select lag order according to "AIC" or "BIC"}
+\item{IC}{specifies whether to select lag order according to 'AIC' or 'BIC'}
 
 \item{h}{desired forecast horizon}
 
 \item{iterated}{indicator as to whether to use iterated or direct multistep forecasts (if applicable, VAR context only)}
 
-\item{loss}{loss function (default "L2", one of "L1","L2","Huber")}
+\item{loss}{loss function (default 'L2', one of 'L1','L2','Huber')}
 
 \item{delta}{delta for Huber loss function (default 2.5)}
 }
@@ -59,11 +59,11 @@ T1 <- floor(nrow(Y))/3
 T2 <- floor(2*nrow(Y))/3
 # Matrix of zeros for X
 X <- matrix(0,nrow=nrow(Y),ncol=ncol(Y))
-BICMSFE <- VARXForecastEval(Y,X,p,0,T1,T2,"BIC",1)
+BICMSFE <- VARXForecastEval(Y,X,p,0,T1,T2,'BIC',1)
 
 }
 \references{
-Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes of multivariate autoregressive models." ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
+Neumaier, Arnold, and Tapio Schneider. 'Estimation of parameters and eigenmodes of multivariate autoregressive models.' ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
 }
 \seealso{
 \code{\link{VARXFit}},\code{\link{constructModel}}, \code{\link{cv.BigVAR}}

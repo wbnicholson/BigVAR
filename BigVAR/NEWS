@@ -1,9 +1,10 @@
-BigVAR v 1.0.7 (Release date: 2021-01-15)
+BigVAR v 1.1.0 (Release date: 2022-03-16)
 ==============
 
 Changes: 
 
+* Major code reorganization and simplification
 * Minor bug fixes in predict method and penalty grid construction
 * Added options for rolling out of sample evaluation
 * Added additional choices for loss function (L1, Huber)
-
+* Added SCAD and MCP penalties

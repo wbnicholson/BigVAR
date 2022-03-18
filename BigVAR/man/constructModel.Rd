@@ -9,10 +9,8 @@ constructModel(
   p,
   struct,
   gran,
-  RVAR = FALSE,
   h = 1,
   cv = "Rolling",
-  MN = FALSE,
   verbose = TRUE,
   IC = TRUE,
   VARX = list(),
@@ -20,18 +18,14 @@ constructModel(
   T2 = floor(2 * nrow(Y)/3),
   ONESE = FALSE,
   ownlambdas = FALSE,
-  alpha = as.double(NULL),
   recursive = FALSE,
-  C = as.double(NULL),
   dates = as.character(NULL),
-  intercept = TRUE,
-  tol = 1e-04,
   window.size = 0,
   separate_lambdas = FALSE,
   linear = TRUE,
   loss = "L2",
-  delta = 2.5,
-  rolling_oos = FALSE
+  rolling_oos = FALSE,
+  model.controls = list()
 )
 }
 \arguments{
@@ -43,13 +37,9 @@ constructModel(
 
 \item{gran}{vector of penalty parameter specifications.}
 
-\item{RVAR}{True or False: option to refit based upon the support selected using the Relaxed-VAR procedure.}
-
 \item{h}{Desired forecast horizon.}
 
-\item{cv}{Cross-validation approach, either "Rolling" for rolling cross-validation or "LOO" for leave-one-out cross-validation.}
-
-\item{MN}{Minnesota Prior Indicator.}
+\item{cv}{Cross-validation approach, either 'Rolling' for rolling cross-validation or 'LOO' for leave-one-out cross-validation.}
 
 \item{verbose}{Verbose output while estimating.}
 
@@ -61,21 +51,13 @@ constructModel(
 
 \item{T2}{Index of times series in which to start forecast evaluation.}
 
-\item{ONESE}{True or False: whether to use the "One Standard Error Heuristic."}
+\item{ONESE}{True or False: whether to use the 'One Standard Error Heuristic.'}
 
 \item{ownlambdas}{True or False: Indicator for user-supplied penalty parameters.}
 
-\item{alpha}{grid of candidate parameters for the alpha in the Sparse Lag and Sparse Own/Other VARX-L.}
-
 \item{recursive}{True or False: Indicator as to whether iterative multi-step predictions are desired in the VAR context if the forecast horizon is greater than 1.}
 
-\item{C}{vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE}).}
-
 \item{dates}{optional vector of dates corresponding to \eqn{Y}.}
-
-\item{intercept}{True or False: option to fit an intercept.}
-
-\item{tol}{optimization tolerance (default 1e-4).}
 
 \item{window.size}{size of rolling window.  If set to 0 an expanding window will be used.}
 
@@ -83,40 +65,55 @@ constructModel(
 
 \item{linear}{indicator for linearly decrementing penalty grid (FALSE is log-linear).}
 
-\item{loss}{Loss function to select penalty parameter (one of "L1","L2","Huber").}
-
-\item{delta}{delta parameter for Huber loss (default 2.5)}
+\item{loss}{Loss function to select penalty parameter (one of 'L1','L2','Huber')}
 
 \item{rolling_oos}{True or False: indicator to update the penalty parameter over the evaluation period (default \code{False})}
+
+\item{model.controls}{named list of control parameters for BigVAR model estimation (see details).}
 }
 \description{
 Construct an object of class BigVAR
 }
 \details{
-The choices for "struct" are as follows
+The choices for 'struct' are as follows
 \itemize{
-\item{  "Basic" (Basic VARX-L)}
-\item{  "BasicEN" (Elastic Net VARX-L)}
-\item{  "Lag" (Lag Group VARX-L)} 
-\item{  "SparseLag" (Lag Sparse Group VARX-L)} 
-\item{  "OwnOther" (Own/Other Group VARX-L) }
-\item{  "SparseOO" (Own/Other Sparse Group VARX-L) }
-\item{  "EFX" (Endogenous First VARX-L)}
-\item{  "HVARC" (Componentwise HVAR) }
-\item{  "HVAROO" (Own/Other HVAR) }
-\item{  "HVARELEM" (Elementwise HVAR)}
-\item{  "Tapered" (Lag weighted Lasso VAR)}
-\item{  "BGR" (Bayesian Ridge Regression (cf. Banbura et al))}
+\item{  'Basic' (Basic VARX-L)}
+\item{  'BasicEN' (Elastic Net VARX-L)}
+\item{  'Lag' (Lag Group VARX-L)} 
+\item{  'SparseLag' (Lag Sparse Group VARX-L)} 
+\item{  'OwnOther' (Own/Other Group VARX-L) }
+\item{  'SparseOO' (Own/Other Sparse Group VARX-L) }
+\item{  'EFX' (Endogenous First VARX-L)}
+\item{  'HLAGC' (Componentwise HLAG) }
+\item{  'HLAGOO' (Own/Other HLAG) }
+\item{  'HLAGELEM' (Elementwise HLAG)}
+\item{  'Tapered' (Lag weighted Lasso VAR)}
+\item{  'BGR' (Bayesian Ridge Regression (cf. Banbura et al))}
+\item{  'MCP' (Minimax Concave Penalty  (cf. Breheny and Huang))}
+\item{  'SCAD' (Smoothly Clipped Absolute Deviation Penalty (cf. Breheny and Huang))}
 }
 
-The first number in the vector "gran" specifies how deep to construct the penalty grid and the second specifies how many penalty parameters to use  If ownlambas is set to TRUE, gran should contain the user-supplied penalty parameters.
+The first number in the vector 'gran' specifies how deep to construct the penalty grid and the second specifies how many penalty parameters to use  If ownlambas is set to TRUE, gran should contain the user-supplied penalty parameters.
 
-VARX specifications consist of a list with entry k denoting the series that are to be modeled and entry s to denote the maximal lag order for exogenous series.
+VARX specifications consist of a named list with entry k denoting the series that are to be modeled and entry s to denote the maximal lag order for exogenous series.
 
-The argument alpha is ignored unless the structure choice is "SparseLag" or "Lag."  By default "alpha" is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.
+As the capabilities of BigVAR have expanded, we have decided to consolidate parameters in the list model.controls.  These parameters include: 
+\itemize{
+\item{ 'alpha:' grid of candidate parameters for the alpha in the Basic Elastic Net, Sparse Lag, Sparse Own/Other VARX-L.}
+\item{ 'C:' vector of coefficients to shrink toward a random walk (if \code{MN} is \code{TRUE}).}
+\item{ 'delta:' parameter for Huber loss (default 2.5)} 
+\item{ 'intercept:' option to fit an intercept, default \code{TRUE}}
+\item{ 'loss:' Loss function to select penalty parameter (one of 'L1','L2','Huber')}
+\item{ 'MN:' Minnesota Prior Indicator, default \code{FALSE}}
+\item{ 'RVAR:'  option to refit based upon the support selected using the Relaxed-VAR procedure (default FALSE).}
+\item{ 'refit_fraction:'  If RVAR is \code{TRUE}, proportional tradeoff between least squares fit and penalized fit (default 1).}
+\item{ 'tol:' optimization tolerance (default 1e-4)}
+}
+
+The argument alpha is ignored unless the structure choice is 'SparseLag' or 'Lag.'  By default 'alpha' is set to \code{NULL} and will be initialized as 1/(k+1) in \code{cv.BigVAR} and \code{BigVAR.est}.  Any user supplied values must be between 0 and 1.
 }
 \note{
-The specifications "Basic","BasicEN", "Lag," "SparseLag," "SparseOO," and "OwnOther" can accommodate both VAR and VARX models.  EFX only applies to VARX models.  "HVARC," "HVAROO," "HVARELEM," and "Tapered" can only be used with VAR models.
+The specifications 'Basic','BasicEN', 'Lag,' 'SparseLag,' 'SparseOO','OwnOther', 'MCP', and 'SCAD.' can accommodate both VAR and VARX models.  EFX only applies to VARX models.  'HLAGC,' 'HLAGOO,' 'HLAGELEM,' and 'Tapered' can only be used with VAR models.  Our implementation of the SCAD and MCP penalties is heavily influenced by the package \code{ncvreg}.
 }
 \examples{
 # VARX Example
@@ -127,14 +124,14 @@ VARX$s=2 # sets 2 as the maximal lag order for exogenous series
 data(Y)
 T1=floor(nrow(Y)/3)
 T2=floor(2*nrow(Y)/3)
-Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
+Model1=constructModel(Y,p=4,struct='Basic',gran=c(50,10),verbose=FALSE,VARX=VARX,T1=T1,T2=T2)
 }
 \references{
+Banbura, Marta, Domenico Giannone, and Lucrezia Reichlin. 'Large Bayesian vector auto regressions.' Journal of Applied Econometrics 25.1 (2010): 71-92.
+Breheny P, Huang J (2011). “Coordinate descent algorithms for nonconvex penalized regression, with applications to biological feature selection.” Annals of Applied Statistics, 5(1), 232–253.
 Nicholson, William, I. Wilms, J. Bien, and D. S. Matteson. High dimensional forecasting via interpretable vector autoregression. Journal of Machine Learning Research, 21(166):1–52, 2020.
 William B. Nicholson, David S. Matteson, Jacob Bien,VARX-L: Structured regularization for large vector autoregressions with exogenous variables, International Journal of Forecasting, Volume 33, Issue 3, 2017, Pages 627-651,
-William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Tools for Modeling Sparse High-Dimensional Multivariate Time Series" arxiv:1702.07094
-
-Banbura, Marta, Domenico Giannone, and Lucrezia Reichlin. "Large Bayesian vector auto regressions." Journal of Applied Econometrics 25.1 (2010): 71-92.
+William B Nicholson, David S. Matteson, and Jacob Bien (2016), 'BigVAR: Tools for Modeling Sparse High-Dimensional Multivariate Time Series' arxiv:1702.07094
 }
 \seealso{
 \code{\link{cv.BigVAR}},\code{\link{BigVAR.est}}

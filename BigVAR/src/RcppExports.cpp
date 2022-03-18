@@ -71,6 +71,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ST3a
+colvec ST3a(colvec z, double gam);
+RcppExport SEXP _BigVAR_ST3a(SEXP zSEXP, SEXP gamSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< colvec >::type z(zSEXP);
+    Rcpp::traits::input_parameter< double >::type gam(gamSEXP);
+    rcpp_result_gen = Rcpp::wrap(ST3a(z, gam));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gamloopFista
 cube gamloopFista(NumericVector beta_, const mat& Y, const mat& Z, const mat gammgrid, const double eps, const colvec& YMean2, const colvec& ZMean2, mat& B1, int k, int p, double tk, int k1, int s, bool sep_lambda);
 RcppExport SEXP _BigVAR_gamloopFista(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP tkSEXP, SEXP k1SEXP, SEXP sSEXP, SEXP sep_lambdaSEXP) {
@@ -274,9 +286,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// gamloopHVAR
-cube gamloopHVAR(NumericVector beta_, const mat& Y, const mat& Z, mat gammgrid, const double eps, const colvec& YMean2, const colvec& ZMean2, mat& B1, const int k, const int p, bool sep_lambda);
-RcppExport SEXP _BigVAR_gamloopHVAR(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP sep_lambdaSEXP) {
+// gamloopHLAG
+cube gamloopHLAG(NumericVector beta_, const mat& Y, const mat& Z, mat gammgrid, const double eps, const colvec& YMean2, const colvec& ZMean2, mat& B1, const int k, const int p, bool sep_lambda);
+RcppExport SEXP _BigVAR_gamloopHLAG(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP gammgridSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP B1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP sep_lambdaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -291,7 +303,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type k(kSEXP);
     Rcpp::traits::input_parameter< const int >::type p(pSEXP);
     Rcpp::traits::input_parameter< bool >::type sep_lambda(sep_lambdaSEXP);
-    rcpp_result_gen = Rcpp::wrap(gamloopHVAR(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda));
+    rcpp_result_gen = Rcpp::wrap(gamloopHLAG(beta_, Y, Z, gammgrid, eps, YMean2, ZMean2, B1, k, p, sep_lambda));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -382,18 +394,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // RelaxedLS
-mat RelaxedLS(const mat K, mat B2, int k, int p, int k1, int s);
-RcppExport SEXP _BigVAR_RelaxedLS(SEXP KSEXP, SEXP B2SEXP, SEXP kSEXP, SEXP pSEXP, SEXP k1SEXP, SEXP sSEXP) {
+mat RelaxedLS(const mat K, mat B2);
+RcppExport SEXP _BigVAR_RelaxedLS(SEXP KSEXP, SEXP B2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const mat >::type K(KSEXP);
     Rcpp::traits::input_parameter< mat >::type B2(B2SEXP);
-    Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    Rcpp::traits::input_parameter< int >::type p(pSEXP);
-    Rcpp::traits::input_parameter< int >::type k1(k1SEXP);
-    Rcpp::traits::input_parameter< int >::type s(sSEXP);
-    rcpp_result_gen = Rcpp::wrap(RelaxedLS(K, B2, k, p, k1, s));
+    rcpp_result_gen = Rcpp::wrap(RelaxedLS(K, B2));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -521,12 +529,49 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// mcp_loop
+cube mcp_loop(mat Y, mat Z, cube B, const vec lambda, const double tol, double gamma, bool mcp);
+RcppExport SEXP _BigVAR_mcp_loop(SEXP YSEXP, SEXP ZSEXP, SEXP BSEXP, SEXP lambdaSEXP, SEXP tolSEXP, SEXP gammaSEXP, SEXP mcpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< mat >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< cube >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const vec >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< const double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< bool >::type mcp(mcpSEXP);
+    rcpp_result_gen = Rcpp::wrap(mcp_loop(Y, Z, B, lambda, tol, gamma, mcp));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gamloopMCP
+cube gamloopMCP(NumericVector beta_, const mat& Y, const mat& Z, vec lambda, const double eps, const colvec& YMean2, const colvec& ZMean2, double gamma, bool mcp);
+RcppExport SEXP _BigVAR_gamloopMCP(SEXP beta_SEXP, SEXP YSEXP, SEXP ZSEXP, SEXP lambdaSEXP, SEXP epsSEXP, SEXP YMean2SEXP, SEXP ZMean2SEXP, SEXP gammaSEXP, SEXP mcpSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type beta_(beta_SEXP);
+    Rcpp::traits::input_parameter< const mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< vec >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< const colvec& >::type YMean2(YMean2SEXP);
+    Rcpp::traits::input_parameter< const colvec& >::type ZMean2(ZMean2SEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< bool >::type mcp(mcpSEXP);
+    rcpp_result_gen = Rcpp::wrap(gamloopMCP(beta_, Y, Z, lambda, eps, YMean2, ZMean2, gamma, mcp));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BigVAR_VARXCons", (DL_FUNC) &_BigVAR_VARXCons, 8},
     {"_BigVAR_ARFitVARXR", (DL_FUNC) &_BigVAR_ARFitVARXR, 5},
     {"_BigVAR_ICX", (DL_FUNC) &_BigVAR_ICX, 8},
     {"_BigVAR_ST1a", (DL_FUNC) &_BigVAR_ST1a, 2},
+    {"_BigVAR_ST3a", (DL_FUNC) &_BigVAR_ST3a, 2},
     {"_BigVAR_gamloopFista", (DL_FUNC) &_BigVAR_gamloopFista, 14},
     {"_BigVAR_gamloopFistaEN", (DL_FUNC) &_BigVAR_gamloopFistaEN, 15},
     {"_BigVAR_Eigencomp", (DL_FUNC) &_BigVAR_Eigencomp, 4},
@@ -536,18 +581,20 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BigVAR_GamLoopSGLOO", (DL_FUNC) &_BigVAR_GamLoopSGLOO, 17},
     {"_BigVAR_GamLoopSGLOODP", (DL_FUNC) &_BigVAR_GamLoopSGLOODP, 17},
     {"_BigVAR_Fistapar", (DL_FUNC) &_BigVAR_Fistapar, 9},
-    {"_BigVAR_gamloopHVAR", (DL_FUNC) &_BigVAR_gamloopHVAR, 11},
+    {"_BigVAR_gamloopHLAG", (DL_FUNC) &_BigVAR_gamloopHLAG, 11},
     {"_BigVAR_gamloopOO", (DL_FUNC) &_BigVAR_gamloopOO, 13},
     {"_BigVAR_FistaElem", (DL_FUNC) &_BigVAR_FistaElem, 9},
     {"_BigVAR_gamloopElem", (DL_FUNC) &_BigVAR_gamloopElem, 11},
     {"_BigVAR_powermethod", (DL_FUNC) &_BigVAR_powermethod, 2},
     {"_BigVAR_norm2", (DL_FUNC) &_BigVAR_norm2, 1},
-    {"_BigVAR_RelaxedLS", (DL_FUNC) &_BigVAR_RelaxedLS, 6},
+    {"_BigVAR_RelaxedLS", (DL_FUNC) &_BigVAR_RelaxedLS, 2},
     {"_BigVAR_GamLoopSGLX", (DL_FUNC) &_BigVAR_GamLoopSGLX, 17},
     {"_BigVAR_proxvx2", (DL_FUNC) &_BigVAR_proxvx2, 6},
     {"_BigVAR_GamLoopSGL", (DL_FUNC) &_BigVAR_GamLoopSGL, 17},
     {"_BigVAR_GamLoopSGLDP", (DL_FUNC) &_BigVAR_GamLoopSGLDP, 17},
     {"_BigVAR_GamLoopSGLXDP", (DL_FUNC) &_BigVAR_GamLoopSGLXDP, 17},
+    {"_BigVAR_mcp_loop", (DL_FUNC) &_BigVAR_mcp_loop, 7},
+    {"_BigVAR_gamloopMCP", (DL_FUNC) &_BigVAR_gamloopMCP, 9},
     {NULL, NULL, 0}
 };
 

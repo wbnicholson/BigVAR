@@ -95,6 +95,8 @@ It inherits the class BigVAR, but contains substantially more information.
 \item{\code{betaArray}}{array of VAR/VARX coefficients from out of sample forecasts}
 
 \item{\code{sparse_count}}{average fraction of active coefficients in validation period}
+
+\item{\code{lambda_evolve_path}}{evolution of lambda over evaluation period}
 }}
 
 \note{

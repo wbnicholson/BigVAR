@@ -11,19 +11,19 @@ VARXFit(Y, p, IC, VARX = NULL)
 
 \item{p}{maximum lag order}
 
-\item{IC}{Information criterion indicator, if set to \code{NULL}, it will fit a least squares VAR(X) of orders p and s.  Otherwise, if set to "AIC" or "BIC" it return the model with lag orders that minimize the given IC.}
+\item{IC}{Information criterion indicator, if set to \code{NULL}, it will fit a least squares VAR(X) of orders p and s.  Otherwise, if set to 'AIC' or 'BIC' it return the model with lag orders that minimize the given IC.}
 
 \item{VARX}{a list of VARX specifications (as in \code{\link{constructModel}} (or NULL )}
 }
 \value{
 Returns a list with four entries:
 \itemize{
-\item{"Bhat"}{Estimated \eqn{k\times kp+ms} coefficient matrix}
-\item{"SigmaU}{Estimated \eqn{k\times k} residual covariance matrix}
-\item{"phat"}{Selected lag order for VAR component}
-\item{"shat"}{Selected lag order for VARX component}
-\item{"Y"}{multivariate time series retained for prediction purposes}
-\item{"Y"}{number of endogenous (modeled) time series}
+\item{'Bhat'}{Estimated \eqn{k\times kp+ms} coefficient matrix}
+\item{'SigmaU}{Estimated \eqn{k\times k} residual covariance matrix}
+\item{'phat'}{Selected lag order for VAR component}
+\item{'shat'}{Selected lag order for VARX component}
+\item{'Y'}{multivariate time series retained for prediction purposes}
+\item{'Y'}{number of endogenous (modeled) time series}
 }
 }
 \description{
@@ -37,13 +37,13 @@ data(Y)
 # fit a VAR_3(3)
 mod <- VARXFit(Y,3,NULL,NULL)
 # fit a VAR_3 with p= 6 and lag selected according to AIC
-modAIC <- VARXFit(Y,6,"AIC",NULL)
+modAIC <- VARXFit(Y,6,'AIC',NULL)
 # Fit a VARX_{2,1} with p=6, s=4 and lags selected by BIC
-modXBIC <- VARXFit(Y,6,"BIC",list(k=1,s=4))
+modXBIC <- VARXFit(Y,6,'BIC',list(k=1,s=4))
 
 }
 \references{
-Neumaier, Arnold, and Tapio Schneider. "Estimation of parameters and eigenmodes of multivariate autoregressive models." ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
+Neumaier, Arnold, and Tapio Schneider. 'Estimation of parameters and eigenmodes of multivariate autoregressive models.' ACM Transactions on Mathematical Software (TOMS) 27.1 (2001): 27-57.
 }
 \seealso{
 \code{\link{constructModel}}, \code{\link{cv.BigVAR}},\code{\link{BigVAR.fit}}

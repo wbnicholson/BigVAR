@@ -1,0 +1,818 @@
+---
+title: "BigVAR: Tools for Modeling Sparse Vector Autoregressions with Exogenous Variables"
+author: 
+  - Will Nicholson
+  - Jacob Bien
+  - David Matteson
+  - Ines Wilms
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+bibliography: additional_material/bigvar_references.bib
+link-citations: true
+output: 
+  html_document:
+     toc: true
+     toc_depth: 3
+     fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{BigVAR: Tools for Modeling Sparse Vector Autoregressions with Exogenous Variables}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "all" } }
+});
+</script> 
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Overview
+
+${\tt BigVAR}$ is the companion R package to the papers "**VARX-L: Structured Regularization for Large Vector Autoregression with Exogenous Variables**" (Joint with [David Matteson](https://davidsmatteson.com/) and [Jacob Bien](http://www-bcf.usc.edu/~jbien/)) and "**High Dimensional Forecasting via Interpretable Vector Autoregression (HLag)**" (Joint with [Ines Wilms](https://sites.google.com/view/iwilms), David Matteson, and Jacob Bien).
+
+${\tt BigVAR}$ allows for the simultaneous estimation and forecasting of high-dimensional time series by applying structured penalties to the standard vector autoregression (VAR) and vector autoregression with exogenous variables (VARX) frameworks.  This is useful in many applications which make use of time-dependent data, such as macroeconomics, finance, and internet traffic, as the conventional VAR and VARX are heavily overparameterized.  In addition, as stated in @ghysels, VARs with "large enough" lag order can adequately approximate VARMA models.
+
+Our package adapts solution methods from the regularization literature to a multivariate time series setting, allowing for the computationally efficient estimation of high-dimensional VAR and VARX models.   
+
+We also allow for least squares refitting based on the nonzero support selected by our procedures as well as the ability to incorporate mild non-stationarity by shrinking toward a vector random walk.  For more information on these extensions, we refer you to our papers @Nicholson and @Nicholson2. 
+
+This vignette presents a brief formal overview of our notation, the models contained in ${\tt BigVAR}$, and the functionality of the package.  For an interactive tutorial see [the shiny app](http://bigvar.ddns.net:3838/BigVAR/).  Any questions or feature requests with regard to ${\tt BigVAR}$ can be addressed to wbn8@cornell.edu.  If you have basic questions about VAR or multivariate time series in general, we recommend consulting @lutk.
+
+## Roadmap
+
+[Notation and Methodology](#notation) provides an overview of the VARX model as well as the ${\tt BigVAR}$ framework.  Our penalty structures are described in [VARX-L](#varxl) and [HLAG](#hlag).  Empirical penalty parameter selection procedures are discussed in [Penalty Parameter Selection](#penparam) and [N-fold cross validation](#nfold).  Package specific syntax is detailed in [BigVAR Details](#package_specifics).  Finally, example applications and extensions of ${\tt BigVAR}$ are provided in [Selecting a Structure](#structure) and [Impulse Response Functions](#irf).
+
+## Installation {#install}
+
+The stable version of ${\tt BigVAR}$ is available on [cran](https://cran.r-project.org/package=BigVAR).  The developmental release can be installed from github using the following command:
+```{r, eval=FALSE}
+install_github("wbnicholson/BigVAR/BigVAR")
+```
+
+## Quick Start
+
+In this section, we provide a basic overview of the capabilities of ${\tt BigVAR}$.  Further sections will provide elaboration as to the full functionality of ${\tt BigVAR}$.  
+
+$\mathbf{Y}$, a simulated multivariate time series of dimension $100\times 3$ is included with ${\tt BigVAR}$ and is used throughout this vignette (details as to its construction are provided in [Example Data](#data)).  It can be accessed by calling:
+
+```{r}
+library(BigVAR)
+data(Y)
+```
+
+In order to forecast $\hat{y}_{t+1}$ using a vector autoregression with a lasso penalty $\lambda=1$ and maximum lag order of 2, one can simply run 
+```{r}
+# 3 x 7 coefficient matrix
+B = BigVAR.fit(Y,struct='Basic',p=2,lambda=1)[,,1]
+# construct 7 x 99 lag matrix of Y
+Z = VARXLagCons(Y,p=2,oos=TRUE)$Z
+# obtain out of sample forecasts
+yhat = B%*%Z[,ncol(Z),drop=F]
+```
+Some potential use cases of ${\tt BigVAR.fit}$ are elaborated upon in [Extensions](#extensions).  More sophisticated analysis requires the construction of an object of class ${\tt BigVAR}$ as described in [constructModel](#constructModel).
+
+## Notation and Methodology {#notation}
+
+Let $\{ \mathbf{y_t}\}_{t = 1}^T$ denote a $k$ dimensional vector time series and $\{\mathbf{x}_t\}_{t=1}^{T}$ denote an $m$-dimensional unmodeled \emph{exogenous} series.  A vector autoregression with exogenous variables of order (p,s) , VARX$_{k,m}$($p,s$), can be expressed as  
+$$
+\begin{align}
+  \label{VAR1}
+\mathbf{y}_t=\mathbf{\nu}+\sum_{\ell=1}^p\mathbf{\Phi}^{(\ell)}\mathbf{y}_{t-\ell}+\sum_{j=1}^s \mathbf{\beta}^{(j)}\mathbf{x}_{t-j}+\mathbf{u}_t \; \text{ for } \;t=1,\ldots,T,
+\end{align}
+$$
+in which $\mathbf{\nu}$ denotes a $k\times 1$ intercept vector, each $\mathbf{\Phi}^{(\ell)}$ represents a $k\times k$ endogenous (modeled) coefficient matrix, each $\mathbf{\beta}^{(j)}$ represents a $k\times m$ exogenous (unmodeled) coefficient matrix, and $\mathbf{u}_t\stackrel{\text{wn}}{\sim}(\mathbf{0},\mathbf{\Sigma}_u)$.  Note that the VAR is a special case of Equation $\ref{VAR1}$ in which the second summation ($\sum_{j=1}^s \mathbf{\beta}^{(j)}\mathbf{x}_{t-j}$) is not included.
+
+```{r, echo=FALSE}
+suppressMessages(library(BigVAR,quietly=TRUE,warn.conflicts=FALSE))
+#onorm=c()
+library(lattice)
+#Oracle=diag(3)
+#SigmaU=diag(3)
+SparsityPlot <- function (B, p, k,s,m, title = NULL) 
+{
+
+    text <- c()
+    for (i in 1:p) {
+        text1 <- as.expression(bquote(bold(Phi)^(.(i))))
+        text <- append(text, text1)
+    }
+    ## text <- c()
+   if(s>0){
+     for (i in (p+1):(p+s+1)) {
+        text1 <- as.expression(bquote(bold(beta)^(.(i-p))))
+        text <- append(text, text1)
+    }
+     }
+    f <- function(m) t(m)[, nrow(m):1]
+    
+    rgb.palette <- colorRampPalette(c("white", "grey" ),space = "Lab")
+    ## rgb.palette <- colorRampPalette(c("white", "blue"), space = "Lab")
+    at <- seq(k/2 + 0.5, p * (k)+ 0.5, by = k)
+    at2 <- seq(p*k+s/2+.5,p*k+s*m+.5,by=s)
+    at <- c(at,at2)
+    se2 = seq(1.75, by = k, length = k)
+    L2 <- levelplot(f(abs(B)), col.regions = rgb.palette, colorkey = NULL, 
+        xlab = NULL, ylab = NULL, main = list(label = title, 
+            cex = 1), panel = function(...) {
+            panel.levelplot(...)
+            panel.abline(a = NULL, b = 1, h = seq(1.5, m*s+p* k + 
+                0.5, by = 1), v = seq(1.5, by = 1, length = p * 
+                k+m*s))
+            bl1 <- seq(k + 0.5, p * 
+                k + 0.5, by = k)
+            bl2 <- seq(p*k + 0.5, p * 
+                k + 0.5+s*m, by = m)
+            b1 <- c(bl1,bl2)
+            panel.abline(a = NULL, b = 1, v = p*k+.5, lwd = 7)
+            panel.abline(a = NULL, b = 1, v = b1, lwd = 3)
+        }, scales = list(x = list(alternating = 1, labels = text, 
+            cex = 1, at = at, tck = c(0, 0)), y = list(alternating = 0, 
+            tck = c(0, 0))))
+    return(L2)
+}
+
+B1 <- matrix(rep(1,57)*rbinom(57,1,.6),nrow=3,ncol=19)
+B2 <-matrix(0,nrow=3,ncol=19)
+B2[,1:3] <- 1
+B2[,10:12] <- 1
+B2[,16] <- 1
+B2[,19] <- 1
+
+B3 <-matrix(0,nrow=3,ncol=19)
+diag(B3[,1:3])<- 1
+B3[,10:12] <- 1
+diag(B3[,10:12])<- 0
+B2[,16] <- 1
+B2[,19] <- 1
+
+
+B4 <-matrix(0,nrow=3,ncol=19)
+B4[,1:3] <- rep(1,9)*rbinom(9,1,.6)
+B4[,10:12] <- rep(1,9)*rbinom(9,1,.4)
+
+B4[,18] <- c(1,0,1)
+
+p=5;k=3
+Lasso <- SparsityPlot(B1,p,k,m=2,s=2,title="Basic VARX-L")
+Group <- SparsityPlot(B2,p,k,m=2,s=2,title="Lag VARX-L")
+OO <- SparsityPlot(B3,p,k,m=2,s=2,title="Own/Other VARX-L")
+Sparse <- SparsityPlot(B4,p,k,m=2,s=2,title="Sparse Lag VARX-L")
+```
+### Example Sparsity Patterns
+```{r,echo=FALSE}
+library(gridExtra,quietly=TRUE)    
+grid.arrange(Lasso,Group,OO,Sparse,ncol=2)
+```
+
+1.  The Basic VARX-L will zero individual elements in $[\mathbf{\Phi},\mathbf{\beta}]$   
+2. The Lag VARX-L assigns a group lasso penalty by lag coefficient matrix $\mathbf{\Phi}$.  Each column in the exogenous coefficient matrices $\mathbf{\beta}$ is assigned to its own group.
+3. The Own/Other VARX-L assigns separate group lasso penalties to _own_ _lags_  ($\text{diag}(\mathbf{\Phi}^{(\ell)})$ and _other_ _lags_ $(\mathbf{\Phi}^{(\ell)^{-}})$.  It applies the same penalty as the Lag VARX-L to the exogenous structure.
+4. The Sparse Lag and Sparse Own/Other VARX-L extend the aforementioned structures to allow for within-group sparsity. 
+
+We recently added an _elastic net_ penalty (BasicEN) which combines the Basic VARX-L with a ridge penalty.
+
+### VARX-L {#varxl}
+$\tt BigVAR$ can be used to apply the following penalties to the VARX (Equation $\ref{VAR1}$):
+
+
+|Model Structure|BigVAR Name| Penalty           | Solution Algorithm  |
+|---------------|:------------------:|-------------------:|-------------------:|
+| Basic         |$\tt{Basic}$| $\lambda\|[\mathbf{\Phi},\mathbf{\beta}]\|_1$ | Coordinate Descent|
+| Basic-Elastic Net         |$\tt{BasicEN}$| $\lambda\big(\alpha\|[\mathbf{\Phi},\mathbf{\beta}]\|_1+(1-\alpha)\|[\mathbf{\Phi},\mathbf{\beta}]\|_2^2\big)$| Coordinate Descent|
+| Lag VARX-L| $\tt{Lag}$| $\lambda\big(\sum_{\ell=1}^p\|\mathbf{\Phi}_\ell\|_F+\sqrt{k}\sum_{j=1}^s\sum_{i=1}^m\|\beta_{\cdot,i}^{(j)}\|_F \big)$ |Block Coordinate Descent |
+| Own/Other VARX-L|$\tt{OwnOther}$|$\lambda(\rho_1\sum_{\ell=1}^p \|\text{diag}(\mathbf{\Phi}^{(\ell)})\|_F+\gamma_1\sum_{\ell=1}^p\|\mathbf{\Phi}^{(\ell^{-})}\|_F+\sqrt{k}\sum_{j=1}^s\sum_{i=1}^m\|\beta_{\cdot,i}^{(j)}\|_F)$|Block Coordinate Descent |
+|Sparse Lag VARX-L|$\tt{SparseLag}$|$(1-\alpha)\sqrt{k^2}\sum_{\ell=1}^p\|\mathbf{\Phi}^{(\ell)}\|_F+\alpha\|\mathbf{\Phi}\|_1 (1-\alpha)\sqrt{k}\sum_{j=1}^s\sum_{i=1}^m\|\beta_{\cdot,i}^{(j)}\|_F +\alpha\|\beta\|_1$|Generalized Gradient Descent|
+|Own/Other Sparse VARX-L|$\tt{SparseOwnOther}$|$\lambda(1-\alpha)[\rho_1\sum_{\ell=1}^p \|\text{diag}(\mathbf{\Phi}^{(\ell)})\|_F+\gamma_1\sum_{\ell=1}^p\|\mathbf{\Phi}^{(\ell)^{-}}\|_F]+\alpha\lambda\|\mathbf{\Phi}\|{_1}$|Generalized Gradient Descent|
+
+$\lambda>0$ is a penalty parameter that can be selected via a validation procedure or chosen by the user; larger values of $\lambda$ encourage a greater degree of sparsity. $0\leq \alpha\leq 1$ is an additional penalty parameter set by default to $\frac{1}{k+1}$ to control within-group sparsity in the sparse group setting or the trade-off between the ridge and lasso penalty in the elastic net setting.  We allow for $\alpha$ to be estimated empirically with the option ${\tt dual=TRUE}$ in the function ${\tt constructModel}$.  $\rho_1=\sqrt{k}$ and $\gamma_1=\sqrt{k(k-1)}$ are fixed weights accounting for the cardinality of each group.
+
+
+### HLAG {#hlag}
+```{r,echo=FALSE}
+k=3;p=5
+HLAGC <- matrix(0,nrow=k,ncol=k*p)
+HLAGC[1,] <- 1
+HLAGC[2,1:6] <- 1
+HLAGC[3,1:12] <- 1
+
+HLAGOO <- matrix(0,nrow=k,ncol=k*p)
+HLAGOO[1,1:13] <- 1
+HLAGOO[2,1:6] <- 1
+HLAGOO[3,c(1:9,12)] <- 1
+
+HLAGELEM <- matrix(0,nrow=k,ncol=k*p)
+HLAGELEM[1,c(1:10,12,13)] <- 1
+HLAGELEM[2,c(1,3,4,6,7,9,10,12,13,15)] <- 1
+HLAGELEM[3,c(1:8,10:11,13:14)] <- 1
+
+
+
+
+SparsityPlot <-  
+function (B, p, k,s,m, title = NULL) 
+{
+
+    text <- c()
+    for (i in 1:p) {
+        text1 <- as.expression(bquote(bold('\U03A6')^(.(i))))
+        text <- append(text, text1)
+    }
+    ## text <- c()
+    if(m>0){
+     for (i in (p+1):(p+s+1)) {
+        text1 <- as.expression(bquote(bold('\U03B2')^(.(i-p))))
+        text <- append(text, text1)
+    }
+     }
+    f <- function(m) t(m)[, nrow(m):1]
+    
+    rgb.palette <- colorRampPalette(c("white", "grey" ),space = "Lab")
+    ## rgb.palette <- colorRampPalette(c("white", "blue"), space = "Lab")
+    at <- seq(k/2 + 0.5, p * (k)+ 0.5, by = k)
+    if(m>0){
+    at2 <- seq(p*k+m/2+.5,p*k+s*m+.5,by=m)}else{at2=c()}
+    at <- c(at,at2)
+    se2 = seq(1.75, by = k, length = k)
+    L2 <- levelplot(f(abs(B)), col.regions = rgb.palette, colorkey = NULL, 
+        xlab = NULL, ylab = NULL, main = list(label = title, 
+            cex = 1), panel = function(...) {
+            panel.levelplot(...)
+            panel.abline(a = NULL, b = 1, h = seq(1.5, m*s+p* k + 
+                0.5, by = 1), v = seq(1.5, by = 1, length = p * 
+                k+m*s))
+            bl1 <- seq(k + 0.5, p * 
+                k + 0.5, by = k)
+            if(m>0){
+            bl2 <- seq(p*k + 0.5, p * 
+                k + 0.5+s*m, by = m)}else(bl2=c())
+            b1 <- c(bl1,bl2)
+            panel.abline(a = NULL, b = 1, v = p*k+.5, lwd = 3)
+            panel.abline(a = NULL, b = 1, v = b1, lwd = 3)
+        }, scales = list(x = list(alternating = 1, labels = text, 
+            cex = 1, at = at, tck = c(0, 0)), y = list(alternating = 0, 
+            tck = c(0, 0))))
+    return(L2)
+}
+set.seed(1986)
+B5 <-matrix(0,nrow=3,ncol=15)
+B5[,1:3] <- rep(1,9)*rbinom(9,1,.85)
+B5[,4:6] <- rep(1,9)*rbinom(9,1,.65)
+B5[,7:9] <- rep(1,9)*rbinom(9,1,.45)
+B5[,10:12] <- rep(1,9)*rbinom(9,1,.25)
+B5[,13:15] <- rep(1,9)*rbinom(9,1,.05)
+
+
+HV4 <- SparsityPlot(B5,5,k,0,0,title='Lag-Weighted Lasso')
+
+HVC=SparsityPlot(HLAGC,p,k,0,0,title="Componentwise HLAG")
+HVOO=SparsityPlot(HLAGOO,p,k,0,0,title="Own/Other HLAG")
+HVELEM=SparsityPlot(HLAGELEM,p,k,0,0,title="Elementwise HLAG")
+grid.arrange(HVC,HVOO,HVELEM,HV4,ncol=2)
+```
+
+|Model Structure|BigVAR Name| Penalty           | 
+|---------------|:------------------:|-------------------:|
+| Componentwise| $\tt{HLAGC}$ |  $\sum_{i=1}^k\sum_{\ell=1}^p\|\mathbf{\Phi}_i^{(\ell:p)}\|_2.$ |
+| Own/Other | $\tt{HLAGOO}$ |   $\sum_{i=1}^k\sum_{\ell=1}^p\left[\|\mathbf{\Phi}_{i}^{(\ell:p)}\|_2+\|(\mathbf{\Phi}_{i,-i}^{(\ell)}, \mathbf{\Phi}_{i}^{([\ell+1]:p)})\|_2\right]$. | 
+|Elementwise|$\tt{HLAGELEM}$| $\sum_{i=1}^k\sum_{j=1}^k\sum_{\ell=1}^p\|\mathbf{\Phi}_{ij}^{(\ell:p)}\|_2$. |
+Lag-weighted Lasso|$\tt{Tapered}$| $\sum_{\ell=1}^p\ell^{\gamma}\|\mathbf{\Phi}^{(\ell)}\|_1$.|
+
+
+We additionally incorporate several VAR-specific penalties that directly address lag order selection.  In addition to returning sparse solutions, our $\text{HLAG}_k(p)$ procedures induce regularization toward models with low maximum lag order.  To allow for greater flexibility, instead of imposing a single, universal lag order (as information criterion minimization based approaches tend to do), we allow it to vary across marginal models (i.e. the rows of the coefficient matrix $\mathbf{\Phi}=[\mathbf{\Phi}^{(1)},\dots,\mathbf{\Phi}^{(p)}]$).  
+
+$\tt{BigVAR}$ includes three HLAG models as well as the _Lag-weighted Lasso_, which incorporates a lasso penalty that increases geometrically as the lag order increases.  This penalty does not directly address lag order but it encourages a greater degree of sparsity at more distant lags (as controlled by the additional penalty parameter $\gamma \in (0,1)$.  
+
+
+The componentwise HLAG embeds a conventional lag order selection penalty into the hierarchical group lasso; the maximum lag order can vary across series, but within a series all components have the same maximum lag.  The *Own/Other* HLAG adds another layer of lag order: within a lag a series *own* lags will be prioritized over *other* lags.  Finally, the Elementwise HLAG allows for the most flexibility, allowing each series in each marginal model to have its own maximum lag order resulting in $k^2$ possible lag orders.  
+
+#### Additional Penalties
+
+In addition to the HLAG and VARX-L frameworks we also include two non-convex penalties: Smoothly Clipped Absolute Deviation (SCAD) and Minimax Concave Penalty (MCP).  These penalties serve to obviate the bias of lasso-type penalties, which tend to "over-regularize", by decreasing the amount of penalization as the magnitude of the coefficient decreases.  Though these penalties are not convex, the coordinate descent algorithm developed by @breheny fits seamlessly into the ${\tt BigVAR}$ framework.  Along with SCAD and MCP, we also incorporate the Bayesian VAR developed by @bgr into the BigVAR framework under the name ${\tt BGR}$. 
+
+<!-- |Model Structure|BigVAR Name| Penalty           |  -->
+<!-- |---------------|:------------------:|-------------------:| -->
+<!-- | Smoothly Clipped Absolute Deviation| $\tt{SCAD}$ |  $$ | -->
+<!-- | Minimax Concave Penalty | $\tt{MCP}$ |   $\sum_{i=1}^k\sum_{\ell=1}^p\left[\|\mathbf{\Phi}_{i}^{(\ell:p)}\|_2+\|(\mathbf{\Phi}_{i,-i}^{(\ell)}, \mathbf{\Phi}_{i}^{([\ell+1]:p)})\|_2\right]$. |  -->
+
+
+# BigVAR Details {#package_specifics}
+Our package allows for the straightforward estimation of the aforementioned VARX-L and HLAG procedures.
+
+
+## Input Arguments {#constructModel}
+
+The end-user completely specifies their model by constructing an object of class ${\tt BigVAR}$.
+
+To construct an object of class ${\tt BigVAR}$, simply run the command ${\tt constructModel}$:
+
+```{r}
+data(Y)
+# Create a Basic VAR-L (Lasso Penalty) with maximum lag order p=4, 10 grid points with lambda optimized according to rolling validation of 1-step ahead MSFE
+mod1<-constructModel(Y,p=4,"Basic",gran=c(150,10),h=1,cv="Rolling",verbose=FALSE,IC=TRUE,model.controls=list(intercept=TRUE))
+```
+
+The first four arguments below are required; the rest only need to be specified if expanded or non-standard functionality is requested.
+
+The input arguments are:
+
+1. ${\tt Y}$: Multivariate time series of the form $T\times k$
+2. ${\tt p}$: Maximal lag order
+3. ${\tt struct}$:  Structure of Penalty.  Choices are
+     1. ${\tt Basic}$: Lasso Penalty
+	2. ${\tt BasicEN}$: Lasso with Elastic Net
+    3. ${\tt Lag}$: Lag Penalty
+    4. ${\tt OwnOther}$: Own/Other Penalty
+    5. ${\tt SparseLag}$: Sparse Lag Penalty
+    6. ${\tt SparseOwnOther}$: Sparse Own/Other Lag Penalty
+	7. ${\tt SCAD}$: Smoothly Clipped Absolute Deviation
+	8. ${\tt MCP}$: Minimax Concave Penalty
+	9. ${\tt EFX}$: Endogenous-First VARX
+	10. ${\tt HLAGC}$: Componentwise HLAG
+	11. ${\tt HLAGOO}$: Own/Other HLAG
+	12. ${\tt HLAGELEM}$: Elementwise HLAG
+	13. ${\tt Tapered}$: Lasso with Lag Penalty
+	14. ${\tt BGR}$: Bayesian VAR as detailed in @bgr.
+	
+The first 7 can be applied to VAR and VARX models, EFX can only be applied toward VARX models, the remaining 5 are only applicable to VAR models.
+		
+		
+4. ${\tt gran}$: two options for the grid of penalty parameters $\lambda$.
+
+      The first option controls the depth of the lambda grid (a good default option is 50).  The second option controls the number of grid values (a good default is 10).  If your grid does not go deep enough, your forecasts results may be suboptimal, but if it is too deep, the routine may take a substantial amount of time to run.  The index of the optimal penalty parameter is monitored by ${\tt cv.BigVAR}$.  If it is on the border of the grid, it is recommended to re-run the function with a larger granularity parameter.  If you set the option ${\tt ownlambdas}$ to ${\tt TRUE}$, ${\tt gran}$ is used to supply a user defined grid of lambdas.  For more details on the granularity parameter, see [Diagnostics](#diag).
+	  	  
+5. ${\tt h}$: Forecast horizon in which to optimize (default 1). 
+6. ${\tt verbose}$: Logical, if ${\tt TRUE}$, will display a progress bar for the validation and evaluation procedures.
+7. ${\tt IC}:$ Logical, if ${\tt TRUE}$, will return AIC and BIC VAR(X) benchmarks.
+8. ${\tt VARX}:$  VARX characteristics in a list form.  The list must contain two arguments:
+	1. k: number of modeled series.
+	2. s: maximum lag order for unmodeled series.
+	3. contemp: (Optional) Indicator for contemporaneous unmodeled series. 
+9. ${\tt window.size}$:  Size of window for rolling cv.  (Default is 0; resulting in an expanding window).
+10. ${\tt T1}$ Start of rolling cv period (default $\lfloor \frac{T}{3} \rfloor$)
+11. ${\tt T2}$: End of rolling cv period (default $\lfloor \frac{2T}{3} \rfloor$)
+12. ${\tt cv}:$ Type of validation (as described in [Penalty Parameter Selection](#penparam)) used to select the penalty parameter (options are "rolling" (default) and "LOO," a pseudo "leave one out" cv procedure that respects time dependence). 
+13. ${\tt ownlambdas}:$ Logical, Indicator as to whether the user supplied a penalty grid in slot ${\tt gran}$ (default ${\tt FALSE}$).
+14. ${\tt recursive}$  Whether recursive (iterated) or direct forecasts are used for multi-step  VAR predictions (default FALSE, indicating direct forecasts are used).  Note that only direct forecasts are available for VARX models.  For more information on the distinction consult @marcellino.
+15. ${\tt \verb|separate_lambdas|}$: Logical, indicator to use separate penalty parameters for each series.  This option is only valid for the structures ${\tt Basic, BasicEN,HLAG,HLAGOO,HLAGELEM, SCAD, MCP}$.
+16. ${\tt \verb|model.controls|}$  As the capabilities of BigVAR have expanded, we have decided to consolidate parameters into the list model.controls.  These parameters include: 
+	1. ${\tt tol}$: Optimizer tolerance (default $0.0001$).
+	2. ${\tt intercept}$:  Logical, indicator as to whether an intercept should be fit (default ${\tt TRUE}$).  (Note that the intercept is fit separately and not subject to regularization).
+	3. ${\tt MN}$: Logical, option to select a pseudo "Minnesota Prior" (shrinks series toward a known constant matrix ; useful for mildly non-stationary data)
+	4. ${\tt C}$: vector of coefficients to shrink toward (only used if ${\tt MN}$ is ${\tt TRUE}$, default is $\mathbf{I}_k$, corresponding to a vector random walk).
+	5. ${\tt delta}$:  Delta for [huber loss](https://en.wikipedia.org/wiki/Huber_loss) function (default 2.5).
+	6. ${\tt gamma}$: Gamma parameter for ${\tt SCAD}$ or ${\tt MCP}$ (default 3).
+	7. ${\tt RVAR}$: Logical, option to use our relaxed VAR(X) procedure to re-fit the nonzero support selected by a model via least squares (default ${\tt FALSE}$).
+	8. ${\tt alpha}$: Numeric or vector; user defined $0\leq \alpha \leq 1$ denoting the trade-off between $L_1$ and $L_2$ penalties (in the Sparse Lag and Sparse Own/Other structures) or the trade-off between the lasso and ridge penalties in the elastic net structure.  Defaults to $\frac{1}{k+1}$ if not specified.
+17. ${\tt linear}$: Logical, indicator for linear lambda grid (default ${\tt TRUE}$; ${\tt FALSE}$ constructs a log-linear grid).
+18. ${\tt \verb|rolling_oos|}$ Logical, option to re-determine the optimal penalty parameter following each iteration of rolling cross validation, (see [Rolling Extension](#rolling_oos)), default ${\tt FALSE}$.
+
+One we construct the model object, we can run ${\tt \verb|cv.BigVAR(mod1)|}$, which selects the optimal penalty parameter via a validation procedure, evaluates its forecast accuracy, and compares it against conditional mean, random walk, AIC, and BIC VAR(X) benchmarks over an out-of-sample period ${\tt T_2}$ through ${\tt T}$.
+
+```{r}
+results=cv.BigVAR(mod1)
+results
+```
+
+
+## Penalty Parameter Selection {#penparam} 
+
+In order to account for time-dependence, penalty parameter selection is conducted in a rolling manner.  Define time indices $T_1=\left \lfloor \frac{T}{3} \right\rfloor$,  and $T_2=\left\lfloor \frac{2T}{3} \right\rfloor$ 
+ 
+ The training period $T_1+1$ through $T_2$ is used to select $\lambda$, 
+ $T_2+1$ through $T$ is for evaluation of forecast accuracy in a rolling manner.  The process is visualized in the following figure
+
+![Rolling Validation](additional_material/rollingcv_fixed_notation.png)
+
+Define $\hat{\mathbf{y}}_{t+1}^{\lambda}$ as the one-step ahead forecast based on $\mathbf{y}_1,\dots\mathbf{y}_t$.  We choose $\lambda$ based on minimizing one-step ahead mean square forecast error (MSFE) over the training period:  MSFE$(\lambda)=\frac{1}{(T_2-T_1-1)}\sum_{t=T_1}^{T_2-1} \|\hat{\mathbf{y}}_{t+1}^{\lambda}-\mathbf{y}_{t+1}\|_F^2.$
+
+Though we select $\lambda$ based on minimizing one-step ahead mean squared forecast error (MSFE) by default, this can be easily generalized to longer forecast horizons (by adjusting ${\tt h}$ in ${\tt constructModel}$) or alternative loss functions (by adjusting ${\tt loss}$ in the ${\tt model.controls}$ list within ${\tt constructModel}$). 
+
+### Rolling Extension {#rolling_oos}
+
+By default, the selected penalty parameter is fixed throughout the forecast evaluation period.  In certain applications, it may be more appropriate to allow for a greater degree of flexibility.  Consequently, by setting ${\tt \verb|rolling_oos|}$ to ${\tt TRUE}$ in ${\tt constructModel}$ we allow for the penalty parameter to be re-evaluated using a rolling window following each iteration in the forecast evaluation period, as depicted in the following figure
+ 
+![Rolling Window Out of Sample Evaluation](additional_material/rolling_rolling_v2.png)
+  
+### Leave One Out Validation {#LOO}
+
+As an alternative to rolling validation, we also offer a psuedo "leave-one-out" selection approach that respects the intrinsic time ordering of the VARX model.  This procedure iterates through the data in the same manner as rolling validation.  However, at each iteration $t$, the row $\mathbf{y}_t$ is removed from consideration when constructing the VARX lag matrix and instead used as a test set.  Every other row up to $T_2$ is used for training, as visualized in the following figure
+
+![Leave One Out Validation](additional_material/loo.png)
+
+This procedure is particularly amenable relative to rolling validation in scenarios with limited data.
+
+## Diagnostics {#diag}
+Generally, the only potential post-hoc diagnostic procedures are adjusting the depth/size of the penalty grid as well as the maximum lag order.  We suggest setting the maximum lag order based on the frequency of the data (e.g. 4 for quarterly, 12 for monthly, etc).
+
+The method ${\tt \verb|cv.BigVAR|}$ method returns an object of class ${\tt \verb|BigVAR.results|}$.  This object inherits the properties of class ${\tt BigVAR}$ and contains both in and out-of-sample diagnostic information.  For information on all fields, consult the [package manual](https://cran.r-project.org/web/packages/BigVAR/BigVAR.pdf).
+
+```{r}
+str(results)
+```
+
+${\tt BigVAR.results}$ also has a plot method, to show a comparison of in-sample MSFE over the grid of $\lambda$ values.
+
+```{r}
+plot(results)
+```
+
+Generally, you want this graph to have a parabolic shape with the optimal value in one of the middle indices.  In this scenario, since the slope of the line is very flat, it is likely that increasing the depth of the grid (i.e. the first parameter of ${\tt gran}$ in $\tt{constructModel}$) would not substantially improve forecasts.  It is not recommended to make the depth too large as it substantially increases computation time.
+
+```{r}
+
+mod2<-constructModel(Y,p=4,"Basic",gran=c(5,10),h=1,cv="Rolling",verbose=FALSE,IC=FALSE)
+res2=cv.BigVAR(mod2)
+plot(res2)
+
+```
+
+However, since the slope of the line in this case is quite steep, it is likely that forecasts will be improved by increasing the depth.
+
+```{r}
+
+mod3<-constructModel(Y,p=4,"Basic",gran=c(500,10),h=1,cv="Rolling",verbose=FALSE,IC=FALSE)
+res3=cv.BigVAR(mod3)
+plot(res3)
+
+```
+
+As evidenced above, this plot does not always take on a parabolic shape.  On occasion, when the grid is very deep, it will start to level off.  In this scenario, it is best to decrease the depth of the grid.
+
+<!-- #### Re-running evaluation period -->
+
+<!-- After performing rolling or leave-one-out validation, an object of class ${\tt \verb|BigVAR.intermediate|}$ is produced which contains the grid of candidate lambdas as well as their in-sample MSFE.  Though ${\tt \verb|BigVAR.intermediate|}$ is not intended to be user-facing, it can be modified to re-run out of sample forecast evaluation with different parameters.  -->
+
+## Prediction
+
+We can also view the sparsity pattern of the final estimated coefficient matrix with ${\tt \verb|SparsityPlot.BigVAR.results|}$ 
+
+```{r}
+SparsityPlot.BigVAR.results(results)
+```
+
+Finally, out of sample predictions can be computed with ${\tt predict}$ 
+
+```{r}
+predict(results,n.ahead=1)
+```
+95 percent confidence intervals can be returned with the option ${\tt confint=TRUE}$
+
+```{r}
+predict(results,n.ahead=1, confint=TRUE)
+```
+
+## Coefficients
+
+A formatted dataframe of the coefficient matrix of the final iteration of forecast evaluation can be obtained via the ${\tt coef}$ method
+
+```{r}
+coef(results)
+```
+
+## Example Data {#data}
+${\tt Y}$, the sparse multivariate time series included with ${\tt BigVAR}$ was generated using matrix $\mathbf{A}$, included with ${\tt BigVAR}$ as ${\tt Generator}$.  The sparsity structure of $\mathbf{A}$ is visualized in the following plot
+
+```{r,echo=TRUE}
+data(Y) # simulated multivariate time series
+# coefficient matrix used to generate Y
+data(Generator)
+# note that coefficients with a darker shade are larger in magnitude
+SparsityPlot(A[1:3,],p=4,3,s=0,m=0,title="Sparsity Structure of Generator Matrix")
+```
+
+In order to generate multivariate VARs, we transform $k\times kp$ coefficient matrix to its *multiple companion form* (i.e. converting to a $kp\times kp$ matrix representing a VAR of lag order 1).  For details, consult page 15 of @lutk.
+
+
+# Extensions {#extensions}
+
+## Fit with fixed, known $\lambda$ {#BigVAR.fit}
+
+In certain scenarios, it may be overly cumbersome to construct a $\tt{BigVAR}$ object and perform rolling validation or lambda grid construction (for example, out-of-sample testing once an "optimal" penalty parameter has been selected).  As an alternative, we include the function $\tt{\verb|BigVAR.fit|}$ which will fit a ${\tt BigVAR}$ model with a fixed penalty parameter without requiring the construction of a ${\tt BigVAR}$ object.
+```{r}
+# fit a Basic VARX-L with k=2,m=1,s=2,p=4,lambda=.01
+VARX=list(k=2,s=2)
+#returns k x (kp+ms+1) coefficient matrix
+model=BigVAR.fit(Y,p,"Basic",lambda=1e-2,VARX=VARX,intercept=TRUE)
+model
+```
+
+## N-fold cross validation {#nfold}
+
+If, instead of rolling or "leave one out" validation, you wish to use a custom procedure to set the penalty parameters, you can do so using repeated calls to ${\tt \verb|BigVAR.fit|}$.  As an example, we provide a N-fold cross validation function (which does not respect time dependence).
+
+```{r}
+
+# N-fold cross validation for VAR
+# Y: data
+# nfolds: number of cross validation folds
+# struct: penalty structure
+# p: lag order 
+# nlambdas: number of lambdas:
+# gran1: depth of lambda grid
+# seed: set to make it reproducible
+NFoldcv <- function(Y,nfolds,struct,p,nlambdas,gran1,seed)
+{
+    MSFE <- matrix(0,nrow=nrow(Y),ncol=10)
+    A <- constructModel(Y,p,struct=struct,gran=c(gran1,nlambdas),verbose=F)
+                                        # construct lag matrix										
+    Z1 <- VARXLagCons(Y,X=NULL,s=0,p=p,0,0)
+    trainZ <- Z1$Z[2:nrow(Z1$Z),]
+
+
+    trainY <- matrix(Y[(p+1):nrow(Y),],ncol=ncol(Y)) 
+    set.seed(seed)
+    
+	inds <- sample(nrow(trainY))
+
+	B <- BigVAR.est(A)
+	lambda.grid <- B$lambda
+    folds <- cut(inds,breaks=nfolds,labels=FALSE)
+
+    MSFE <- matrix(0,nrow=nfolds,ncol=nlambdas)
+    for(i in 1:nfolds){
+        
+        test <- trainY[which(folds==i),]
+        train <- trainY[which(folds!=i),]
+        testZ <-t(t(trainZ)[which(folds!=i),])
+        
+	    B=BigVAR.fit(train,p=p,lambda=lambda.grid,struct='Basic')
+	
+                                                #iterate over lambdas
+        for(j in 1:nlambdas){
+
+
+            MSFETemp <- c()
+            for(k in 1:nrow(test))    {
+                tempZ <- testZ[,k,drop=FALSE]
+                bhat <- matrix(B[,2:dim(B)[2],j],nrow=ncol(Y),ncol=(p*ncol(Y)))
+                preds <- B[,1,j]+bhat%*%tempZ
+
+                MSFETemp <- c(MSFETemp,sum(abs(test[k,]-preds))^2)
+                
+            }
+            MSFE[i,j] <- mean(MSFETemp)
+            
+
+        }
+
+
+    }
+
+    return(list(MSFE=MSFE,lambdas=lambda.grid))
+}
+# 10 fold cv
+MSFEs<-NFoldcv(Y,nfolds=10,"Basic",p=5,nlambdas=10,gran1=50,seed=2000)
+# choose smaller lambda in case of ties (prevents extremely sparse solutions)
+opt=MSFEs$lambda[max(which(colMeans(MSFEs$MSFE)==min(colMeans(MSFEs$MSFE))))]
+opt
+```
+
+
+## Information Criterion Benchmarks
+	
+
+We have noticed a relative dearth of packages that allow for the estimation and forecasting of VAR and VARX models via least squares with lag order selected according to an information criterion.  By default, $\tt{cv.BigVAR}$ returns least squares AIC and BIC benchmarks as forecast comparison.
+
+$\tt{VARXFit}$ will fit a VAR or VARX model with pre-specified maximum lag orders and the function $\tt{VARXForecastEval}$ will evaluate the forecasting performance of VAR and VARX models with information criterion selected by AIC or BIC over a user-specified time horizon.
+
+The arguments to $\tt{VARXForecastEval}$ are detailed below:
+
+1. ${\tt Y}$: $T\times k$ matrix of endogenous (modeled) series.
+2. ${\tt X}$: $T\times m$ matrix of exogenous (unmodeled) series.
+3. ${\tt p}$: Maximum lag order for endogenous series.
+4. ${\tt s}$: Maximum lag order for exogenous series.
+5. ${\tt T1}$: Integer, Start of forecast evaluation period.
+6. ${\tt T2}$: Interger, End of forecast evaluation period.
+7. ${\tt IC}$: Information criterion used ("AIC" or "BIC")
+8. ${\tt h}$: Forecast horizon.
+9. ${\tt Iterated}$: Logical, indicator to use "iterated" (default $\tt{FALSE}$ indicating that direct forecasts are used).
+
+Note that one may encounter scenarios in which the number of least squares VARX parameters $(k^2\times p+m*k*s) > (k+m)T$.  Our algorithm will terminate lag order selection as soon as the problem becomes ill-posed.  In the event that the problem is ill-conditioned at $p=1$, the algorithm will always return a lag order of zero.
+
+An example usage of $\tt{VARXForecastEval}$ is below.
+
+```{r}
+data(Y)
+p <- 4
+T1 <- floor(nrow(Y))/3
+T2 <- floor(2*nrow(Y))/3
+#Matrix of zeros for X
+X <- matrix(0,nrow=nrow(Y),ncol=ncol(Y))
+BICMSFE <- VARXForecastEval(Y,X,p,0,T1,T2,"BIC",1)
+```
+
+In addition, one-step ahead predictions from VARX models can be computed using the function $\tt{PredictVARX}$.
+
+```{r}
+mod <- VARXFit(Y,3,NULL,NULL)
+pred <-PredictVARX(mod)
+pred
+```
+
+## Selecting a Structure {#structure}
+
+The choice of structured penalty is not always clear at the outset of the forecasting problem.  Since our methods are all computationally manageable across most dimensions, one approach that we recommend is to use a subset of the data to fit models with all applicable structured penalties and find the set of "superior models" using the $\tt{MCSProcedure}$ function from the package $\tt{MCS}$.  For more information about the package and procedure consult @MCSPackage and the original paper @hansen.
+
+We will start by simulating a $\text{VAR}_3(6)$
+
+```{r}
+library(MASS)
+k=3;p=6
+B=matrix(0,nrow=k,ncol=p*k)
+A1<- matrix(c(.4,-.07,.08,-.06,-.7,.07,-.08,.07,-.4),ncol=3,nrow=3)
+A2 <- matrix(c(-.6,0,0,0,-.4,0,0,0,.5),ncol=3,nrow=3)
+B[,1:k]=A1
+B[,(5*k+1):(6*k)]=A2
+A <- VarptoVar1MC(B,p,k)
+set.seed(2000)
+Y <-MultVarSim(k,A,p,.005*diag(k),500)
+SparsityPlot(B,p,k,0,0, title='Sparsity Plot of VAR Coefficient Matrix')
+```
+
+The first lag matrix  and the _own_ lags in the fifth coefficient matrix are the only nonzero entries.  This suggests that the structures incorporating an _Own/Other_ or _Lag_ type penalty will achieve the best forecast performance.  There is no within-group sparsity so we should not expect the Sparse counterparts to be in the set of superior models. 
+
+```{r,cache=TRUE}
+library(MCS)
+# train on first 250 observations
+YTrain=Y[1:250,]
+Loss <- c()
+T1=1*floor(nrow(YTrain)/3);T2=2*floor(nrow(YTrain)/3)
+p=8
+
+structures<-c("Basic","BasicEN","Lag","SparseLag","OwnOther","HLAGC","HLAGOO","HLAGELEM","MCP","SCAD")
+
+for(i in structures){
+	# construct BigVAR object; we will perform a dual grid search for the sparse lag and sparse own/other models
+	if(i%in%c("SparseLag","SparseOO")){
+		alpha=seq(0,1,length=10)
+	}else{
+		alpha=0
+	}
+    
+    A<- constructModel(YTrain,p=p,struct=i,gran=c(100,10),T1=T1,T2=T2,verbose=FALSE,model.controls=list(intercept=FALSE,alpha=alpha))
+	# perform rolling cv
+    res<- cv.BigVAR(A)
+    # save out of sample loss for each structure
+    Loss <- cbind(Loss,res@OOSMSFE)    
+}
+# construct AIC and BIC benchmarks
+BIC <- VARXForecastEval(YTrain,matrix(0,nrow=nrow(YTrain)),p,0,T2,nrow(YTrain),"BIC",1)$MSFE
+AIC <- VARXForecastEval(YTrain,matrix(0,nrow=nrow(YTrain)),p,0,T2,nrow(YTrain),"AIC",1)$MSFE
+
+Loss <- as.data.frame(Loss)
+names(Loss) <- structures
+Loss <- cbind(Loss,BIC,AIC)
+
+names(Loss)[(ncol(Loss)-1):ncol(Loss)] <- c("BIC","AIC")
+names(Loss) <- paste0(names(Loss),"L")
+mcs.test <- MCSprocedure(as.matrix(Loss),verbose=FALSE)
+mcs.test
+```
+
+As expected, we find that the set of superior models contains only the Own/Other VAR-L and Lag VAR-L.
+
+## Impulse Response Functions {#irf}
+ 
+(Note: this section is adapted from the @nicholson_bigvar.)
+ 
+Though ${\tt BigVAR}$ is primarily designed to forecast high-dimensional time series, it can also be of use in analyzing the joint dynamics of a group of interrelated time series.  In order to conduct policy analysis, many macroeconomists make use of VARs to examine the impact of shocks to certain variables on the entire system (holding all other variables fixed).  This is know as impulse response analysis.  
+
+For example, a macroeconomist may wish to analyze the impact of a 100 basis point increase in the Federal Funds Rate on all included series over the next 8 quarters.  To do so, we can utilize the function ${\tt generateIRF}$, which converts the last estimated ${\tt BigVAR}$ coefficient matrix to fundamental form.
+
+We use the following function to generate an impulse response function:
+```{r}
+suppressMessages(library(expm))
+
+# Phi k x kp coefficient matrix
+# sigma kxk residual covariance matrix
+# n number of time steps to run IRF
+# p lag order
+# k number of series
+# Y0: k dimensional vector reflecting initialization of the IRF									   
+generateIRF <- function(Phi,Sigma,n,k,p,Y0)
+{
+
+
+if(p>1){
+
+A <-VarptoVar1MC(Phi,p,k) 
+
+}else{
+
+A <- Phi
+
+}
+J <- matrix(0,nrow=k,ncol=k*p)
+diag(J) <- 1
+P <- t(chol(Sigma))
+IRF <- matrix(0,nrow=k,ncol=n+1)
+for(i in 0:n)
+{
+
+phi1 <- J%*%(A%^%i)%*%t(J)
+
+theta20 <- phi1%*%P
+
+IRF[,i+1] <- (theta20%*%Y0)
+
+}
+
+
+return(IRF)
+
+}
+```
+
+
+```{r, echo=TRUE,eval=TRUE,cache=TRUE}
+require(quantmod)
+require(zoo)
+# get GDP, Federal Funds Rate, CPI from FRED
+#Gross Domestic Product (Relative to 2000)
+getSymbols('GDP',src='FRED',type='xts')
+GDP<- aggregate(GDP,as.yearqtr,mean)
+GDP <- GDP/mean(GDP["2000"])*100
+# Transformation Code: First Difference of Logged Variables
+GDP <- diff(log(GDP))
+index(GDP) <- as.yearqtr(index(GDP))
+# Federal Funds Rate
+getSymbols('FEDFUNDS',src='FRED',type='xts')
+FFR <- aggregate(FEDFUNDS,as.yearqtr,mean)
+# Transformation Code: First Difference
+FFR <- diff(FFR)
+# CPI ALL URBAN CONSUMERS, relative to 1983
+getSymbols('CPIAUCSL',src='FRED',type='xts')
+CPI <- aggregate(CPIAUCSL,as.yearqtr,mean)
+CPI <- CPI/mean(CPI['1983'])*100
+# Transformation code: difference of logged variables
+CPI <- diff(log(CPI))                             
+# Seasonally Adjusted M1
+getSymbols('M1SL',src='FRED',type='xts')
+M1<- aggregate(M1SL,as.yearqtr,mean)
+# Transformation code, difference of logged variables
+M1 <- diff(log(M1))
+# combine series
+Y <- cbind(CPI,FFR,GDP,M1)
+names(Y) <- c("CPI","FFR","GDP","M1")
+Y <- na.omit(Y)
+k=ncol(Y)
+T <- nrow(Y)
+# start/end of rolling validation
+T1 <- which(index(Y)=="1985 Q1")
+T2 <- which(index(Y)=="2005 Q1")
+
+#Demean
+    Y <- Y - (c(rep(1, nrow(Y))))%*%t(c(apply(Y[1:T1,], 2, mean))) 
+#Standarize Variance 
+for (i in 1:k) {
+        Y[, i] <- Y[, i]/apply(Y[1:T1,], 2, sd)[i]
+    }
+library(expm)
+# Fit an Elementwise HLAG model
+Model1=constructModel(as.matrix(Y),p=4,struct="HLAGELEM",gran=c(25,10),verbose=FALSE,VARX=list(),T1=T1,T2=T2)
+Model1Results=cv.BigVAR(Model1)
+
+# generate IRF for 10 quarters following a 1 percent increase in the federal funds rate
+IRFS <- generateIRF(Phi=Model1Results@betaPred[,2:ncol(Model1Results@betaPred)],Sigma=cov(Model1Results@resids),n=10,k=ncol(Y),p=4,Y0=c(0,.01,0,0))
+
+IRFS <- generateIRF(Model1Results@betaPred[,2:ncol(Model1Results@betaPred)],cov(Model1Results@resids),10,4,4,c(0,.01,0,0))    
+```
+
+```{r functions, include=FALSE, echo=FALSE}
+# A function for captioning and referencing images
+fig <- local({
+    i <- 0
+    ref <- list()
+    list(
+        cap=function(refName, text) {
+            i <<- i + 1
+            ref[[refName]] <<- i
+            paste("Figure ", i, ": ", text, sep="")
+        },
+        ref=function(refName) {
+            ref[[refName]]
+        })
+})
+``` 
+
+The impulse responses generated from this "shock" are depicted below.
+
+```{r irf_plot,fig.cap='\\label{fig:irf_plot} Generated Impulse Reponses', echo=FALSE}
+# Plot IRFs
+par(mfrow=c(2,2))
+for(i in 1:4)
+    {
+
+        plot(IRFS[i,],type='l',main=names(Y)[i],ylab="",xlab="")
+
+        
+        }
+
+```
+
+# References

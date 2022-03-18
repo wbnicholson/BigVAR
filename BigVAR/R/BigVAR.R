@@ -1,6 +1,6 @@
 #' Dimension Reduction Methods for Multivariate Time Series.
 #'
-#' BigVAR implements the HVAR and VARX-L frameworks which allow for the estimation of vector autoregressions and vector autoregressions with exogenous variables using structured convex penalties.  This package originated as a 2014 Google "Summer of Code" Project.  The development version of this package is hosted on github: \url{http://www.github.com/wbnicholson/BigVAR}.
+#' BigVAR implements the HLAG and VARX-L frameworks which allow for the estimation of vector autoregressions and vector autoregressions with exogenous variables using structured convex penalties.  This package originated as a 2014 Google "Summer of Code" Project.  The development version of this package is hosted on github: \url{https://github.com/wbnicholson/BigVAR}.
 #'
 #' @author Will Nicholson \email{wbn8@@cornell.edu},
 
@@ -19,11 +19,13 @@
 #' results=cv.BigVAR(m1)
 #' plot(results)
 #' predict(results,n.ahead=1)
-#' @references Lutkepohl "New Introduction to Multivariate Time Series",
-#' William B Nicholson, Jacob Bien, and David S Matteson. "High Dimensional Forecasting via Interpretable Vector Autoregression." arXiv preprint arXiv:1412.5250, 2016.
-#' William B Nicholson, David S. Matteson, and Jacob Bien (2015), "VARX-L Structured regularization for large vector
-#' autoregressions with exogenous variables," arXiv preprint arXiv:1508.07497, 2016..
-#' William B Nicholson, David S. Matteson, and Jacob Bien (2016), "BigVAR: Dimension Reduction Reduction Methods for Multivariate Time Series," \url{http://www.wbnicholson.com/BigVAR.pdf}.
+#' @references
+#' Lutkepohl "New Introduction to Multivariate Time Series",
+#' Banbura, Marta, Domenico Giannone, and Lucrezia Reichlin. 'Large Bayesian vector auto regressions.' Journal of Applied Econometrics 25.1 (2010): 71-92.
+#' Breheny P, Huang J (2011). “Coordinate descent algorithms for nonconvex penalized regression, with applications to biological feature selection.” Annals of Applied Statistics, 5(1), 232–253.
+#' Nicholson, William, I. Wilms, J. Bien, and D. S. Matteson. High dimensional forecasting via interpretable vector autoregression. Journal of Machine Learning Research, 21(166):1–52, 2020.
+#' William B. Nicholson, David S. Matteson, Jacob Bien,VARX-L: Structured regularization for large vector autoregressions with exogenous variables, International Journal of Forecasting, Volume 33, Issue 3, 2017, Pages 627-651,
+#' William B Nicholson, David S. Matteson, and Jacob Bien (2016), 'BigVAR: Tools for Modeling Sparse High-Dimensional Multivariate Time Series' arxiv:1702.07094
 #' @import Rcpp
 #' @import methods
 #' @import stats

@@ -11,18 +11,18 @@ predict(object,...)
 \arguments{
 \item{object}{BigVAR.results object from \code{cv.BigVAR}}
 
-\item{...}{additional arguments affecting the predictions produced (e.g. \code{n.ahead})}
+\item{...}{additional arguments affecting the predictions produced (e.g. \code{n.ahead}, \code{confint})}
 }
 \description{
 Forecast using a BigVAR.results object
 }
 \details{
-Provides \code{n.ahead} step forecasts using the model produced by cv.BigVAR.
+Provides \code{n.ahead} step forecasts using the model produced by cv.BigVAR.  If \code{confint} is set to \code{TRUE}, a 95 percent confidence interval will also be returned.
 }
 \examples{
 data(Y)
 Y=Y[1:100,]
-Model1=constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE)
+Model1=constructModel(Y,p=4,struct='Basic',gran=c(50,10),verbose=FALSE)
 results=cv.BigVAR(Model1)
 predict(results,n.ahead=1)
 }

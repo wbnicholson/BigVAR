@@ -29,7 +29,7 @@ B[,(4*k+1):(5*k)]=A2
 A <- VarptoVar1MC(B,p,k)
 }
 \references{
-See page 15 of Lutkepohl, "A New Introduction to Multiple Time Series Analysis"
+See page 15 of Lutkepohl, 'A New Introduction to Multiple Time Series Analysis'
 }
 \seealso{
 \code{\link{MultVarSim}}

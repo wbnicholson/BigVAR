@@ -13,7 +13,9 @@ To construct an object of class BigVAR, use the function \code{\link{constructMo
 \section{Slots}{
 
 \describe{
-\item{\code{Data}}{a \eqn{T \times k} multivariate time Series}
+\item{\code{Data}}{a \eqn{T \times k} multivariate time series}
+
+\item{\code{model_data}}{processed time series and lag matrix}
 
 \item{\code{lagmax}}{Maximal lag order for modeled series}
 
@@ -23,7 +25,7 @@ To construct an object of class BigVAR, use the function \code{\link{constructMo
 
 \item{\code{Relaxed}}{Indicator for relaxed VAR}
 
-\item{\code{Granularity}}{Granularity of Penalty Grid}
+\item{\code{Granularity}}{Granularity of penalty grid}
 
 \item{\code{horizon}}{Desired Forecast Horizon}
 
@@ -39,11 +41,13 @@ To construct an object of class BigVAR, use the function \code{\link{constructMo
 
 \item{\code{VARX}}{VARX Model Specifications}
 
+\item{\code{VARXI}}{VARX Indicator}
+
 \item{\code{T1}}{Index of time series in which to start cross validation}
 
 \item{\code{T2}}{Index of times series in which to start forecast evaluation}
 
-\item{\code{ONESE}}{Indicator for "One Standard Error Heuristic"}
+\item{\code{ONESE}}{Indicator for 'One Standard Error Heuristic'}
 
 \item{\code{ownlambdas}}{Indicator for user-supplied lambdas}
 
@@ -61,11 +65,17 @@ To construct an object of class BigVAR, use the function \code{\link{constructMo
 
 \item{\code{separate_lambdas}}{indicator to use separate penalty parameter for each time series (default \code{FALSE})}
 
-\item{\code{loss}}{Loss function to select penalty parameter (one of "L1","L2","Huber").}
+\item{\code{loss}}{Loss function to select penalty parameter (one of 'L1','L2','Huber').}
 
 \item{\code{delta}}{delta parameter for Huber loss (default 2.5)}
 
+\item{\code{gamma}}{gamma parameter for SCAD or MCP penalty (default 3)}
+
 \item{\code{rolling_oos}}{True or False: indicator to update the penalty parameter over the evaluation period (default \code{False})}
+
+\item{\code{linear}}{indicator for linearly decrementing penalty grid (FALSE is log-linear).}
+
+\item{\code{refit_fraction}}{fraction of least squares refit to incorporate (default is 1).}
 }}
 
 \seealso{

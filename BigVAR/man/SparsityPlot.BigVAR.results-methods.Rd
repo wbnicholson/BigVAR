@@ -23,7 +23,7 @@ Uses \code{levelplot} from the \code{lattice} package to plot the magnitude of e
 \examples{
 data(Y)
 Y <- Y[1:100,]
-Model1 <- constructModel(Y,p=4,struct="Basic",gran=c(50,10),verbose=FALSE)
+Model1 <- constructModel(Y,p=4,struct='Basic',gran=c(50,10),verbose=FALSE)
 SparsityPlot.BigVAR.results(cv.BigVAR(Model1))
 }
 \seealso{
