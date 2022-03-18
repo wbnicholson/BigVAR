@@ -1,4 +1,3 @@
-## > tidy_source('/home/will/Dropbox/BigVAR_Clone_Working_Errors_721/BigVAR/BigVAR/R/BigVARFitFun.R',arrow=T)
 # BigVAR fit used in rolling cv, out of sample forecast evaluation and
 # BigVAR.est
 .BigVAR.fit <- function(group, beta, trainZ, trainY, lambda, tol, p, m = 0, k1, k,
@@ -384,7 +383,6 @@ BigVAR.fit <- function(Y, p, struct, lambda, alpha = NULL, VARX = list(), separa
 
 
     if (group == "BGR") {
-
         trainZ <- rbind(1, trainZ)
         beta <- BGRGridSearch(trainY, trainZ, p, lambda, as.numeric(MN))
     } else {
@@ -392,12 +390,15 @@ BigVAR.fit <- function(Y, p, struct, lambda, alpha = NULL, VARX = list(), separa
             s, s1, MN, C, intercept, separate_lambdas, dual, activeset, starting_eigvals,
             groups, compgroups, VARX, alpha, palpha)
         beta <- temp$beta
+        
     }
-
+    
     # refit if varx
     if (RVAR) {
-        beta_rls<- RelaxedLS(cbind(t(trainZ), trainY), beta)
-        beta <- (1-refit_fraction)*beta +refit_fraction*beta_rls
+        for(i in dim(beta)[3]) {
+            beta_rls<- RelaxedLS(cbind(t(trainZ), trainY), beta[,,i])
+            beta[,,i] <- (1-refit_fraction)*beta[,,i] +refit_fraction*beta_rls
+        }
     }
 
     return(beta)
