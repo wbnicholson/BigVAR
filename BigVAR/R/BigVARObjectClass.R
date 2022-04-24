@@ -212,7 +212,7 @@ setClass(Class = "BigVAR", representation(Data = "matrix", model_data = "list", 
 #' @param dates optional vector of dates corresponding to \eqn{Y}.
 #' @param separate_lambdas indicator for separate penalty parameters for each time series (default \code{FALSE}).
 #' @param window.size size of rolling window.  If set to 0 an expanding window will be used. 
-#' @param linear indicator for linearly decrementing penalty grid (FALSE is log-linear).
+#' @param linear indicator for linearly decrementing penalty grid (FALSE is log-linear; default \code{FALSE}).
 #' @param rolling_oos True or False: indicator to update the penalty parameter over the evaluation period (default \code{False})
 #' @param model.controls named list of control parameters for BigVAR model estimation (see details).
 #' @details The choices for 'struct' are as follows
@@ -275,7 +275,7 @@ setClass(Class = "BigVAR", representation(Data = "matrix", model_data = "list", 
 #' @export
 constructModel <- function(Y, p, struct, gran, h = 1, cv = "Rolling", verbose = TRUE, IC = TRUE, VARX = list(), T1 = floor(nrow(Y)/3),
     T2 = floor(2 * nrow(Y)/3), ONESE = FALSE, ownlambdas = FALSE, recursive = FALSE, dates = as.character(NULL), window.size = 0,
-    separate_lambdas = FALSE, linear = TRUE, loss = "L2", rolling_oos = FALSE, model.controls = list()) {
+    separate_lambdas = FALSE, linear = FALSE, loss = "L2", rolling_oos = FALSE, model.controls = list()) {
 
 
     if (exists("RVAR", where = model.controls)) {
@@ -291,10 +291,10 @@ constructModel <- function(Y, p, struct, gran, h = 1, cv = "Rolling", verbose = 
     }
 
 
-    if (exists("linear", where = model.controls)) {
+    if (exists("linear")) {
         linear <- model.controls$linear
     } else {
-        linear <- TRUE
+        linear <- FALSE
     }
 
     if (exists("alpha", where = model.controls)) {
@@ -588,7 +588,7 @@ setMethod(f = "plot", signature = "BigVAR", definition = function(x, y = NULL, .
 #' @examples
 #' data(Y)
 #' # Fit a Basic VARX-L with rolling cross validation 
-#' Model1=constructModel(Y,p=4,struct='Basic',gran=c(50,10))
+#' Model1=constructModel(Y,p=4,struct='Basic',gran=c(50,10), verbose=FALSE)
 #' results=cv.BigVAR(Model1)
 #' @importFrom abind adrop
 #' @importFrom abind abind
@@ -691,6 +691,7 @@ setMethod(f = "cv.BigVAR", signature = "BigVAR", definition = function(object) {
     } else {
         gran2 <- object@Granularity[2]
         gran1 <- object@Granularity[1]
+        
         lambda <- create_lambda_grid(trainY[1:T2, , drop = FALSE], trainZ[, 1:T2], lapply(groups, function(x) {
             x + 1
         }), gran1, gran2, group, p, k1, s + s1, m, k, MN, alpha, C, intercept, tol, VARXI, separate_lambdas, dual, gamma,

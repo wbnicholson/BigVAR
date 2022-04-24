@@ -223,7 +223,7 @@ VARXConsModel <- function(Y, p, VARX, tf) {
 
     if (group == "Basic" | group == "BasicEN" | group == "Tapered") {
         if (!separate_lambdas) {
-            if (group == "Basic" | group == "Tapered") {
+            if (group == "Basic" | group == "Tapered") {                
                 lambdastart <- max(abs(t(Y) %*% t(Z)))
             } else {
                 lambdastart <- max(abs(t(Y) %*% t(Z)))/max(c(alpha, 0.01))
@@ -372,7 +372,7 @@ VARXConsModel <- function(Y, p, VARX, tf) {
         if (!linear) {
             lambda <- exp(seq(from = log(lambdastart), to = log(lambdastart/gran1), length = gran2))
         } else {
-            lambda <- exp(seq(from = lambdastart, to = lambdastart/gran1, length = gran2))
+            lambda <- seq(from = lambdastart, to = lambdastart/gran1, length = gran2)
 
         }
 
@@ -391,7 +391,7 @@ VARXConsModel <- function(Y, p, VARX, tf) {
             if (!linear) {
                 lambda[, i] <- exp(seq(from = log(lambdastart[i]), to = log(lambdastart[i]/gran1), length = gran2))
             } else {
-                lambda[, i] <- exp(seq(from = lambdastart[i], to = lambdastart[i]/gran1, length = gran2))
+                lambda[, i] <- seq(from = lambdastart[i], to = lambdastart[i]/gran1, length = gran2)
             }
 
         }
@@ -932,9 +932,8 @@ LGSearch <- function(gstart, Y, Z, BOLD, group, k1, p, s, m, gs, k, MN, alpha, C
         } else {
             lambdal <- lambda
         }
-
+        
     }
-
     lambdah
 }
 
@@ -1469,7 +1468,7 @@ create_lambda_grid <- function(trainY, trainZ, groups, gran1, gran2, group, p, k
         for (i in 1:length(alpha)) {
 
             lambda[, i] <- .LambdaGrid(gran1, gran2, groups, trainY, trainZ, group, p, k1, s, m, k, MN, alpha[i], C, intercept,
-                tol, VARX = VARX, linear = FALSE)
+                tol, VARX = VARX, linear = linear)
 
         }
 
@@ -1478,7 +1477,7 @@ create_lambda_grid <- function(trainY, trainZ, groups, gran1, gran2, group, p, k
         if (group != "BGR") {
 
             lambda <- .LambdaGrid(gran1, gran2, groups, trainY, trainZ, group, p, k1, s, m, k, MN, alpha, C, intercept, tol,
-                VARX = VARX, separate_lambdas, verbose, linear = FALSE)
+                VARX = VARX, separate_lambdas, verbose, linear = linear)
         } else {
             # special handling for BGR
             lambda <- seq(1, 5, length = gran2)
