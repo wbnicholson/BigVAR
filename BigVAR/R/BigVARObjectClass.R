@@ -291,12 +291,13 @@ constructModel <- function(Y, p, struct, gran, h = 1, cv = "Rolling", verbose = 
     }
 
 
-    if (exists("linear")) {
-        linear <- model.controls$linear
-    } else {
-        linear <- FALSE
-    }
-
+    ## if (exists("linear")) {
+    ##     linear <- linear
+    ## } else {
+    ##     linear <- FALSE
+    ## }
+    linear <- linear
+    
     if (exists("alpha", where = model.controls)) {
         alpha = model.controls$alpha
     } else {
