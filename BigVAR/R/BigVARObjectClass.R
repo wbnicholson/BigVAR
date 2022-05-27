@@ -548,7 +548,7 @@ setMethod("show", "BigVAR", function(object) {
 #' @param y NULL
 #' @param ... additional plot arguments
 #' @return NA, side effect is graph
-#' @details Uses plot.zoo to plot each individual series of \code{Y} on a single plot
+#' @details Uses plot.zoo to plot each indivdual series of \code{Y} on a single plot
 #' @name plot.BigVAR
 #' @import methods
 #' @seealso \code{\link{constructModel}}
@@ -1194,7 +1194,6 @@ setMethod(f = "BigVAR.Eval", signature = "BigVAR.intermediate", definition = fun
             lambda_evolve[msfe_index, ] <- lambdaopt
         }
     }
-    ## browser()
     temp <- .BigVAR.fit(group, beta, ZFull$Z, ZFull$Y, lambda, tol, p, m, k1, k, s, s1, MN, C, intercept, separate_lambdas,
                         dual, activeset, starting_eigvals, groups, compgroups, VARXI, alpha, palpha)
     betas_full <- temp$beta
@@ -1710,7 +1709,7 @@ setMethod(f = "coef", signature = "BigVAR.results", definition = function(object
         }
         m <- ncol(Y) - k
         s <- object@VARX$s
-        if (is.null(object@VARX$contemp)) {
+        if (!is.null(object@VARX$contemp)) {
             bnamesX <- c(outer(X = paste0("X", 1:m), Y = paste0("L", 1:s), paste0))
         } else {
             bnamesX <- c(outer(X = paste0("X", 1:m), Y = paste0("L", 0:s), paste0))
