@@ -297,13 +297,18 @@ BigVAR.fit <- function(Y, p, struct, lambda, alpha = NULL, VARX = list(), separa
         k1 <- VARX$k
         s <- VARX$s
 
-        if (!is.null(VARX$contemp)) {
-
-            contemp <- TRUE
-            s1 <- 1
-
-        } else {
-
+        if(exists('contemp',where=VARX)){
+            if(!is.logical(VARX$contemp)){
+                stop("contemp must be logical")
+            }
+            if(VARX$contemp){
+                contemp <- TRUE
+                s1 <- 1
+            }else{
+                contemp <- FALSE
+                s1 <- 0
+            }
+        }else{
             contemp <- FALSE
             s1 <- 0
         }
@@ -386,6 +391,7 @@ BigVAR.fit <- function(Y, p, struct, lambda, alpha = NULL, VARX = list(), separa
         trainZ <- rbind(1, trainZ)
         beta <- BGRGridSearch(trainY, trainZ, p, lambda, as.numeric(MN))
     } else {
+        ## browser()
         temp <- .BigVAR.fit(group, beta, trainZ, trainY, lambda, tol, p, m, k1, k,
             s, s1, MN, C, intercept, separate_lambdas, dual, activeset, starting_eigvals,
             groups, compgroups, VARX, alpha, palpha)

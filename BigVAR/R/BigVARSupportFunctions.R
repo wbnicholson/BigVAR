@@ -56,13 +56,18 @@ VARXConsModel <- function(Y, p, VARX, tf) {
         k1 <- VARX$k
         s <- VARX$s
 
-        if (!is.null(VARX$contemp)) {
-
-            contemp <- TRUE
-            s1 <- 1
-
-        } else {
-
+        if(exists('contemp',where=VARX)){
+            if(!is.logical(VARX$contemp)){
+                stop("contemp must be logical")
+            }
+            if(VARX$contemp){
+                contemp <- TRUE
+                s1 <- 1
+            }else{
+                contemp <- FALSE
+                s1 <- 0
+            }
+        }else{
             contemp <- FALSE
             s1 <- 0
         }
