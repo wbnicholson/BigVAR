@@ -2702,7 +2702,8 @@ cube mcp_loop(mat Y,mat Z, cube B, const vec lambda,const double tol,double gamm
 				// int counter =0;
 
 				counter+=1;
-				while(counter<102)
+				int counter2 = 0;
+				while (counter2 < 100)
 					{
 
 
@@ -2748,6 +2749,7 @@ cube mcp_loop(mat Y,mat Z, cube B, const vec lambda,const double tol,double gamm
 						if(thresh<tol*sdy){
 							break;
 						}
+						counter2 += 1;
 					}
 
 				// Rcout<<"TEST"<<endl;
@@ -2779,7 +2781,6 @@ cube mcp_loop(mat Y,mat Z, cube B, const vec lambda,const double tol,double gamm
 				BOLD=BTemp;
 				// Rcout<<"violations"<<violations<<endl;
 				if(violations==0) break;
-				// counter2+=1;
 			}
 			
 		
