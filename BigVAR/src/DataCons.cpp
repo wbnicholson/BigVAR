@@ -408,16 +408,15 @@ List ICX(NumericMatrix Y1, NumericMatrix X1, double k, int pmax,int smax,double 
 		{
 			for(int j=0;j<=smax;++j)    
 				{
-					if((int) (k*i+j*m)>T)
-						{
-							crit.push_back(1000000);
-							// Rcout<<"Undetermined"<<std::endl;
-							break;
-						}else{
+					int c = max(i, j) + h - 1;
+			        if ((int) (k * i + j * m) >= T || c >= T) {
+                        crit.push_back(1000000);
+                        // Rcout<<"Undetermined"<<std::endl;
+                        break;
+                    } else {
+						os = max(i, j);
 
-						os=max(i,j);
-
-						kp  =k*i+m*j+1;
+						kp = k * i + m * j + 1;
 						// Z.resize(kp,T-os);
 
 						// MatrixXd Z(kp,T-os);
@@ -429,7 +428,6 @@ List ICX(NumericMatrix Y1, NumericMatrix X1, double k, int pmax,int smax,double 
 
 						MatrixXd Z=ZmatF(Y,i,k,true,false,false);
 
-					    int c=max(i,j)+h-1;
 						MatrixXd Y2=Y.bottomRows(T-c);
 						MatrixXd Zaa=Z.leftCols(Z.cols()-h+1);
 						MatrixXd K(Y2.rows(),Zaa.rows()+Y2.cols());
