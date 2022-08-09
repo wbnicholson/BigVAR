@@ -279,7 +279,7 @@ BigVAR.fit <- function(Y, p, struct, lambda, alpha = NULL, VARX = list(), separa
     k <- ncol(Y)
     # runs constructModel just to check for errors
     temp.bv <- constructModel(Y, p, struct = struct, gran = c(lambda), ownlambdas = TRUE,
-        VARX = VARX, cv = "LOO", model.controls=list(MN=MN, RVAR=RVAR, C=C, intercept = intercept,gamma=gamma))
+        VARX = VARX, cv = "None", model.controls=list(MN=MN, RVAR=RVAR, C=C, intercept = intercept,gamma=gamma))
     gran2 <- length(lambda)
     ## structures=c('Basic','Lag','SparseLag','OwnOther','SparseOO','HLAGC','HLAGOO','HLAGELEM','Tapered','EFX','BGR')
 

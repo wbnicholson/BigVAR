@@ -53,8 +53,8 @@ check.BigVAR <- function(object) {
         msg <- paste("Refit fraction is ", object@refit_fraction, " must be between 0 and 1")
     }
 
-    if (object@crossval != "Rolling" & object@crossval != "LOO") {
-        msg <- c("Cross-Validation type must be one of Rolling or LOO")
+    if (!(object@crossval %in% c("Rolling", "LOO", "None"))) {
+        msg <- c("Cross-Validation type must be one of Rolling, LOO or None")
         errors <- c(errors, msg)
     }
     if (length(object@Granularity) != 2 & object@ownlambdas == FALSE) {
@@ -199,7 +199,7 @@ setClass(Class = "BigVAR", representation(Data = "matrix", model_data = "list", 
 #' @param struct The choice of penalty structure (see details).
 #' @param gran vector of penalty parameter specifications.
 #' @param h Desired forecast horizon.
-#' @param cv Cross-validation approach, either 'Rolling' for rolling cross-validation or 'LOO' for leave-one-out cross-validation.
+#' @param cv Cross-validation approach, either 'Rolling' for rolling cross-validation or 'LOO' for leave-one-out cross-validation. 'None' for use with BigVAR.fit.
 #' @param verbose Verbose output while estimating.
 #' @param IC True or False: whether to include AIC and BIC benchmarks.
 #' @param VARX List containing VARX model specifications. 
@@ -371,11 +371,11 @@ constructModel <- function(Y, p, struct, gran, h = 1, cv = "Rolling", verbose = 
     if (h < 1) {
         stop("Forecast Horizon must be at least 1")
     }
-    if (T1 - 2 * h - p < 0) {
+    if (cv != "None" & T1 - 2 * h - p < 0) {
         stop("Forecast Horizon too long; increase T1 or decrease h ")
     }
-    if (cv != "Rolling" & cv != "LOO") {
-        stop("Cross-Validation type must be one of Rolling or LOO")
+    if (!(cv %in% c("Rolling", "LOO", "None"))) {
+        stop("Cross-Validation type must be one of Rolling, LOO or None")
     }
     if (length(gran) != 2 & ownlambdas == FALSE) {
         stop("Granularity must have two parameters")
