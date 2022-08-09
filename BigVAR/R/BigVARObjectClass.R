@@ -614,6 +614,9 @@ setMethod(f = "cv.BigVAR", signature = "BigVAR", definition = function(object) {
     refit_fraction <- object@refit_fraction
     group <- object@Structure
     cvtype <- object@crossval
+    if(ctype=='None'){
+        stop("set cv to rolling or LOO to run cv.BigVAR")
+    }
     intercept <- object@intercept
     recursive <- object@recursive
     VARX <- object@VARX
