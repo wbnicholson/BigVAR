@@ -48,7 +48,7 @@
     jjfull <- jj
     jjcomp <- .lfunctioncomp(p, k)
     dims <- dim(beta)
-    beta <- array(beta[, 2:ncol(beta[, , 1]), ], dim = c(dims[1], dims[2] - 1, dims[3]))
+    beta <- array(beta[, 2:dim(beta)[2], ], dim = c(dims[1], dims[2] - 1, dims[3]))
     if (!dual) {
 
         BB <- GamLoopSGLOO(beta, INIactive, lambda, alpha, Y, ZZ, jj, jj, jjcomp, eps, YMean, ZMean, k, p * k, M2f, eigs,
@@ -95,7 +95,7 @@
     jjfull <- jj
     jjcomp <- .groupfuncomp(p, k)
     dims <- dim(beta)
-    beta <- array(beta[, 2:ncol(beta[, , 1]), ], dim = c(dims[1], dims[2] - 1, dims[3]))
+    beta <- array(beta[, 2:dim(beta)[2], ], dim = c(dims[1], dims[2] - 1, dims[3]))
     BB <- GamLoopSGL(beta, INIactive, lambda, alpha, Y, Z, jj, jjfull, jjcomp, eps, YMean, as.matrix(ZMean), k, p * k, M1f,
                      M2f, eigs)
     BB$q1 <- q1
@@ -132,7 +132,7 @@
     jjcomp <- .groupfuncomp(p, k)
     ngp <- length(alpha) * length(lambda)
     dims <- dim(beta)
-    beta <- array(beta[, 2:ncol(beta[, , 1]), ], dim = c(dims[1], dims[2] - 1, dims[3]))
+    beta <- array(beta[, 2:dim(beta)[2], ], dim = c(dims[1], dims[2] - 1, dims[3]))
     BB <- GamLoopSGLDP(beta, INIactive, lambda, alpha, Y, Z, jj, jjfull, jjcomp, eps, YMean, ZMean, k, p * k, M1f, M2f, eigs)
     BB$q1 <- q1
 
@@ -405,7 +405,7 @@
 
     tk <- 1/max(Mod(eigen(Z %*% t(Z))$values))
     lambda <- as.matrix(lambda)
-    betaini <- array(beta[, 2:ncol(beta[, , 1]), ], dim = c(k, k * p, nrow(lambda)))
+    betaini <- array(beta[, 2:dim(beta)[2], ], dim = c(k, k * p, nrow(lambda)))
     betafin <- gamloopElem(betaini, Y, Z, lambda, eps, YMean, ZMean, as.matrix(betaini[, , 1]), k, p, separate_lambdas)
 
     if (MN) {
@@ -506,7 +506,7 @@
 
     } else {
 
-        betaini <- beta[, 2:ncol(beta[, , 1]), ]
+        betaini <- beta[, 2:dim(beta)[2], ]
 
     }
 
