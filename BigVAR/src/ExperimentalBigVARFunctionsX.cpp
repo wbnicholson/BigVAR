@@ -1914,7 +1914,7 @@ mat RelaxedLS(const mat K,  mat B2)
 		for(int i=0;i<k1;++i)
 			{
 				rowvec B3a=B3.row(i);
-				unsigned int thresh=1e-8;
+				double thresh = 1e-8;
 
 				uvec R1a=find(abs(B3a)>thresh);
 				if(R1a.n_elem<2){A.row(i)=B3a;}
