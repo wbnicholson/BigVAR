@@ -343,7 +343,7 @@ inline double Newton2(int k,const  arma::mat& P, double lambda, const arma::vec&
 	double threshold=1;
 	double phi=0;
 	double deltanew=delta;
-	int iter=0;
+	// int iter=0;
 	while(threshold>.0001)
 		{
 			phi=1-1/pow(trust32(k, P, delta, lambda, EigVA, EigVE),.5);
@@ -352,7 +352,7 @@ inline double Newton2(int k,const  arma::mat& P, double lambda, const arma::vec&
 			threshold = fabs(delta-deltanew);
 			delta=deltanew;
 			phi=0;
-			iter+=1;
+			// iter+=1;
 
 		}
   
@@ -369,7 +369,6 @@ List Eigencomp( mat& Z1, List groups,int n1,int k1)
 	List M3f(n1);
 	List eigvecF(n1);
 	int count=0;
- 
 	for(int i=0; i<n1; ++i)
 		{
 			NumericVector g1=groups[i];

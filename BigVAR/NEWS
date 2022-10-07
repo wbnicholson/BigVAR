@@ -1,3 +1,10 @@
+BigVAR v 1.1.1 (Release date: 2022-09-28)
+==============
+Changes: 
+
+* Minor bug fixes
+* Correct compiler warning raised by cran checks
+
 BigVAR v 1.1.0 (Release date: 2022-03-16)
 ==============
 

@@ -22,7 +22,7 @@ constructModel(
   dates = as.character(NULL),
   window.size = 0,
   separate_lambdas = FALSE,
-  linear = TRUE,
+  linear = FALSE,
   loss = "L2",
   rolling_oos = FALSE,
   model.controls = list()
@@ -39,7 +39,7 @@ constructModel(
 
 \item{h}{Desired forecast horizon.}
 
-\item{cv}{Cross-validation approach, either 'Rolling' for rolling cross-validation or 'LOO' for leave-one-out cross-validation.}
+\item{cv}{Cross-validation approach, either 'Rolling' for rolling cross-validation or 'LOO' for leave-one-out cross-validation. 'None' for use with BigVAR.fit.}
 
 \item{verbose}{Verbose output while estimating.}
 
@@ -63,7 +63,7 @@ constructModel(
 
 \item{separate_lambdas}{indicator for separate penalty parameters for each time series (default \code{FALSE}).}
 
-\item{linear}{indicator for linearly decrementing penalty grid (FALSE is log-linear).}
+\item{linear}{indicator for linearly decrementing penalty grid (FALSE is log-linear; default \code{FALSE}).}
 
 \item{loss}{Loss function to select penalty parameter (one of 'L1','L2','Huber')}
 

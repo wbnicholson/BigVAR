@@ -8,6 +8,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // VARXCons
 MatrixXd VARXCons(NumericMatrix Y1, NumericMatrix X1, const int k, const int p, const int m, int s, bool oos, bool contemp);
 RcppExport SEXP _BigVAR_VARXCons(SEXP Y1SEXP, SEXP X1SEXP, SEXP kSEXP, SEXP pSEXP, SEXP mSEXP, SEXP sSEXP, SEXP oosSEXP, SEXP contempSEXP) {

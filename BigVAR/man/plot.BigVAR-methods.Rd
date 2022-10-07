@@ -22,7 +22,7 @@ NA, side effect is graph
 Plot a BigVAR object
 }
 \details{
-Uses plot.zoo to plot each individual series of \code{Y} on a single plot
+Uses plot.zoo to plot each indivdual series of \code{Y} on a single plot
 }
 \seealso{
 \code{\link{constructModel}}

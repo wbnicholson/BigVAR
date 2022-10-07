@@ -23,7 +23,7 @@ The main function of the BigVAR package. Performs cross validation to select pen
 \examples{
 data(Y)
 # Fit a Basic VARX-L with rolling cross validation 
-Model1=constructModel(Y,p=4,struct='Basic',gran=c(50,10))
+Model1=constructModel(Y,p=4,struct='Basic',gran=c(50,10), verbose=FALSE)
 results=cv.BigVAR(Model1)
 }
 \seealso{

@@ -33,7 +33,7 @@ knitr::opts_chunk$set(
 
 # Overview
 
-${\tt BigVAR}$ is the companion R package to the papers "**VARX-L: Structured Regularization for Large Vector Autoregression with Exogenous Variables**" (Joint with [David Matteson](https://davidsmatteson.com/) and [Jacob Bien](http://www-bcf.usc.edu/~jbien/)) and "**High Dimensional Forecasting via Interpretable Vector Autoregression (HLag)**" (Joint with [Ines Wilms](https://sites.google.com/view/iwilms), David Matteson, and Jacob Bien).
+${\tt BigVAR}$ is the companion R package to the papers "**VARX-L: Structured Regularization for Large Vector Autoregression with Exogenous Variables**" (Joint with [David Matteson](https://davidsmatteson.com/) and [Jacob Bien](http://faculty.marshall.usc.edu/Jacob-Bien/)) and "**High Dimensional Forecasting via Interpretable Vector Autoregression (HLag)**" (Joint with [Ines Wilms](https://sites.google.com/view/iwilms), David Matteson, and Jacob Bien).
 
 ${\tt BigVAR}$ allows for the simultaneous estimation and forecasting of high-dimensional time series by applying structured penalties to the standard vector autoregression (VAR) and vector autoregression with exogenous variables (VARX) frameworks.  This is useful in many applications which make use of time-dependent data, such as macroeconomics, finance, and internet traffic, as the conventional VAR and VARX are heavily overparameterized.  In addition, as stated in @ghysels, VARs with "large enough" lag order can adequately approximate VARMA models.
 
@@ -49,7 +49,7 @@ This vignette presents a brief formal overview of our notation, the models conta
 
 ## Installation {#install}
 
-The stable version of ${\tt BigVAR}$ is available on [cran](https://cran.r-project.org/package=BigVAR).  The developmental release can be installed from github using the following command:
+The stable version of ${\tt BigVAR}$ is available on [cran](https://CRAN.R-project.org/package=BigVAR).  The developmental release can be installed from github using the following command:
 ```{r, eval=FALSE}
 install_github("wbnicholson/BigVAR/BigVAR")
 ```
@@ -409,7 +409,7 @@ This procedure is particularly amenable relative to rolling validation in scenar
 ## Diagnostics {#diag}
 Generally, the only potential post-hoc diagnostic procedures are adjusting the depth/size of the penalty grid as well as the maximum lag order.  We suggest setting the maximum lag order based on the frequency of the data (e.g. 4 for quarterly, 12 for monthly, etc).
 
-The method ${\tt \verb|cv.BigVAR|}$ method returns an object of class ${\tt \verb|BigVAR.results|}$.  This object inherits the properties of class ${\tt BigVAR}$ and contains both in and out-of-sample diagnostic information.  For information on all fields, consult the [package manual](https://cran.r-project.org/web/packages/BigVAR/BigVAR.pdf).
+The method ${\tt \verb|cv.BigVAR|}$ method returns an object of class ${\tt \verb|BigVAR.results|}$.  This object inherits the properties of class ${\tt BigVAR}$ and contains both in and out-of-sample diagnostic information.  For information on all fields, consult the package manual.
 
 ```{r}
 str(results)
