@@ -46,7 +46,7 @@ MatrixXd ZmatF(const MatrixXd& Y, int p, const int k, bool intercept=true, bool 
 
 	MatrixXd Z(k * p, M);
 	Z.setZero();
-	// Return here if Z has columns to avoid a segfault
+	// Return here if Z has zero columns to avoid a segfault
 	if (M == 0) return(Z);
 
 	Z.col(0) = Y1.reverse();
