@@ -93,15 +93,10 @@ VARXConsModel <- function(Y, p, VARX, tf) {
         # VAR setting
         VARXI <- FALSE
         contemp <- FALSE
-        k1 <- 0
-        s <- 0
-        m <- 0
         s1 <- 0
 
         Z1 <- VARXCons(Y, matrix(0, nrow = nrow(Y)), k, p, 0, 0)
-
-        trainZ <- Z1[2:nrow(Z1), ]
-
+        trainZ <- Z1[2:nrow(Z1), , drop = FALSE]
         trainY <- matrix(Y[(p + 1):nrow(Y), , drop = FALSE], ncol = k)
 
     }
