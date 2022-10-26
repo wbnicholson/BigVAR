@@ -20,69 +20,57 @@ MatrixXd backsolve(const MatrixXd& R2, const MatrixXd& R){
 
 }
 
-MatrixXd ZmatF(const MatrixXd& Y,  int p, const int k,bool intercept=true,bool oos=false,bool contemp=false,int offset=0)
+MatrixXd ZmatF(const MatrixXd& Y, int p, const int k, bool intercept=true, bool oos=false, bool contemp=false, int offset=0)
 {
-
-		// Rcout<<"check"<<endl;
-
-	int T=Y.rows();
+	int T = Y.rows();
 	// some issues with out of sample predictions and contemporaneous dependence
-    if(oos & !contemp){
-		T+=1;
+    if (oos & !contemp) {
+		T += 1;
 	}
-		// Rcout<<"check2"<<endl;
 
-	MatrixXd Y2=Y.rowwise().reverse();
-	if(contemp){p+=1;}
-	
-	// MatrixXd Y2a=Y2.topLeftCorner(p,k);
-	MatrixXd Y2a=Y2.block(offset,0,p,k);
-			// Rcout<<"check3"<<endl;
+	MatrixXd Y2 = Y.rowwise().reverse();
+	if (contemp) {
+	    p += 1;
+	}
+
+	MatrixXd Y2a = Y2.block(offset, 0, p, k);
 
 	Y2a.transposeInPlace();
-	VectorXd Y1(Map<VectorXd>(Y2a.data(),Y2a.cols()*Y2a.rows()));
-	int M=T-p-offset;
+	VectorXd Y1(Map<VectorXd>(Y2a.data(), Y2a.cols() * Y2a.rows()));
+	int M = T - p - offset;
    
-	if(contemp){
+	if (contemp) {
 		//fixed
 		M+=1;
-		
 	}
-	// if(contemp){
-	// Rcout<<Y2<<endl;
-	// }
-	// 	M=T-p;
-	// }
 
-	MatrixXd Z(k*p,M);
+	MatrixXd Z(k * p, M);
 	Z.setZero();
-	Z.col(0)=Y1.reverse();
+	// Return here if Z has zero columns to avoid a segfault
+	if (M == 0) return(Z);
+
+	Z.col(0) = Y1.reverse();
 	VectorXd Y1c(Y1.size());
-	for(int i=1;i<M;++i){
-		MatrixXd Y1M=Y2.block(i+offset,0,p,k);
+	for(int i = 1; i < M; ++i){
+		MatrixXd Y1M = Y2.block(i + offset, 0, p, k);
 		Y1M.transposeInPlace();
-		VectorXd Y1N(Map<VectorXd>(Y1M.data(),Y1M.cols()*Y1M.rows()));
-		Z.col(i)=Y1N.reverse();
+		VectorXd Y1N(Map<VectorXd>(Y1M.data(), Y1M.cols() * Y1M.rows()));
+		Z.col(i) = Y1N.reverse();
 	}
-	// if(offset!=0){
 
-	// 	Z=Z.rightCols(M-offset);
-	// }
-	MatrixXd ones(1,M);
+	MatrixXd ones(1, M);
 	ones.setOnes();
-	if(p==0){return(ones);
-
+	if (p == 0) {
+	    return(ones);
 	}
 
-	if(intercept){
-		MatrixXd ZF(k*p+1,M);
-		ZF <<ones,Z;
+	if (intercept) {
+		MatrixXd ZF(k * p + 1, M);
+		ZF << ones, Z;
 		return(ZF);
-	}else{
+	} else {
 		return(Z);
-
 	}
-	      
 }
 
 MatrixXd VARXConsInternal(const MatrixXd& Y,const MatrixXd& X, const int k, const int p, const int m,  int s,bool oos=false,bool contemp=false)
