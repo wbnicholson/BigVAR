@@ -702,7 +702,7 @@ setMethod(f = "cv.BigVAR", signature = "BigVAR", definition = function(object) {
         gran2 <- object@Granularity[2]
         gran1 <- object@Granularity[1]
         
-        lambda <- create_lambda_grid(trainY[1:T2, , drop = FALSE], trainZ[, 1:T2], lapply(groups, function(x) {
+        lambda <- create_lambda_grid(trainY[1:T2, , drop = FALSE], trainZ[, 1:T2, drop = FALSE], lapply(groups, function(x) {
             x + 1
         }), gran1, gran2, group, p, k1, s + s1, m, k, MN, alpha, C, intercept, tol, VARXI, separate_lambdas, dual, gamma,
         linear, verbose)
