@@ -905,6 +905,7 @@ setMethod(f = "cv.BigVAR", signature = "BigVAR", definition = function(object) {
             BICbench$svec <- BICbench1$s
         } else {
             offset <- max(c(p, s))
+            browser()
             X <- matrix(Y[(offset + 1):nrow(Y), (k1 + 1):ncol(Y)], ncol = m)
             AICbench1 <- VARXForecastEval(matrix(ZFull$Y[, 1:k1], ncol = k1), as.matrix(X), p, s, T2, T3, "AIC", h = h, loss = loss,
                                           delta = delta)

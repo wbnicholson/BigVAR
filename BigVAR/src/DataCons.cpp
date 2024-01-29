@@ -400,7 +400,7 @@ List ICX(NumericMatrix Y1, NumericMatrix X1, double k, int pmax,int smax,double 
 			        if ((int) (k * i + j * m) >= T || c >= T) {
                         crit.push_back(1000000);
                         // Rcout<<"Undetermined"<<std::endl;
-                        break;
+                        // break;
                     } else {
 						os = max(i, j);
 
