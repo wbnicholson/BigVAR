@@ -1198,6 +1198,9 @@ setMethod(f = "BigVAR.Eval", signature = "BigVAR.intermediate", definition = fun
             lambda_evolve[msfe_index, ] <- lambdaopt
         }
     }
+    if(rolling_oos){
+        lambda <- lambdaopt
+    }    
     temp <- .BigVAR.fit(group, beta, ZFull$Z, ZFull$Y, lambda, tol, p, m, k1, k, s, s1, MN, C, intercept, separate_lambdas,
                         dual, activeset, starting_eigvals, groups, compgroups, VARXI, alpha, palpha)
     betas_full <- temp$beta
