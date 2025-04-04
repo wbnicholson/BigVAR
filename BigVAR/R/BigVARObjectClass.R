@@ -1201,12 +1201,13 @@ setMethod(f = "BigVAR.Eval", signature = "BigVAR.intermediate", definition = fun
     temp <- .BigVAR.fit(group, beta, ZFull$Z, ZFull$Y, lambda, tol, p, m, k1, k, s, s1, MN, C, intercept, separate_lambdas,
                         dual, activeset, starting_eigvals, groups, compgroups, VARXI, alpha, palpha)
     betas_full <- temp$beta
-    if (separate_lambdas) {
-        betaPred <- matrix(0, nrow = ncol(Y), ncol = dim(betas_full)[2])
-        for (col in seq_len(ncol(Y))) betaPred[col, ] <- betas_full[col, , optind[col]]
-    } else {
-        betaPred <- as.matrix(betas_full[, , optind])
-    }
+    # no longer necessary, handled by .BigVAR.fit
+    ## if (separate_lambdas) {
+    ##     betaPred <- matrix(0, nrow = ncol(Y), ncol = dim(betas_full)[2])
+    ##     for (col in seq_len(ncol(Y))) betaPred[col, ] <- betas_full[col, , optind[col]]
+    ## } else {
+    betaPred <- as.matrix(betas_full[, , 1])
+    ## }
     return(list(MSFE = MSFE_oos, betaPred = betaPred, predictions = preds, betaArray = betaArray, lambda_evolve = lambda_evolve))
 })
 
