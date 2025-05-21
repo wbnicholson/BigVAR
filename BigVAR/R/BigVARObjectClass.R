@@ -22,7 +22,7 @@ check.BigVAR <- function(object) {
         msg <- c("Maximal lag order must be at least 0")
         errors <- c(errors, msg)
     }
-    if (object@lagmax == 0 & !object@Structure %in% c("Basic", "BasicEN")) {
+    if (object@lagmax == 0 & !object@Structure %in% c("Basic", "BasicEN","SCAD","MCP")) {
         msg <- c("Only Basic VARX-L supports a transfer function")
         errors <- c(errors, msg)
     }
@@ -348,7 +348,7 @@ constructModel <- function(Y, p, struct, gran, h = 1, cv = "Rolling", verbose = 
     if (p < 0) {
         stop("Maximal lag order must be at least 0")
     }
-    if (p == 0 & !struct %in% c("Basic", "BasicEN")) {
+    if (p == 0 & !struct %in% c("Basic", "BasicEN", "SCAD","MCP")) {
         stop("Only Basic VARX-L supports a transfer function")
     }
     oldnames <- c("None", "Diag", "SparseDiag")
@@ -1014,7 +1014,11 @@ setMethod(f = "BigVAR.Eval", signature = "BigVAR.intermediate", definition = fun
         optind <- object@index
     } else {
         lambda <- object@OptimalLambda
-        optind <- 1
+        if(!object@separate_lambdas){
+            optind <- 1
+        }else{
+            optind <- object@index
+            }
     }
     gran2 <- nrow(as.matrix(lambda))
     lambdaopt <- object@OptimalLambda
@@ -1163,12 +1167,14 @@ setMethod(f = "BigVAR.Eval", signature = "BigVAR.intermediate", definition = fun
         temp_results <- refine_and_forecast(beta, as.matrix(eZ), trainZ, trainY, ZFull$Y[v + h - 1, , drop = FALSE], lambda = lambda,
                                             h = h, recursive = recursive, MN = MN, RVAR = RVAR, refit_fraction = refit_fraction, separate_lambdas = separate_lambdas,
                                             C = C, inds = NULL, loss = loss, delta = delta, k = k, p = p, k1 = k1, s = s, oos = !rolling_oos)
+        
         if (!rolling_oos) {
             if (separate_lambdas) {
-                MSFE_oos[msfe_index] <- temp_results$MSFE[optind]
-                for (col in seq_len(ncol(temp_results$MSFE))) {
-                    preds[msfe_index, col] <- temp_results$preds[col, optind[col]]
-                    betaArray[col, , msfe_index] <- temp$beta[col, , optind[col]]
+                
+                MSFE_oos[msfe_index] <- temp_results$MSFE[1]
+                for (col in seq_len(ncol(temp_results$MSFE))) {                    
+                    preds[msfe_index, col] <- temp_results$preds[col,]                
+                    betaArray[col, , msfe_index] <- temp$beta[col, , ]
                 }
             } else {
                 MSFE_oos[msfe_index] <- temp_results$MSFE
@@ -1729,4 +1735,5 @@ setMethod(f = "coef", signature = "BigVAR.results", definition = function(object
         names(B) <- bnames
     }
     return(B)
-})
+}
+)
